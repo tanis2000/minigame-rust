@@ -16,5 +16,9 @@ jni = { version = "0.4", default-features = false }
 
 [lib]
 name = "minigame"
-crate-type = ["staticlib", "cdylib"]
+path = "src/lib.rs"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
