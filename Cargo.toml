@@ -1,5 +1,4 @@
 [package]
-
 name = "minigame"
 version = "0.1.0"
 authors = [ "Valerio Santinelli <santinelli@gmail.com>" ]
@@ -11,3 +10,10 @@ sdl2 = "0.30"
 [features]
 hotload = ["dynamic_reload"]
 default = ["hotload"]
+
+[target.'cfg(target_os="android")'.dependencies]
+jni = { version = "0.4", default-features = false }
+
+#[lib]
+#name = "minigame"
+#crate-type = ["staticlib", "cdylib"]
