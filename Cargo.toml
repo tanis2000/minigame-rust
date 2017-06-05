@@ -1,0 +1,9 @@
+[package]
+
+name = "minigame"
+version = "0.1.0"
+authors = [ "Valerio Santinelli <santinelli@gmail.com>" ]
+
+[dependencies]
+dynamic_reload = "0.2.1"
+sdl2 = "0.30"
