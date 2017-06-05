@@ -5,5 +5,9 @@ version = "0.1.0"
 authors = [ "Valerio Santinelli <santinelli@gmail.com>" ]
 
 [dependencies]
-dynamic_reload = "0.2.1"
+dynamic_reload = {version = "0.2.1", optional=true}
 sdl2 = "0.30"
+
+[features]
+hotload = ["dynamic_reload"]
+default = ["hotload"]
