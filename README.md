@@ -42,3 +42,9 @@ To get iOS running:
 - Open the Xcode-iOS project and build the library for both the simulator and the device
 - Copy the resulting libraries in your target/[platform] folders 
 - Open the ios/minigame Xcode project and run it
+
+# Building the Rust library for Android
+
+```
+cargo build --no-default-features --target armv7-linux-androideabi
+```
