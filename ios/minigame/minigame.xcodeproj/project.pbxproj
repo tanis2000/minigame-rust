@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		024D14561EE70C1100D211B4 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D14551EE70C1100D211B4 /* libSDL2.a */; };
+		024D14591EE70C2F00D211B4 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D14581EE70C2F00D211B4 /* CoreMotion.framework */; };
+		024D145B1EE70C3D00D211B4 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145A1EE70C3D00D211B4 /* GameController.framework */; };
+		024D145D1EE70C5100D211B4 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145C1EE70C5100D211B4 /* AVFoundation.framework */; };
+		024D145F1EE70C5A00D211B4 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145E1EE70C5A00D211B4 /* AudioToolbox.framework */; };
 		028ECE561EE68FEF0008EC84 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE551EE68FEF0008EC84 /* main.m */; };
 		028ECE591EE68FEF0008EC84 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE581EE68FEF0008EC84 /* AppDelegate.m */; };
 		028ECE5C1EE68FEF0008EC84 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE5B1EE68FEF0008EC84 /* ViewController.m */; };
@@ -17,6 +22,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		024D14551EE70C1100D211B4 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../../target/x86_64-apple-ios/debug/libSDL2.a"; sourceTree = "<group>"; };
+		024D14581EE70C2F00D211B4 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
+		024D145A1EE70C3D00D211B4 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		024D145C1EE70C5100D211B4 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		024D145E1EE70C5A00D211B4 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		028ECE511EE68FEF0008EC84 /* minigame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = minigame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		028ECE551EE68FEF0008EC84 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		028ECE571EE68FEF0008EC84 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -35,6 +45,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				024D145F1EE70C5A00D211B4 /* AudioToolbox.framework in Frameworks */,
+				024D145D1EE70C5100D211B4 /* AVFoundation.framework in Frameworks */,
+				024D145B1EE70C3D00D211B4 /* GameController.framework in Frameworks */,
+				024D14591EE70C2F00D211B4 /* CoreMotion.framework in Frameworks */,
+				024D14561EE70C1100D211B4 /* libSDL2.a in Frameworks */,
 				028ECE6C1EE6910F0008EC84 /* libminigame.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -42,11 +57,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		024D14571EE70C2F00D211B4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				024D145E1EE70C5A00D211B4 /* AudioToolbox.framework */,
+				024D145C1EE70C5100D211B4 /* AVFoundation.framework */,
+				024D145A1EE70C3D00D211B4 /* GameController.framework */,
+				024D14581EE70C2F00D211B4 /* CoreMotion.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		028ECE481EE68FEF0008EC84 = {
 			isa = PBXGroup;
 			children = (
 				028ECE531EE68FEF0008EC84 /* minigame */,
 				028ECE521EE68FEF0008EC84 /* Products */,
+				024D14571EE70C2F00D211B4 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -61,6 +88,7 @@
 		028ECE531EE68FEF0008EC84 /* minigame */ = {
 			isa = PBXGroup;
 			children = (
+				024D14551EE70C1100D211B4 /* libSDL2.a */,
 				028ECE6B1EE6910F0008EC84 /* libminigame.a */,
 				028ECE571EE68FEF0008EC84 /* AppDelegate.h */,
 				028ECE581EE68FEF0008EC84 /* AppDelegate.m */,
@@ -320,6 +348,7 @@
 				028ECE6A1EE68FEF0008EC84 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
