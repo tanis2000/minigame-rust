@@ -121,7 +121,8 @@ pub fn run_loop() {
 }
 
 #[cfg(not(feature = "hotload"))]
-pub fn run_loop() {
+#[no_mangle]
+pub extern "C" fn run_loop() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
