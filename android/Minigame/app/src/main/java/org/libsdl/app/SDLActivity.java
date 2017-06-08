@@ -79,8 +79,7 @@ public class SDLActivity extends AppCompatActivity {
      */
     protected String[] getLibraries() {
         return new String[] {
-                "native-lib",
-                //"SDL2",
+                "SDL2",
                 // "SDL2_image",
                 // "SDL2_mixer",
                 // "SDL2_net",
