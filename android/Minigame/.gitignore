@@ -54,6 +54,8 @@ freeline.py
 freeline/
 freeline_project_description.json
 
+# jniLibs we build on our own
+app/src/main/jniLibs/**/*.so
 
 
 #*.iml
