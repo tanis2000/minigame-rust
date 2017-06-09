@@ -1,16 +1,10 @@
 extern crate sdl2;
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;
-
-#[no_mangle]
-#[allow(non_snake_case)]
-pub extern "C" fn SDL_main() -> i32 {
-    engine::run_loop();
-    0
-}
-
 #[cfg(target_os="android")]
 extern crate jni;
+
+
 #[cfg(target_os="android")]
 use jni::objects::JObject;
 #[cfg(target_os="android")]
@@ -21,6 +15,21 @@ use jni::JNIEnv;
 use jni::sys::jint;
 #[cfg(target_os="android")]
 use sdl2::libc::c_char;
+
+pub mod test_shared;
+pub mod engine;
+pub mod blendmode;
+pub mod shader;
+pub mod renderstate;
+pub mod rectangle;
+pub mod texture;
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn SDL_main() -> i32 {
+    engine::run_loop();
+    0
+}
 
 #[cfg(target_os="android")]
 extern "C" {
@@ -91,6 +100,3 @@ pub unsafe extern "C" fn Java_org_libsdl_app_SDLActivity_nativeInit(env: JNIEnv,
 
     return status;
 }
-
-pub mod test_shared;
-pub mod engine;
