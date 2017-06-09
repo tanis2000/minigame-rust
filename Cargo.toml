@@ -2,10 +2,17 @@
 name = "minigame"
 version = "0.1.0"
 authors = [ "Valerio Santinelli <santinelli@gmail.com>" ]
+build = "build.rs"
 
 [dependencies]
 dynamic_reload = {version = "0.2.1", optional=true}
 sdl2 = "0.30"
+cgmath = "0.14.1"
+rusttype = "0.2.1"
+png = "0.7.0"
+
+[build-dependencies]
+gl_generator = "0.5.3"
 
 [features]
 hotload = ["dynamic_reload"]
