@@ -22,7 +22,7 @@ use sdl2::keyboard::Keycode;
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
 
-mod gl {
+pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 use self::gl::types::*;

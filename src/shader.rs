@@ -1,8 +1,5 @@
-mod gl {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
-
-use self::gl::types::*;
+use engine::gl::types::*;
+use engine::gl as gl;
 use std::ffi::CString;
 use std::ptr;
 use std::str;
@@ -40,7 +37,7 @@ static FS_SRC: &'static str = "\n\
 pub struct Shader {
     vertShader: GLuint,
     fragShader: GLuint,
-    program: GLuint,
+    pub program: GLuint,
     vertexSource: String,
     fragmentSource: String,
 }

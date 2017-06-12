@@ -23,6 +23,10 @@ pub mod shader;
 pub mod renderstate;
 pub mod rectangle;
 pub mod texture;
+pub mod color;
+pub mod vertexpositioncolortexture;
+pub mod log;
+pub mod graphicsdevice;
 
 #[no_mangle]
 #[allow(non_snake_case)]

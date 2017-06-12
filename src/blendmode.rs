@@ -5,7 +5,7 @@
 /// specified by glBlendFunc() or glBlendFuncSeparate().
 ////////////////////////////////////////////////////////
 #[derive(Copy, Clone)]
-enum Factor {
+pub enum Factor {
     Zero, //< (0, 0, 0, 0)
     One, //< (1, 1, 1, 1)
     SrcColor, //< (src.r, src.g, src.b, src.a)
@@ -25,18 +25,18 @@ enum Factor {
 /// specified by glBlendEquation() or glBlendEquationSeparate().
 ////////////////////////////////////////////////////////
 #[derive(Copy, Clone)]
-enum Equation {
+pub enum Equation {
     Add, //< Pixel = Src * SrcFactor + Dst * DstFactor
     Subtract, //< Pixel = Src * SrcFactor - Dst * DstFactor
 }
 
 pub struct BlendMode {
-    colorSrcFactor: Factor, //< Source blending factor for the color channels
-    colorDstFactor: Factor, //< Destination blending factor for the color channels
-    colorEquation: Equation, //< Blending equation for the color channels
-    alphaSrcFactor: Factor, //< Source blending factor for the alpha channel
-    alphaDstFactor: Factor, //< Destination blending factor for the alpha channel
-    alphaEquation: Equation, //< Blending equation for the alpha channel
+    pub colorSrcFactor: Factor, //< Source blending factor for the color channels
+    pub colorDstFactor: Factor, //< Destination blending factor for the color channels
+    pub colorEquation: Equation, //< Blending equation for the color channels
+    pub alphaSrcFactor: Factor, //< Source blending factor for the alpha channel
+    pub alphaDstFactor: Factor, //< Destination blending factor for the alpha channel
+    pub alphaEquation: Equation, //< Blending equation for the alpha channel
 }
 
 impl BlendMode {
