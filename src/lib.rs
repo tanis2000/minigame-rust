@@ -27,6 +27,9 @@ pub mod color;
 pub mod vertexpositioncolortexture;
 pub mod log;
 pub mod graphicsdevice;
+pub mod spritebatchitem;
+pub mod spritebatch;
+pub mod spritebatcher;
 
 #[no_mangle]
 #[allow(non_snake_case)]
