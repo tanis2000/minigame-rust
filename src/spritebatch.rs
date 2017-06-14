@@ -2,15 +2,19 @@ extern crate cgmath;
 
 use sdl2::video::Window;
 use sdl2::render::Canvas;
+use sdl2::rect::Rect;
 use graphicsdevice::GraphicsDevice;
 use renderstate::RenderState;
 use spritebatcher::SpriteBatcher;
 use rectangle::Rectangle;
 use spritefont::SpriteFont;
+use shader::Shader;
 use self::cgmath::Matrix4;
 use self::cgmath::Vector2;
 use self::cgmath::One;
+use std::option::Option;
 
+#[derive(Copy, Clone)]
 pub enum SpriteSortMode
 {
     /// <summary>
@@ -105,4 +109,52 @@ impl <'a>SpriteBatch<'a> {
             },
         }
     }
+
+    pub fn compute_cull_rectangle(&mut self) {
+        let vp = self.renderer.viewport();
+        //SDL_Rect vp;
+        //SDL_RenderGetViewport(renderer, &vp);
+        
+        self.cull_rect.x = vp.x as f32;
+        self.cull_rect.y = vp.y as f32;
+        self.cull_rect.w = vp.w;
+        self.cull_rect.h = vp.h;
+    }
+
+    pub fn begin(&mut self, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<&'a Shader>, transformMatrix: Option<Matrix4<f32>>) {
+        self.render_state.shader = shader;
+        if transformMatrix.is_some() {
+            self.matrix = transformMatrix.unwrap();
+        } else {
+            self.matrix = Matrix4::one();
+        }
+        self.render_state.transform = self.matrix;
+        self.sort_mode = sortMode;
+        self.compute_cull_rectangle();
+        match self.sort_mode
+        {
+            SpriteSortMode::SpriteSortModeImmediate => {
+                self.setup();
+            },
+            _ => {},
+        }
+
+        self.begin_called = true;
+    }
+
+    pub fn end(&'a mut self) {
+        self.begin_called = false;
+        match self.sort_mode {
+            SpriteSortMode::SpriteSortModeImmediate => {},
+            _ => {
+                self.setup();
+            },
+        }
+        self.batcher.draw_batch(self.sort_mode, &mut self.render_state, &mut self.graphics_device);
+    }
+
+    pub fn setup(&mut self) {
+
+    }
+
 }
