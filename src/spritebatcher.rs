@@ -16,7 +16,7 @@ pub struct SpriteBatcher<'a> {
     max_batch_size: i32,
     initial_vertex_array_size: i32,
     renderer: &'a Canvas<Window>,
-    graphics_device: GraphicsDevice,
+    //graphics_device: &'a GraphicsDevice,
     batch_item_list: Vec<SpriteBatchItem<'a>>, /// The list of batch items to process.
     batch_item_count: i32, /// Index pointer to the next available SpriteBatchItem in _batchItemList.
     index: Vec<i32>, /// Vertex index array. The values in this array never change.
@@ -24,7 +24,7 @@ pub struct SpriteBatcher<'a> {
 }
 
 impl<'a> SpriteBatcher<'a> {
-    pub fn new(renderer: &'a Canvas<Window>, graphics_device: GraphicsDevice) -> SpriteBatcher<'a> {
+    pub fn new(renderer: &'a Canvas<Window>/*, graphics_device: &'a GraphicsDevice*/) -> SpriteBatcher<'a> {
         let mut bil = Vec::new();
         for i in 0..256 {
             bil.push(SpriteBatchItem::new());
@@ -35,7 +35,7 @@ impl<'a> SpriteBatcher<'a> {
             max_batch_size: i32::MAX / 6, // 6 = 4 vertices unique and 2 shared, per quad
             initial_vertex_array_size: 256, 
             renderer: renderer,
-            graphics_device: graphics_device,
+            //graphics_device: graphics_device,
             batch_item_list: bil,
             batch_item_count: 0,
             index: Vec::new(),
@@ -92,7 +92,7 @@ impl<'a> SpriteBatcher<'a> {
         self.vertex_array.resize(neededCapacity as usize, VertexPositionColorTexture::new());
     }
 
-    pub fn draw_batch(&'a mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &'a mut RenderState<'a>) {
+    pub fn draw_batch(&'a mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &'a mut RenderState<'a>, graphics_device: &'a mut GraphicsDevice) {
         // nothing to do
         if self.batch_item_count == 0 {
             return;
@@ -131,7 +131,7 @@ impl<'a> SpriteBatcher<'a> {
                 // if the texture changed, we need to flush and bind the new texture
                 let shouldFlush: bool = &**self.batch_item_list[batch_index as usize].texture.as_ref().unwrap() as *const _ != &**tex.as_ref().unwrap() as *const _;
                 if shouldFlush {
-                    self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state);
+                    self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);
 
                     tex = self.batch_item_list[batch_index as usize].texture;
                     startIndex = 0;
@@ -157,7 +157,7 @@ impl<'a> SpriteBatcher<'a> {
                 item.set_texture(None);
             }
             // flush the remaining vertexArray data
-            self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state);
+            self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);
             // Update our batch count to continue the process of culling down
             // large batches
             batch_count -= numBatchesToProcess;
@@ -166,15 +166,15 @@ impl<'a> SpriteBatcher<'a> {
         self.batch_item_count = 0;
     }
 
-    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<&'a Texture<'a>>, render_state: &mut RenderState<'a>) {
+    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<&'a Texture<'a>>, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
         if start == end {
             return;
         }
 
         let vertexCount: i32 = end - start;
         render_state.set_texture(texture);
-        
-        self.graphics_device.draw(&self.vertex_array, vertexCount, render_state);
+
+        graphics_device.draw(&self.vertex_array, vertexCount, render_state);
     }
   
 

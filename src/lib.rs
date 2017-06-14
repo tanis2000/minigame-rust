@@ -30,6 +30,7 @@ pub mod graphicsdevice;
 pub mod spritebatchitem;
 pub mod spritebatch;
 pub mod spritebatcher;
+pub mod spritefont;
 
 #[no_mangle]
 #[allow(non_snake_case)]

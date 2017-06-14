@@ -34,8 +34,26 @@ pub struct GraphicsDevice {
 }
 
 impl GraphicsDevice {
-    pub fn initialize() {
+    pub fn new() -> GraphicsDevice {
+        GraphicsDevice {
+            vertexAttribute: 0,
+            texCoordAttribute: 0,
+            colorAttribute: 0,
+            normalAttribute: 0,
+            projectionMatrixUniform: 0,
+            modelViewMatrixUniform: 0,
+            imageUniform: 0,
+            vbo: 0,
+        }
+    }
 
+    pub fn initialize(&mut self) {
+        unsafe {
+            // Create a Vertex Buffer Object and copy the vertex data to it
+            let mut vbo: u32 = 0;
+            gl::GenBuffers(1, &mut vbo);
+            self.vbo = vbo;
+        }
     }
 
     fn createOrthographicMatrixOffCenter(left: f32, right: f32, bottom: f32, top: f32, z_near_plane: f32, z_far_plane: f32) -> Matrix4<f32> {

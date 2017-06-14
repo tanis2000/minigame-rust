@@ -18,7 +18,7 @@ pub struct RenderState<'a> {
 }
 
 impl<'a> RenderState<'a> {
-    fn new(texture: Option<&'a Texture<'a>>, shader: Option<&'a Shader>) -> RenderState<'a> {
+    pub fn new(texture: Option<&'a Texture<'a>>, shader: Option<&'a Shader>) -> RenderState<'a> {
         RenderState {
             blendMode: BlendAlpha,
             transform: Matrix4::one(),
