@@ -115,7 +115,7 @@ impl<'a> SpriteBatcher<'a> {
             // setup the vertexArray array
             let mut startIndex: i32 = 0;
             let mut index: i32 = 0;
-            let mut tex: Option<&Texture> = None;
+            let mut tex: Option<&'a Texture<'a>> = None;
 
             let mut numBatchesToProcess: i32 = batch_count;
             if numBatchesToProcess > self.max_batch_size {
