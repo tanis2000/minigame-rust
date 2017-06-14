@@ -166,7 +166,7 @@ impl<'a> SpriteBatcher<'a> {
         self.batch_item_count = 0;
     }
 
-    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<&'a Texture<'a>>, render_state: &'a mut RenderState<'a>) {
+    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<&'a Texture<'a>>, render_state: &mut RenderState<'a>) {
         if start == end {
             return;
         }
