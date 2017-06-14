@@ -56,12 +56,12 @@ impl GraphicsDevice {
                            Vector4::new(x, y, 0.0, 1.0))
     }
 
-    pub fn draw(&mut self, vertices: &Vec<VertexPositionColorTexture>, vertexCount: i32, state: &mut RenderState) {
+    pub fn draw(&mut self, vertices: &Vec<VertexPositionColorTexture>, vertexCount: i32, state: &RenderState) {
         GraphicsDevice::resetGLStates();
         GraphicsDevice::applyCurrentView(&state.viewport);
         GraphicsDevice::applyBlendMode(&state.blendMode);
-        self.applyShader(state.shader);
-        GraphicsDevice::applyTexture(state.texture);
+        self.applyShader(state.shader.unwrap());
+        GraphicsDevice::applyTexture(state.texture.unwrap());
 
         let projectionMatrix: Matrix4<f32> = GraphicsDevice::createOrthographicMatrixOffCenter(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
         let modelViewMatrix: Matrix4<f32> = GraphicsDevice::createModelViewMatrix(0.0, 0.0, 1.0, 0.0);
@@ -96,7 +96,8 @@ impl GraphicsDevice {
             //let ref mut tex = state.texture.texture;
             //tex.gl_unbind_texture();
             //state.texture.texture = tex;
-            state.texture.texture.gl_unbind_texture();
+            let mut texture = state.texture.unwrap().texture.borrow_mut();
+            texture.gl_unbind_texture();
         }
     }
 
@@ -132,11 +133,12 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn applyTexture(texture: &mut Texture) {
+    pub fn applyTexture(texture: &Texture) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
 
-            let (texW, texH) = texture.texture.gl_bind_texture();
+            let mut t = texture.texture.borrow_mut();
+            let (texW, texH) = t.gl_bind_texture();
         }
     }
 

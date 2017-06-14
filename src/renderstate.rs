@@ -12,13 +12,13 @@ use std::ptr;
 pub struct RenderState<'a> {
     pub blendMode: BlendMode,
     pub transform: Matrix4<f32>,
-    pub texture: &'a mut Texture<'a>,
-    pub shader: &'a Shader,
+    pub texture: Option<&'a Texture<'a>>,
+    pub shader: Option<&'a Shader>,
     pub viewport: Rectangle,
 }
 
 impl<'a> RenderState<'a> {
-    fn new(texture: &'a mut Texture<'a>, shader: &'a Shader) -> RenderState<'a> {
+    fn new(texture: Option<&'a Texture<'a>>, shader: Option<&'a Shader>) -> RenderState<'a> {
         RenderState {
             blendMode: BlendAlpha,
             transform: Matrix4::one(),
@@ -26,5 +26,9 @@ impl<'a> RenderState<'a> {
             shader: shader,
             viewport: Rectangle::new(0.0, 0.0, 0, 0),
         }
+    }
+
+    pub fn set_texture(&mut self, texture: Option<&'a Texture<'a>>) {
+        self.texture = texture;
     }
 }
