@@ -225,7 +225,7 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
 
 
 //#[cfg(feature = "hotload")]
-pub fn run_loop<'rl>() {
+pub fn run_loop() {
     let (mut plugs, mut reload_handler) = plugin_load();
     /*
     let mut plugs = Plugins { plugins: Vec::new() };
@@ -302,11 +302,9 @@ pub fn run_loop<'rl>() {
     }
     */
 
-    let texture_creator = canvas.texture_creator();
+    let texture_creator = &canvas.texture_creator();
     let texture = texture_creator.load_texture(Path::new("assets/wabbit_alpha.png")).unwrap();
-    let wabbit = Texture {
-        texture: RefCell::new(texture),
-    };
+    let wabbit = Texture::new(texture);
 
     //
     // While this is running (printing a number) change return value in file src/test_shared.rs
