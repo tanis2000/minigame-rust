@@ -353,11 +353,11 @@ pub fn run_loop() {
         */
 
         {
+            let mut shader = Shader::new();
+            shader.load_default();
             let mut sb = SpriteBatch::new(&canvas);
             let position = Vector2::new(0.0, 0.0);
             let matrix: Matrix4<f32> = Matrix4::one();
-            let mut shader = Shader::new();
-            shader.load_default();
             sb.begin(SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
             sb.draw(&wabbit, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
             sb.end();
