@@ -6,7 +6,7 @@ build = "build.rs"
 
 [dependencies]
 dynamic_reload = {version = "0.2.1", optional=true}
-sdl2 = "0.30"
+sdl2 = { version = "0.30", default-features = false, features = ["image"] }
 cgmath = "0.14.1"
 rusttype = "0.2.1"
 png = "0.7.0"

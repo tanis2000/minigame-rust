@@ -6,8 +6,8 @@ use color::Color;
 use self::cgmath::Vector2;
 use std::cmp::Ordering;
 
-pub struct SpriteBatchItem<'a> {
-    pub texture: Option<&'a Texture<'a>>,
+pub struct SpriteBatchItem<'sbi> {
+    pub texture: Option<&'sbi Texture<'sbi>>,
     pub vertexTL: VertexPositionColorTexture,
     pub vertexTR: VertexPositionColorTexture,
     pub vertexBL: VertexPositionColorTexture,
@@ -15,8 +15,8 @@ pub struct SpriteBatchItem<'a> {
     pub sortKey: f32,
 }
 
-impl<'a> SpriteBatchItem<'a> {
-    pub fn new() -> SpriteBatchItem<'a> {
+impl<'sbi> SpriteBatchItem<'sbi> {
+    pub fn new() -> SpriteBatchItem<'sbi> {
         SpriteBatchItem {
             vertexTL: VertexPositionColorTexture::new(),
             vertexTR: VertexPositionColorTexture::new(),
@@ -27,7 +27,7 @@ impl<'a> SpriteBatchItem<'a> {
         }
     }
 
-    pub fn with_position(x: f32, y: f32, w: f32, h: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: &'a mut Texture<'a>) -> SpriteBatchItem<'a> {
+    pub fn with_position(x: f32, y: f32, w: f32, h: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: &'sbi Texture<'sbi>) -> SpriteBatchItem<'sbi> {
         SpriteBatchItem {
             vertexTL: VertexPositionColorTexture {
                 position: Vector2 {
@@ -78,7 +78,7 @@ impl<'a> SpriteBatchItem<'a> {
         }
     }
 
-    pub fn with_rotation(x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: &'a mut Texture<'a>) -> SpriteBatchItem<'a> {
+    pub fn with_rotation(x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: &'sbi Texture<'sbi>) -> SpriteBatchItem<'sbi> {
         SpriteBatchItem {
             vertexTL: VertexPositionColorTexture {
                 position: Vector2 {
@@ -139,7 +139,7 @@ impl<'a> SpriteBatchItem<'a> {
         }
     }
 
-    pub fn set_texture(&mut self, texture: Option<&'a Texture<'a>>) {
+    pub fn set_texture(&mut self, texture: Option<&'sbi Texture<'sbi>>) {
         self.texture = texture;
     }
 }

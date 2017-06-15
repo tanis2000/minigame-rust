@@ -45,11 +45,11 @@ pub enum SpriteSortMode
     SpriteSortModeFrontToBack
 }
 
-pub struct SpriteBatch<'a> {
-    renderer: &'a Canvas<Window>,
-    render_state: RenderState<'a>,
+pub struct SpriteBatch<'sb> {
+    renderer: &'sb Canvas<Window>,
+    render_state: RenderState<'sb>,
     graphics_device: GraphicsDevice,
-    batcher: SpriteBatcher<'a>,
+    batcher: SpriteBatcher<'sb>,
     begin_called: bool,
     matrix: Matrix4<f32>,
     temp_rect: Rectangle,
@@ -67,8 +67,8 @@ pub struct SpriteBatch<'a> {
     vertexToCullBR: Vector2<f32>,
 }
 
-impl <'a>SpriteBatch<'a> {
-    pub fn new(renderer: &'a Canvas<Window>) -> SpriteBatch<'a> {
+impl <'sb>SpriteBatch<'sb> {
+    pub fn new(renderer: &'sb Canvas<Window>) -> SpriteBatch<'sb> {
         let mut gd = GraphicsDevice::new();
         gd.initialize();
         SpriteBatch {
@@ -127,7 +127,7 @@ impl <'a>SpriteBatch<'a> {
         self.cull_rect.h = vp.h;
     }
 
-    pub fn begin(&mut self, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<&'a Shader>, transformMatrix: Option<Matrix4<f32>>) {
+    pub fn begin(&mut self, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<&'sb Shader>, transformMatrix: Option<Matrix4<f32>>) {
         self.render_state.shader = shader;
         if transformMatrix.is_some() {
             self.matrix = transformMatrix.unwrap();
@@ -148,7 +148,7 @@ impl <'a>SpriteBatch<'a> {
         self.begin_called = true;
     }
 
-    pub fn end(&'a mut self) {
+    pub fn end(&'sb mut self) {
         self.begin_called = false;
         match self.sort_mode {
             SpriteSortMode::SpriteSortModeImmediate => {},
@@ -190,25 +190,25 @@ impl <'a>SpriteBatch<'a> {
         
     }
 
-    pub fn draw_internal(&mut self, texture: &Texture,
-                            destinationRectangle: Rectangle,
+    pub fn draw_internal<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>,
+                            /* destinationRectangle: Rectangle, */
                                sourceRectangle: Option<Rectangle>, color: Color,
-                               rotation: f32, origin: Vector2<f32>,
+                               rotation: f32, /* origin: Vector2<f32>, */
                                /*SpriteEffects *effects, */ depth: f32,
                                autoFlush: bool) {
         
         // Cull geometry outside the viewport
-        self.vertexToCullTL.x = destinationRectangle.x + -origin.x * rotation.cos() - -origin.y * rotation.sin();
-        self.vertexToCullTL.y = destinationRectangle.y + -origin.x * rotation.sin() + -origin.y * rotation.cos();
+        self.vertexToCullTL.x = self.origin_rect.x + -self.scaled_origin.x * rotation.cos() - -self.scaled_origin.y * rotation.sin();
+        self.vertexToCullTL.y = self.origin_rect.y + -self.scaled_origin.x * rotation.sin() + -self.scaled_origin.y * rotation.cos();
         
-        self.vertexToCullTR.x = destinationRectangle.x + (-origin.x + destinationRectangle.w as f32) * rotation.cos() - -origin.y * rotation.sin();
-        self.vertexToCullTR.y = destinationRectangle.y + (-origin.x + destinationRectangle.w as f32) * rotation.sin() + -origin.y * rotation.cos();
+        self.vertexToCullTR.x = self.origin_rect.x + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.cos() - -self.scaled_origin.y * rotation.sin();
+        self.vertexToCullTR.y = self.origin_rect.y + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.sin() + -self.scaled_origin.y * rotation.cos();
         
-        self.vertexToCullBL.x = destinationRectangle.x + -origin.x * rotation.cos() - (-origin.y + destinationRectangle.h as f32) * rotation.sin();
-        self.vertexToCullBL.y = destinationRectangle.y + -origin.x * rotation.sin() + (-origin.y + destinationRectangle.h as f32) * rotation.cos();
+        self.vertexToCullBL.x = self.origin_rect.x + -self.scaled_origin.x * rotation.cos() - (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.sin();
+        self.vertexToCullBL.y = self.origin_rect.y + -self.scaled_origin.x * rotation.sin() + (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.cos();
 
-        self.vertexToCullBR.x = destinationRectangle.x + (-origin.x + destinationRectangle.w as f32) * rotation.cos() - (-origin.y + destinationRectangle.h as f32) * rotation.sin();
-        self.vertexToCullBR.y = destinationRectangle.y + (-origin.x + destinationRectangle.w as f32) * rotation.sin() + (-origin.y + destinationRectangle.h as f32) * rotation.cos();
+        self.vertexToCullBR.x = self.origin_rect.x + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.cos() - (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.sin();
+        self.vertexToCullBR.y = self.origin_rect.y + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.sin() + (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.cos();
         
         
         /*if (!cullRect.containsAnyPoint(vertexToCullTL, vertexToCullTR, vertexToCullBL, vertexToCullBR)) {
@@ -222,10 +222,11 @@ impl <'a>SpriteBatch<'a> {
 
 
         if sourceRectangle.is_some() {
-            self.temp_rect.x = sourceRectangle.unwrap().x;
-            self.temp_rect.y = sourceRectangle.unwrap().y;
-            self.temp_rect.w = sourceRectangle.unwrap().w;
-            self.temp_rect.h = sourceRectangle.unwrap().h;
+            let src = sourceRectangle.unwrap();
+            self.temp_rect.x = src.x;
+            self.temp_rect.y = src.y;
+            self.temp_rect.w = src.w;
+            self.temp_rect.h = src.h;
         } else {
             self.temp_rect.x = 0.0;
             self.temp_rect.y = 0.0;
@@ -249,10 +250,10 @@ impl <'a>SpriteBatch<'a> {
             _texCoordTL.X = temp;
         }*/
 
-        let mut item = SpriteBatchItem::with_rotation(destinationRectangle.x, destinationRectangle.y, 
-                    -origin.x, -origin.y, destinationRectangle.w as f32, destinationRectangle.h as f32,
+        let mut item = SpriteBatchItem::with_rotation(self.origin_rect.x, self.origin_rect.y, 
+                    -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
                     rotation.sin(), rotation.cos(), color, self.texCoordTL,
-                    self.texCoordBR, depth, &mut texture);
+                    self.texCoordBR, depth, &texture);
 
         // set SortKey based on SpriteSortMode.
         match self.sort_mode {
@@ -277,7 +278,7 @@ impl <'a>SpriteBatch<'a> {
     }
 
     // Mark the end of a draw operation for Immediate SpriteSortMode.
-    pub fn flush_if_needed(&self) {
+    pub fn flush_if_needed(&'sb mut self) {
         match self.sort_mode {
             SpriteSortMode::SpriteSortModeImmediate => {
                 self.batcher.draw_batch(self.sort_mode/*, _effect*/, &mut self.render_state, &mut self.graphics_device);
@@ -286,23 +287,23 @@ impl <'a>SpriteBatch<'a> {
         }
     }
 
-    pub fn draw(&self, texture: &Texture, position: Option<Vector2<f32>>,
+    pub fn draw<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
                         destinationRectangle: Option<Rectangle>,
                         sourceRectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
                         rotation: f32, scale: Option<Vector2<f32>>, color: Color,
                         /*SpriteEffects *effects, */ layerDepth: f32) {
-        let baseOrigin = Vector2::new(0.0, 0.0);
-        let baseScale = Vector2::new(1.0, 1.0);
+        let mut baseOrigin = Vector2::new(0.0, 0.0);
+        let mut baseScale = Vector2::new(1.0, 1.0);
         // Assign default values to null parameters here, as they are not compile-time
         // constants
         // if (color == nullptr) {
         //    color = sf::Color(255, 255, 255, 255);
         //}
-        if origin.is_none() {
-            origin = Some(baseOrigin);
+        if origin.is_some() {
+            baseOrigin = origin.unwrap();
         }
-        if scale.is_none() {
-            scale = Some(baseScale);
+        if scale.is_some() {
+            baseScale = scale.unwrap();
         }
 
         // If both drawRectangle and position are null, or if both have been assigned
@@ -313,7 +314,7 @@ impl <'a>SpriteBatch<'a> {
                 "Expected drawRectangle or position, but received neither or both.");
         } else if position.is_some() {
             // Call Draw() using position
-            self.draw_vector_scale(texture, position, sourceRectangle, color, rotation, origin.unwrap(), scale.unwrap(),
+            self.draw_vector_scale(texture, position, sourceRectangle, color, rotation, baseOrigin, baseScale,
                 /*effects,*/ layerDepth);
         } else {
             // Call Draw() using drawRectangle
@@ -322,7 +323,7 @@ impl <'a>SpriteBatch<'a> {
         }
     }
 
-    pub fn draw_vector_scale(&mut self, texture: &Texture, position: Option<Vector2<f32>>,
+    pub fn draw_vector_scale<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: Vector2<f32>,
                        /*SpriteEffects *effects,*/
@@ -331,24 +332,33 @@ impl <'a>SpriteBatch<'a> {
 
         let mut w = texture.get_width() as f32 * scale.x;
         let mut h = texture.get_height() as f32 * scale.y;
-        if sourceRectangle.is_some() {
-            w = sourceRectangle.unwrap().w as f32 * scale.x;
-            h = sourceRectangle.unwrap().h as f32 * scale.y;
+        let mut src: Option<Rectangle>;
+        match sourceRectangle
+        {
+            Some(v) => {
+                w = v.w as f32 * scale.x;
+                h = v.h as f32 * scale.y;
+                src = Some(v);
+            },
+            None => {
+                src = None;
+            },
         }
 
+        let pos = position.unwrap();
         self.scaled_origin.x = origin.x * scale.x;
         self.scaled_origin.y = origin.y * scale.y;
-        self.origin_rect.x = position.unwrap().x;
-        self.origin_rect.y = position.unwrap().y;
+        self.origin_rect.x = pos.x;
+        self.origin_rect.y = pos.y;
         self.origin_rect.w = w as i32;
         self.origin_rect.h = h as i32;
-        self.draw_internal(texture, self.origin_rect, sourceRectangle, color, rotation,
-                    self.scaled_origin,
+        self.draw_internal(texture, /*self.origin_rect,*/ src, color, rotation,
+                    /*self.scaled_origin,*/
                     /*effects,*/
                     layerDepth, true);
     }
 
-    pub fn draw_float_scale(&self, texture: &Texture, position: Vector2<f32>,
+    pub fn draw_float_scale<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Vector2<f32>,
                        sourceRectangle: Rectangle, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: f32,
                        /*SpriteEffects effects,*/
@@ -358,11 +368,11 @@ impl <'a>SpriteBatch<'a> {
         self.draw_vector_scale(texture, Some(position), Some(sourceRectangle), color, rotation, origin, s, layerDepth);
     }
 
-    pub fn draw_position(&self, texture: &Texture, position: Vector2<f32>) {
+    pub fn draw_position<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Vector2<f32>) {
         self.draw(texture, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
     }
 
-    pub fn draw_noscale(&mut self, texture: &Texture, destinationRectangle: Rectangle,
+    pub fn draw_noscale<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>,
                        /*SpriteEffects effects,*/
@@ -394,13 +404,13 @@ impl <'a>SpriteBatch<'a> {
                             texture.get_height() as f32);
         }
 
-        self.draw_internal(texture, self.origin_rect, sourceRectangle, color, rotation,
-                    self.scaled_origin,
+        self.draw_internal(texture, /* self.origin_rect,*/ sourceRectangle, color, rotation,
+                    /*self.scaled_origin,*/
                     /*effects,*/
                     layerDepth, true);
     }
 
-    pub fn draw_dst_src_color(&self, texture: &Texture, destinationRectangle: Rectangle,
+    pub fn draw_dst_src_color<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
                         sourceRectangle : Rectangle, color: Color) {
         self.draw_noscale(texture, destinationRectangle, Some(sourceRectangle), color, 0.0, Vector2::new(0.0, 0.0),
         /*SpriteEffects.None,*/ 0.0);

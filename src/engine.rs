@@ -16,11 +16,21 @@ use std::str;
 use std::ffi::CString;
 use std::ptr;
 use std::mem;
-use sdl2::pixels::Color;
+use std::path::Path;
+use std::cell::RefCell;
+use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
+use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::render::TextureCreator;
+use sdl2::render::Texture as SdlTexture;
+use sdl2::video::WindowContext;
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
+
+use spritebatch::SpriteBatch;
+use color::Color;
+use texture::Texture;
 
 pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -215,7 +225,7 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
 
 
 //#[cfg(feature = "hotload")]
-pub fn run_loop() {
+pub fn run_loop<'rl>() {
     let (mut plugs, mut reload_handler) = plugin_load();
     /*
     let mut plugs = Plugins { plugins: Vec::new() };
@@ -292,6 +302,12 @@ pub fn run_loop() {
     }
     */
 
+    let texture_creator = canvas.texture_creator();
+    let texture = texture_creator.load_texture(Path::new("assets/wabbit_alpha.png")).unwrap();
+    let wabbit = Texture {
+        texture: RefCell::new(texture),
+    };
+
     //
     // While this is running (printing a number) change return value in file src/test_shared.rs
     // build the project with cargo build and notice that this code will now return the new value
@@ -320,13 +336,19 @@ pub fn run_loop() {
             }
         }
 
-        canvas.set_draw_color(Color::RGB(255, 0, 0));
+        canvas.set_draw_color(SdlColor::RGB(255, 0, 0));
         canvas.clear();
 
         sdl2::log::log("Drawing triangle");
         unsafe {
             gl::DrawArrays(gl::TRIANGLES, 0, 3);
         }
+
+        {
+            let mut sb = SpriteBatch::new(&canvas);
+            sb.draw(&wabbit, None, None, None, None, 0.0, None, Color::white(), 0.0);
+        }
+
 
         canvas.present();
 
@@ -346,44 +368,3 @@ pub fn run_loop() {
         gl::DeleteBuffers(1, &vbo);
     }
 }
-
-/*
-#[cfg(not(feature = "hotload"))]
-#[no_mangle]
-pub extern "C" fn run_loop() {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-
-    let window = video_subsystem
-        .window("rust-sdl2 demo: Video", 800, 600)
-        .position_centered()
-        .opengl()
-        .build()
-        .unwrap();
-
-    let mut canvas = window.into_canvas().build().unwrap();
-
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
-    canvas.clear();
-    canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-
-    'running: loop {
-        println!("Value {}", shared_fun());
-
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. } |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'running,
-                _ => {}
-            }
-        }
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-        // The rest of the game loop goes here...
-
-
-        // Wait for 0.5 sec
-        thread::sleep(Duration::from_millis(500));
-    }
-}
-*/
