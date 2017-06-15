@@ -2,6 +2,7 @@
 extern crate dynamic_reload;
 
 extern crate sdl2;
+extern crate cgmath;
 
 //#[cfg(not(feature = "hotload"))]
 //extern crate minigame;
@@ -29,9 +30,14 @@ use sdl2::video::WindowContext;
 use test_shared::shared_fun;
 
 use spritebatch::SpriteBatch;
+use spritebatch::SpriteSortMode;
 use color::Color;
 use texture::Texture;
 use texturemanager::TextureManager;
+use shader::Shader;
+use self::cgmath::Vector2;
+use self::cgmath::Matrix4;
+use self::cgmath::One;
 
 pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -339,14 +345,22 @@ pub fn run_loop() {
         canvas.set_draw_color(SdlColor::RGB(255, 0, 0));
         canvas.clear();
 
+        /*
         sdl2::log::log("Drawing triangle");
         unsafe {
             gl::DrawArrays(gl::TRIANGLES, 0, 3);
         }
+        */
 
         {
             let mut sb = SpriteBatch::new(&canvas);
-            sb.draw(&wabbit, None, None, None, None, 0.0, None, Color::white(), 0.0);
+            let position = Vector2::new(0.0, 0.0);
+            let matrix: Matrix4<f32> = Matrix4::one();
+            let mut shader = Shader::new();
+            shader.load_default();
+            sb.begin(SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
+            sb.draw(&wabbit, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
+            sb.end();
         }
 
 

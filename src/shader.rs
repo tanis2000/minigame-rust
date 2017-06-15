@@ -51,7 +51,7 @@ fn defaultFragmentSource() -> String {
 }
 
 impl Shader {
-    fn new() -> Shader {
+    pub fn new() -> Shader {
         Shader {
             fragShader: 0,
             vertShader: 0,
@@ -128,7 +128,7 @@ impl Shader {
         }
     }
 
-    fn loadDefault(&mut self) {
+    pub fn load_default(&mut self) {
         self.compile(&defaultVertexSource(), &defaultFragmentSource());
     }
 }
