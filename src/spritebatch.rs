@@ -45,11 +45,11 @@ pub enum SpriteSortMode
     SpriteSortModeFrontToBack
 }
 
-pub struct SpriteBatch<'sb> {
+pub struct SpriteBatch<'sb, 't: 'sb> {
     renderer: &'sb Canvas<Window>,
-    render_state: RenderState<'sb>,
+    render_state: RenderState<'sb, 't>,
     graphics_device: GraphicsDevice,
-    batcher: SpriteBatcher<'sb>,
+    batcher: SpriteBatcher<'sb, 't>,
     begin_called: bool,
     matrix: Matrix4<f32>,
     temp_rect: Rectangle,
@@ -67,8 +67,8 @@ pub struct SpriteBatch<'sb> {
     vertexToCullBR: Vector2<f32>,
 }
 
-impl <'sb>SpriteBatch<'sb> {
-    pub fn new(renderer: &'sb Canvas<Window>) -> SpriteBatch<'sb> {
+impl <'sb, 't> SpriteBatch<'sb, 't> {
+    pub fn new(renderer: &'sb Canvas<Window>) -> SpriteBatch<'sb, 't> {
         let mut gd = GraphicsDevice::new();
         gd.initialize();
         SpriteBatch {
@@ -190,7 +190,7 @@ impl <'sb>SpriteBatch<'sb> {
         
     }
 
-    pub fn draw_internal<'t: 'sb>(&mut self, texture: &'t Texture<'t>,
+    pub fn draw_internal(&mut self, texture: &Texture<'t>,
                             /* destinationRectangle: Rectangle, */
                                sourceRectangle: Option<Rectangle>, color: Color,
                                rotation: f32, /* origin: Vector2<f32>, */
@@ -287,11 +287,11 @@ impl <'sb>SpriteBatch<'sb> {
         }
     }
 
-    pub fn draw<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
-                        destinationRectangle: Option<Rectangle>,
-                        sourceRectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
-                        rotation: f32, scale: Option<Vector2<f32>>, color: Color,
-                        /*SpriteEffects *effects, */ layerDepth: f32) {
+    pub fn draw(&mut self, texture: &Texture<'t>, position: Option<Vector2<f32>>,
+               destinationRectangle: Option<Rectangle>,
+               sourceRectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
+               rotation: f32, scale: Option<Vector2<f32>>, color: Color,
+               /*SpriteEffects *effects, */ layerDepth: f32) {
         let mut baseOrigin = Vector2::new(0.0, 0.0);
         let mut baseScale = Vector2::new(1.0, 1.0);
         // Assign default values to null parameters here, as they are not compile-time
@@ -323,7 +323,7 @@ impl <'sb>SpriteBatch<'sb> {
         }
     }
 
-    pub fn draw_vector_scale<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
+    pub fn draw_vector_scale(&mut self, texture: &Texture<'t>, position: Option<Vector2<f32>>,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: Vector2<f32>,
                        /*SpriteEffects *effects,*/
@@ -358,7 +358,7 @@ impl <'sb>SpriteBatch<'sb> {
                     layerDepth, true);
     }
 
-    pub fn draw_float_scale<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Vector2<f32>,
+    pub fn draw_float_scale(&mut self, texture: &Texture<'t>, position: Vector2<f32>,
                        sourceRectangle: Rectangle, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: f32,
                        /*SpriteEffects effects,*/
@@ -368,11 +368,11 @@ impl <'sb>SpriteBatch<'sb> {
         self.draw_vector_scale(texture, Some(position), Some(sourceRectangle), color, rotation, origin, s, layerDepth);
     }
 
-    pub fn draw_position<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Vector2<f32>) {
+    pub fn draw_position(&mut self, texture: &Texture<'t>, position: Vector2<f32>) {
         self.draw(texture, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
     }
 
-    pub fn draw_noscale<'t: 'sb>(&mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
+    pub fn draw_noscale(&mut self, texture: &Texture<'t>, destinationRectangle: Rectangle,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>,
                        /*SpriteEffects effects,*/
@@ -410,7 +410,7 @@ impl <'sb>SpriteBatch<'sb> {
                     layerDepth, true);
     }
 
-    pub fn draw_dst_src_color<'t: 'sb>(&mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
+    pub fn draw_dst_src_color(&mut self, texture: &Texture<'t>, destinationRectangle: Rectangle,
                         sourceRectangle : Rectangle, color: Color) {
         self.draw_noscale(texture, destinationRectangle, Some(sourceRectangle), color, 0.0, Vector2::new(0.0, 0.0),
         /*SpriteEffects.None,*/ 0.0);
