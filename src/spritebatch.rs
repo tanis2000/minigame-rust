@@ -250,7 +250,9 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
             _texCoordTL.X = temp;
         }*/
 
-        let mut item = SpriteBatchItem::with_rotation(self.origin_rect.x, self.origin_rect.y, 
+        //Log::debug(&texture.get_height().to_string());
+        let mut item = self.batcher.create_batch_item();
+        item.set_with_rotation(self.origin_rect.x, self.origin_rect.y, 
                     -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
                     rotation.sin(), rotation.cos(), color, self.texCoordTL,
                     self.texCoordBR, depth, &texture);
@@ -314,10 +316,14 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
                 "Expected drawRectangle or position, but received neither or both.");
         } else if position.is_some() {
             // Call Draw() using position
+            Log::error(
+                "Calling draw_vector_scale");
             self.draw_vector_scale(texture, position, sourceRectangle, color, rotation, baseOrigin, baseScale,
                 /*effects,*/ layerDepth);
         } else {
             // Call Draw() using drawRectangle
+            Log::error(
+                "This should call with drawRectangle but we're not yet supporting it");
             // Draw(texture, (Rectangle)destinationRectangle, sourceRectangle,
             // (Color)color, rotation, (Vector2)origin, effects, layerDepth);
         }

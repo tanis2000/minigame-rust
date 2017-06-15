@@ -7,6 +7,7 @@ use spritebatch::SpriteSortMode;
 use spritebatch::SpriteBatch;
 use renderstate::RenderState;
 use texture::Texture;
+use log::Log;
 use std::i32;
 use std::vec;
 use vertexpositioncolortexture::VertexPositionColorTexture;
@@ -47,8 +48,16 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         sb
     }
 
-    pub fn create_batch_item() -> SpriteBatchItem<'a, 't> {
-        SpriteBatchItem::new()
+    pub fn create_batch_item(&mut self) -> &mut SpriteBatchItem<'a, 't> {
+        if self.batch_item_count >= self.batch_item_list.len() as i32 {
+            let oldSize = self.batch_item_list.len();
+            let mut newSize = oldSize + oldSize / 2; // grow by x1.5
+            newSize = (newSize + 63) & (!63);        // grow in chunks of 64.
+            self.batch_item_list.resize(newSize as usize, SpriteBatchItem::new());
+        }
+        self.batch_item_count = self.batch_item_count + 1;
+        let mut item = &mut self.batch_item_list[self.batch_item_count as usize];
+        item
     }
 
     pub fn ensure_array_capacity(&mut self, num_batch_items: i32) {
@@ -93,6 +102,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
     }
 
     pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
+        Log::debug(&self.batch_item_count.to_string());
         // nothing to do
         if self.batch_item_count == 0 {
             return;
@@ -129,7 +139,24 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
             // Draw the batches
             for i in 0..numBatchesToProcess {
                 // if the texture changed, we need to flush and bind the new texture
-                let shouldFlush: bool = &**self.batch_item_list[batch_index as usize].texture.as_ref().unwrap() as *const _ != &**tex.as_ref().unwrap() as *const _;
+                let mut shouldFlush: bool = false;
+                Log::debug(&batch_index.to_string());
+                if self.batch_item_list[batch_index as usize].texture.is_some() {
+                    Log::debug("has batch item list texture");
+                }
+                if tex.is_some() {
+                    Log::debug("has tex");
+                }
+
+                if self.batch_item_list[batch_index as usize].texture.is_some() && tex.is_none() {
+                    shouldFlush = true;
+                } else if self.batch_item_list[batch_index as usize].texture.is_none() && tex.is_some() {
+                    shouldFlush = true;
+                } else {
+                    shouldFlush = &**self.batch_item_list[batch_index as usize].texture.as_ref().unwrap() as *const _ != &**tex.as_ref().unwrap() as *const _;
+                    //let a = self.batch_item_list[batch_index as usize].texture.unwrap();
+                }
+                //let b:() = &**tex.as_ref().unwrap();
                 if shouldFlush {
                     self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);
 
