@@ -56,14 +56,14 @@ impl GraphicsDevice {
         }
     }
 
-    fn createOrthographicMatrixOffCenter(left: f32, right: f32, bottom: f32, top: f32, z_near_plane: f32, z_far_plane: f32) -> Matrix4<f32> {
+    pub fn createOrthographicMatrixOffCenter(left: f32, right: f32, bottom: f32, top: f32, z_near_plane: f32, z_far_plane: f32) -> Matrix4<f32> {
         Matrix4::from_cols(Vector4::new(2.0 / (right - left), 0.0, 0.0, 0.0),
                            Vector4::new(0.0, 2.0 / (top - bottom), 0.0, 0.0),
                            Vector4::new(0.0, 0.0, 1.0 / (z_near_plane - z_far_plane), 0.0),
                            Vector4::new((left + right) / (left - right), (top + bottom) / (bottom - top), z_near_plane / (z_near_plane - z_far_plane), 1.0))
     }
 
-    fn createModelViewMatrix(x: f32, y: f32, scale: f32, rotation: f32) -> Matrix4<f32> {
+    pub fn createModelViewMatrix(x: f32, y: f32, scale: f32, rotation: f32) -> Matrix4<f32> {
         let theta: f32 = rotation * f32::consts::PI / 180.0;
         let c: f32 = theta.cos();
         let s: f32 = theta.sin();
