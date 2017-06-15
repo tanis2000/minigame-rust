@@ -306,7 +306,7 @@ pub fn run_loop() {
     let texture_creator = canvas.texture_creator();
     let mut tm = TextureManager::new(&texture_creator);
     tm.load(String::from("wabbit"), Path::new("assets/wabbit_alpha.png"));
-    let wabbit = tm.get(String::from("wabbit"));
+    let wabbit = tm.get(&String::from("wabbit"));
 
     //
     // While this is running (printing a number) change return value in file src/test_shared.rs
