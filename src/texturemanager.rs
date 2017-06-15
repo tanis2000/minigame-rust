@@ -19,13 +19,13 @@ impl<'tm> TextureManager<'tm> {
         }
     }
 
-    pub fn load(&mut self, id: String, path: &Path) {
+    pub fn load(&'tm mut self, id: String, path: &Path) {
         let texture = self.texture_creator.load_texture(path).unwrap();
         let wabbit = Texture::new(texture);
         self.items.insert(id, Rc::new(wabbit));
     }
 
-    pub fn get(&self, id: String) -> Rc<Texture> {
+    pub fn get(&self, id: String) -> Rc<Texture<'tm>> {
         let entry = self.items.get(&id).unwrap();
         entry.clone()
     }
