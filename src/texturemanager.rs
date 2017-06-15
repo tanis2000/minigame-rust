@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
+use std::string::String;
 use sdl2::render::TextureCreator;
 use sdl2::video::WindowContext;
 use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
@@ -25,8 +26,8 @@ impl<'tm> TextureManager<'tm> {
         self.items.insert(id, Rc::new(tex));
     }
 
-    pub fn get(&self, id: String) -> Rc<Texture<'tm>> {
-        let entry = self.items.get(&id).unwrap();
+    pub fn get(&self, id: &String) -> Rc<Texture<'tm>> {
+        let entry = self.items.get(id).unwrap();
         entry.clone()
     }
 
