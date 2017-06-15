@@ -24,7 +24,7 @@ pub struct SpriteBatcher<'a> {
 }
 
 impl<'a> SpriteBatcher<'a> {
-    pub fn new(renderer: &'a Canvas<Window>/*, graphics_device: &'a GraphicsDevice*/) -> SpriteBatcher<'a> {
+    pub fn new(renderer: &'a Canvas<Window>/*, graphics_device: &'a GraphicsDevice*/) -> SpriteBatcher {
         let mut bil = Vec::new();
         for i in 0..256 {
             bil.push(SpriteBatchItem::new());
@@ -92,7 +92,7 @@ impl<'a> SpriteBatcher<'a> {
         self.vertex_array.resize(neededCapacity as usize, VertexPositionColorTexture::new());
     }
 
-    pub fn draw_batch(&'a mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &'a mut RenderState<'a>, graphics_device: &'a mut GraphicsDevice) {
+    pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
         // nothing to do
         if self.batch_item_count == 0 {
             return;

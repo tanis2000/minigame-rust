@@ -31,6 +31,7 @@ use test_shared::shared_fun;
 use spritebatch::SpriteBatch;
 use color::Color;
 use texture::Texture;
+use texturemanager::TextureManager;
 
 pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -302,9 +303,10 @@ pub fn run_loop() {
     }
     */
 
-    let texture_creator = &canvas.texture_creator();
-    let texture = texture_creator.load_texture(Path::new("assets/wabbit_alpha.png")).unwrap();
-    let wabbit = Texture::new(texture);
+    let texture_creator = canvas.texture_creator();
+    let mut tm = TextureManager::new(texture_creator);
+    tm.load(String::from("wabbit"), Path::new("assets/wabbit_alpha.png"));
+    let wabbit = tm.get(String::from("wabbit"));
 
     //
     // While this is running (printing a number) change return value in file src/test_shared.rs

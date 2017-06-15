@@ -190,7 +190,7 @@ impl <'sb>SpriteBatch<'sb> {
         
     }
 
-    pub fn draw_internal<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>,
+    pub fn draw_internal<'t: 'sb>(&mut self, texture: &'t Texture<'t>,
                             /* destinationRectangle: Rectangle, */
                                sourceRectangle: Option<Rectangle>, color: Color,
                                rotation: f32, /* origin: Vector2<f32>, */
@@ -278,7 +278,7 @@ impl <'sb>SpriteBatch<'sb> {
     }
 
     // Mark the end of a draw operation for Immediate SpriteSortMode.
-    pub fn flush_if_needed(&'sb mut self) {
+    pub fn flush_if_needed(&mut self) {
         match self.sort_mode {
             SpriteSortMode::SpriteSortModeImmediate => {
                 self.batcher.draw_batch(self.sort_mode/*, _effect*/, &mut self.render_state, &mut self.graphics_device);
@@ -287,7 +287,7 @@ impl <'sb>SpriteBatch<'sb> {
         }
     }
 
-    pub fn draw<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
+    pub fn draw<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
                         destinationRectangle: Option<Rectangle>,
                         sourceRectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
                         rotation: f32, scale: Option<Vector2<f32>>, color: Color,
@@ -323,7 +323,7 @@ impl <'sb>SpriteBatch<'sb> {
         }
     }
 
-    pub fn draw_vector_scale<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
+    pub fn draw_vector_scale<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Option<Vector2<f32>>,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: Vector2<f32>,
                        /*SpriteEffects *effects,*/
@@ -358,7 +358,7 @@ impl <'sb>SpriteBatch<'sb> {
                     layerDepth, true);
     }
 
-    pub fn draw_float_scale<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Vector2<f32>,
+    pub fn draw_float_scale<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Vector2<f32>,
                        sourceRectangle: Rectangle, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: f32,
                        /*SpriteEffects effects,*/
@@ -368,11 +368,11 @@ impl <'sb>SpriteBatch<'sb> {
         self.draw_vector_scale(texture, Some(position), Some(sourceRectangle), color, rotation, origin, s, layerDepth);
     }
 
-    pub fn draw_position<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, position: Vector2<f32>) {
+    pub fn draw_position<'t: 'sb>(&mut self, texture: &'t Texture<'t>, position: Vector2<f32>) {
         self.draw(texture, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
     }
 
-    pub fn draw_noscale<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
+    pub fn draw_noscale<'t: 'sb>(&mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>,
                        /*SpriteEffects effects,*/
@@ -410,7 +410,7 @@ impl <'sb>SpriteBatch<'sb> {
                     layerDepth, true);
     }
 
-    pub fn draw_dst_src_color<'t: 'sb>(&'sb mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
+    pub fn draw_dst_src_color<'t: 'sb>(&mut self, texture: &'t Texture<'t>, destinationRectangle: Rectangle,
                         sourceRectangle : Rectangle, color: Color) {
         self.draw_noscale(texture, destinationRectangle, Some(sourceRectangle), color, 0.0, Vector2::new(0.0, 0.0),
         /*SpriteEffects.None,*/ 0.0);

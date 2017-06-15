@@ -31,6 +31,7 @@ pub mod spritebatchitem;
 pub mod spritebatch;
 pub mod spritebatcher;
 pub mod spritefont;
+pub mod texturemanager;
 
 #[no_mangle]
 #[allow(non_snake_case)]
