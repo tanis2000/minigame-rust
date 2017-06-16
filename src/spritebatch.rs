@@ -252,27 +252,29 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         }*/
 
         //Log::debug(&texture.get_height().to_string());
-        let mut item = self.batcher.create_batch_item();
-        item.set_with_rotation(self.origin_rect.x, self.origin_rect.y, 
-                    -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
-                    rotation.sin(), rotation.cos(), color, self.texCoordTL,
-                    self.texCoordBR, depth, texture);
+        {
+            let mut item = self.batcher.create_batch_item();
+            item.set_with_rotation(self.origin_rect.x, self.origin_rect.y, 
+                        -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
+                        rotation.sin(), rotation.cos(), color, self.texCoordTL,
+                        self.texCoordBR, depth, texture);
 
-        // set SortKey based on SpriteSortMode.
-        match self.sort_mode {
-                // Comparison of Texture objects.
-            SpriteSortMode::SpriteSortModeTexture => {
-                //item->sortKey = texture->sortingKey;
-            },
-                // Comparison of Depth
-            SpriteSortMode::SpriteSortModeFrontToBack => {
-                item.sortKey = depth;
-            },
-                // Comparison of Depth in reverse
-            SpriteSortMode::SpriteSortModeBackToFront => {
-                item.sortKey = -depth;
-            },
-            _ => {},
+            // set SortKey based on SpriteSortMode.
+            match self.sort_mode {
+                    // Comparison of Texture objects.
+                SpriteSortMode::SpriteSortModeTexture => {
+                    //item->sortKey = texture->sortingKey;
+                },
+                    // Comparison of Depth
+                SpriteSortMode::SpriteSortModeFrontToBack => {
+                    item.sortKey = depth;
+                },
+                    // Comparison of Depth in reverse
+                SpriteSortMode::SpriteSortModeBackToFront => {
+                    item.sortKey = -depth;
+                },
+                _ => {},
+            }
         }
 
         if autoFlush {

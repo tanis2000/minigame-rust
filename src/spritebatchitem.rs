@@ -3,6 +3,7 @@ extern crate cgmath;
 use texture::Texture;
 use vertexpositioncolortexture::VertexPositionColorTexture;
 use color::Color;
+use log::Log;
 use self::cgmath::Vector2;
 use std::cmp::Ordering;
 use std::rc::Rc;
@@ -132,6 +133,8 @@ impl<'t> SpriteBatchItem<'t> {
     }
 
     pub fn set_with_rotation(&mut self, x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture<'t>>) {
+        Log::debug("SpriteBatchItem::set_with_rotation");
+        Log::debug(&texture.get_height().to_string());
         self.vertexTL = VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + dx * cos - dy * sin,
@@ -190,6 +193,7 @@ impl<'t> SpriteBatchItem<'t> {
     }
 
     pub fn set_texture(&mut self, texture: Option<Rc<Texture<'t>>>) {
+        Log::debug("Setting the texture of the SpriteBatchItem");
         self.texture = texture;
     }
 }

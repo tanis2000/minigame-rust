@@ -56,8 +56,8 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
             newSize = (newSize + 63) & (!63);        // grow in chunks of 64.
             self.batch_item_list.resize(newSize as usize, SpriteBatchItem::new());
         }
-        self.batch_item_count = self.batch_item_count + 1;
         let mut item = &mut self.batch_item_list[self.batch_item_count as usize];
+        self.batch_item_count = self.batch_item_count + 1;
         item
     }
 
@@ -103,6 +103,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
     }
 
     pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
+        Log::debug("draw_batch: batch_item_count follows");
         Log::debug(&self.batch_item_count.to_string());
         // nothing to do
         if self.batch_item_count == 0 {
@@ -141,6 +142,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
             for i in 0..numBatchesToProcess {
                 // if the texture changed, we need to flush and bind the new texture
                 let mut shouldFlush: bool = false;
+                Log::debug("batch index follows");
                 Log::debug(&batch_index.to_string());
                 if self.batch_item_list[batch_index as usize].texture.is_some() {
                     Log::debug("has batch item list texture");
@@ -161,7 +163,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
                 if shouldFlush {
                     self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);
 
-                    tex = self.batch_item_list[batch_index as usize].texture;
+                    tex = self.batch_item_list[batch_index as usize].texture.clone();
                     startIndex = 0;
                     index = 0;
                 }
