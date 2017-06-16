@@ -336,12 +336,11 @@ impl<T: ViewportAdapterTrait> Camera<T> {
     }
     
 
-    pub fn handle_window_resize(&self, old_window_size: Vector2<f32>, new_window_size: Vector2<f32>) {
+    pub fn handle_window_resize(self, old_window_size: Vector2<f32>, new_window_size: Vector2<f32>) {
         if self.viewport_adapter.is_some() {
-            self.viewport_adapter.as_ref().unwrap().reset();
+            self.viewport_adapter.unwrap().reset();
         }
     }
-
 
 }
 
