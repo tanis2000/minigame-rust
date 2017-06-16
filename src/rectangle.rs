@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Rectangle {
     pub x: f32,
     pub y: f32,

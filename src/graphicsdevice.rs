@@ -100,8 +100,7 @@ impl GraphicsDevice {
             gl::VertexAttribPointer(self.colorAttribute as GLuint, 4, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (2 * mem::size_of::<GLfloat>()) as *const _);
             gl::VertexAttribPointer(self.texCoordAttribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (4 * mem::size_of::<GLfloat>() + 2 * mem::size_of::<GLfloat>()) as *const _);
             
-            //let finalMatrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
-            let finalMatrix = state.transform.mul(projectionMatrix);
+            let finalMatrix = Matrix4::mul(state.transform,projectionMatrix);
             let inverseMatrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
 
             gl::UniformMatrix4fv( self.projectionMatrixUniform, 1, gl::FALSE, finalMatrix.as_ptr() );

@@ -20,6 +20,7 @@ use self::cgmath::One;
 use std::option::Option;
 use std::f32;
 use std::rc::Rc;
+use std::ops::Mul;
 
 #[derive(Copy, Clone)]
 pub enum SpriteSortMode
@@ -162,8 +163,6 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
 
     pub fn setup(&mut self) {
         let vp = self.renderer.viewport();
-        //SDL_Rect vp;
-        //SDL_RenderGetViewport(renderer, &vp);
 
         //In OpenGL the viewport is bottom left origin, so we flip the y
         //when submitting our top left based coordinates.
@@ -172,7 +171,6 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         //rendering to a texture/render target, matches the target.
         let mut _y: f32 = 0.0;
         let (rendererWidth, rendererHeight) = self.renderer.output_size().unwrap();
-        //SDL_GetRendererOutputSize(renderer, &rendererWidth, &rendererHeight);
         _y = (rendererHeight - (vp.y as u32 + vp.h as u32)) as f32;
 
         self.render_state.viewport = Rectangle::new(vp.x as f32, _y, vp.w as i32, vp.h as i32);
@@ -182,13 +180,7 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         // sprite batch layer depth is the opposite (z = 0 is in front of z = 1).
         // --> We get the correct matrix with near plane 0 and far plane -1.
         let mut projection: Matrix4<f32> = GraphicsDevice::createOrthographicMatrixOffCenter(0.0, vp.w as f32, vp.h as f32, 0.0, 0.0, -1.0);
-        projection = self.matrix * projection;
-        //projection.Multiply(matrix, projection);
-        
-        //_matrixTransform.SetValue(projection);
-        //_spritePass.Apply();
-        
-        
+        projection = Matrix4::mul(self.matrix, projection);
     }
 
     pub fn draw_internal(&mut self, texture: Rc<Texture<'t>>,
@@ -215,12 +207,6 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         /*if (!cullRect.containsAnyPoint(vertexToCullTL, vertexToCullTR, vertexToCullBL, vertexToCullBR)) {
             return;
         }*/
-
-        
-        
-        //let item = SpriteBatcher::create_batch_item();
-        //item.set_texture(texture);
-
 
         if sourceRectangle.is_some() {
             let src = sourceRectangle.unwrap();
@@ -325,6 +311,10 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
             // Call Draw() using position
             Log::error(
                 "Calling draw_vector_scale");
+            Log::debug("SpriteBatch::draw() sourceRectangle");
+            println!("{:?}", sourceRectangle);
+            Log::debug("SpriteBatch::draw() position");
+            println!("{:?}", position);
             self.draw_vector_scale(texture, position, sourceRectangle, color, rotation, baseOrigin, baseScale,
                 /*effects,*/ layerDepth);
         } else {
