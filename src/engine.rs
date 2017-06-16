@@ -35,6 +35,9 @@ use color::Color;
 use texture::Texture;
 use texturemanager::TextureManager;
 use shader::Shader;
+use camera::Camera;
+use viewportadapter::ScalingViewportAdapter;
+use viewportadapter::ViewportAdapterTrait;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -304,10 +307,18 @@ pub fn run_loop() {
     }
     */
 
+    let mut shader = Shader::new();
+    shader.load_default();
+
     let texture_creator = canvas.texture_creator();
     let mut tm = TextureManager::new(&texture_creator);
     tm.load(String::from("wabbit"), Path::new("assets/wabbit_alpha.png"));
     let wabbit = tm.get(&String::from("wabbit"));
+
+    let playerVA = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
+    let mut playerCamera = Camera::new();
+    playerCamera.set_viewport_adapter(Some(playerVA));
+
 
     //
     // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -348,8 +359,6 @@ pub fn run_loop() {
         */
 
         {
-            let mut shader = Shader::new();
-            shader.load_default();
             let mut sb = SpriteBatch::new(&canvas);
             let position = Vector2::new(0.0, 0.0);
             let matrix: Matrix4<f32> = Matrix4::one();

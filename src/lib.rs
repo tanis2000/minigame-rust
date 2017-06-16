@@ -32,6 +32,9 @@ pub mod spritebatch;
 pub mod spritebatcher;
 pub mod spritefont;
 pub mod texturemanager;
+pub mod camera;
+pub mod utils;
+pub mod viewportadapter;
 
 #[no_mangle]
 #[allow(non_snake_case)]
