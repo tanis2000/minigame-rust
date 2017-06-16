@@ -49,7 +49,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         sb
     }
 
-    pub fn create_batch_item<'b: 'a>(&'b mut self) -> &mut SpriteBatchItem<'t> {
+    pub fn create_batch_item(&mut self) -> &mut SpriteBatchItem<'t> {
         if self.batch_item_count >= self.batch_item_list.len() as i32 {
             let oldSize = self.batch_item_list.len();
             let mut newSize = oldSize + oldSize / 2; // grow by x1.5

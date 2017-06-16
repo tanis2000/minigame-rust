@@ -80,7 +80,7 @@ impl GraphicsDevice {
         GraphicsDevice::applyCurrentView(&state.viewport);
         GraphicsDevice::applyBlendMode(&state.blendMode);
         self.applyShader(state.shader.unwrap());
-        GraphicsDevice::applyTexture(state.texture.unwrap());
+        GraphicsDevice::applyTexture(&state.texture);
 
         let projectionMatrix: Matrix4<f32> = GraphicsDevice::createOrthographicMatrixOffCenter(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
         let modelViewMatrix: Matrix4<f32> = GraphicsDevice::createModelViewMatrix(0.0, 0.0, 1.0, 0.0);
@@ -115,7 +115,8 @@ impl GraphicsDevice {
             //let ref mut tex = state.texture.texture;
             //tex.gl_unbind_texture();
             //state.texture.texture = tex;
-            let mut texture = state.texture.unwrap().texture.borrow_mut();
+            
+            let mut texture = state.texture.as_ref().unwrap().texture.borrow_mut();
             texture.gl_unbind_texture();
         }
     }
@@ -152,11 +153,11 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn applyTexture<'t>(texture: Rc<Texture<'t>>) {
+    pub fn applyTexture<'t>(texture: &Option<Rc<Texture<'t>>>) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
 
-            let mut t = texture.texture.borrow_mut();
+            let mut t = texture.as_ref().unwrap().texture.borrow_mut();
             let (texW, texH) = t.gl_bind_texture();
         }
     }

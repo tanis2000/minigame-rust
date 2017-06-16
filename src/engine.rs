@@ -361,7 +361,7 @@ pub fn run_loop() {
             sdl2::log::log(&wabbit.get_height().to_string());
             sdl2::log::log(&wabbit.get_width().to_string());
             sb.begin(SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
-            sb.draw(wabbit, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
+            sb.draw(wabbit.clone(), Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
             sb.end();
         }
 
