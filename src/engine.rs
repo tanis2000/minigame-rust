@@ -234,16 +234,8 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
 //#[cfg(feature = "hotload")]
 pub fn run_loop() {
     let (mut plugs, mut reload_handler) = plugin_load();
-    /*
-    let mut plugs = Plugins { plugins: Vec::new() };
 
-    // Setup the reload handler. A temporary directory will be created inside the target/debug
-    // where plugins will be loaded from. That is because on some OS:es loading a shared lib
-    // will lock the file so we can't overwrite it so this works around that issue.
-    let mut reload_handler = DynamicReload::new(Some(vec!["target/debug"]),
-                                                Some("target/debug"),
-                                                Search::Default);
-    */
+    // Init SDL2
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
@@ -267,6 +259,7 @@ pub fn run_loop() {
     canvas.window().gl_set_context_to_current();
 
     // Create GLSL shaders
+    /*
     sdl2::log::log("Compiling vertex shader");
     let vs_src = precision()+VS_SRC;
     let vs = compile_shader(&vs_src, gl::VERTEX_SHADER);
@@ -278,8 +271,9 @@ pub fn run_loop() {
 
     let mut vao = 0;
     let mut vbo = 0;
-
+*/
     unsafe {
+        /*
         // Use shader program
         gl::UseProgram(program);
 
@@ -294,6 +288,7 @@ pub fn run_loop() {
                                 gl::FALSE as GLboolean,
                                 0,
                                 mem::transmute(&VERTEX_DATA[0]));
+        */
     }
 
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -378,9 +373,11 @@ pub fn run_loop() {
 
      // Cleanup
     unsafe {
+        /*
         gl::DeleteProgram(program);
         gl::DeleteShader(fs);
         gl::DeleteShader(vs);
         gl::DeleteBuffers(1, &vbo);
+        */
     }
 }

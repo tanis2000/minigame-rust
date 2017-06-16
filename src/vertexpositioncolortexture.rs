@@ -3,7 +3,7 @@ extern crate cgmath;
 use self::cgmath::Vector2;
 use color::Color;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct VertexPositionColorTexture {
     pub position: Vector2<f32>,
     pub color: Color,

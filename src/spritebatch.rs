@@ -258,6 +258,10 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
                         -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
                         rotation.sin(), rotation.cos(), color, self.texCoordTL,
                         self.texCoordBR, depth, texture);
+            println!("{:?}", item.vertexTL.position);
+            println!("{:?}", item.vertexTR.position);
+            println!("{:?}", item.vertexBL.position);
+            println!("{:?}", item.vertexBR.position);
 
             // set SortKey based on SpriteSortMode.
             match self.sort_mode {

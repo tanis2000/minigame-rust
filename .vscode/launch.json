@@ -5,7 +5,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceRoot}/<your program>",
+            "program": "${workspaceRoot}/target/debug/main",
             "args": [],
             "cwd": "${workspaceRoot}"
         }

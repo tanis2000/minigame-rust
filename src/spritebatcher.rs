@@ -105,6 +105,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
     pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
         Log::debug("draw_batch: batch_item_count follows");
         Log::debug(&self.batch_item_count.to_string());
+
         // nothing to do
         if self.batch_item_count == 0 {
             return;
@@ -170,7 +171,6 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
 
                 let mut item = &mut self.batch_item_list[batch_index as usize];
                 // store the SpriteBatchItem data in our vertexArray
-                index = index + 1;
                 self.vertex_array[index as usize] = item.vertexTL;
                 index = index + 1;
                 self.vertex_array[index as usize] = item.vertexTR;
@@ -182,6 +182,15 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
                 self.vertex_array[index as usize] = item.vertexBR;
                 index = index + 1;
                 self.vertex_array[index as usize] = item.vertexBL;
+                index = index + 1;
+
+                Log::debug("SpriteBatcher::draw_batch()");
+                println!("{:?}", self.vertex_array[(index-6) as usize].position);
+                println!("{:?}", self.vertex_array[(index-5) as usize].position);
+                println!("{:?}", self.vertex_array[(index-4) as usize].position);
+                println!("{:?}", self.vertex_array[(index-3) as usize].position);
+                println!("{:?}", self.vertex_array[(index-2) as usize].position);
+                println!("{:?}", self.vertex_array[(index-1) as usize].position);
 
                 // Release the texture.
                 item.set_texture(None);
@@ -204,6 +213,8 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         let vertexCount: i32 = end - start;
         render_state.set_texture(texture);
 
+        //Log::debug("SpriteBatcher::flush_vertex_array");
+        //println!("{:?}", self.vertex_array);
         graphics_device.draw(&self.vertex_array, vertexCount, render_state);
     }
   

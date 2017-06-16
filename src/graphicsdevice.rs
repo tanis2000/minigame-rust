@@ -91,6 +91,9 @@ impl GraphicsDevice {
             gl::EnableVertexAttribArray (self.texCoordAttribute as GLuint);
             
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+            Log::debug("GraphicsDevice::draw()");
+            Log::debug("vertexCount:");
+            Log::debug(&vertexCount.to_string());
             gl::BufferData(gl::ARRAY_BUFFER, (mem::size_of::<VertexPositionColorTexture>() as i32 * vertexCount) as GLsizeiptr, mem::transmute(&vertices[0]), gl::STATIC_DRAW);
             
             gl::VertexAttribPointer(self.vertexAttribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, ptr::null());
@@ -112,10 +115,6 @@ impl GraphicsDevice {
             gl::DisableVertexAttribArray (self.texCoordAttribute as GLuint);
             gl::UseProgram (gl::ZERO);
 
-            //let ref mut tex = state.texture.texture;
-            //tex.gl_unbind_texture();
-            //state.texture.texture = tex;
-            
             let mut texture = state.texture.as_ref().unwrap().texture.borrow_mut();
             texture.gl_unbind_texture();
         }
