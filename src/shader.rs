@@ -20,18 +20,37 @@ fn precision() -> String {
 }
 
 static VS_SRC: &'static str = "\n\
-    attribute vec2 position;\n\
-    varying vec4 color;\n\
-    void main() {\n\
-       gl_Position = vec4(position, 0.0, 1.0);\n\
-       color = vec4(1.0, 1.0, 1.0, 1.0);\n\
-       gl_PointSize = 1.0;\n\
+        attribute vec3 vertexPosition;\n\
+        attribute vec2 vertexTCoord;\n\
+        attribute vec4 vertexColor;\n\
+        attribute vec3 vertexNormal;\n\
+        \n\
+        varying vec2 tcoord;\n\
+        varying vec4 color;\n\
+        \n\
+        uniform mat4 projectionMatrix;\n\
+        uniform mat4 modelViewMatrix;\n\
+        \n\
+        void main(void) {\n\
+        \n\
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);\n\
+        tcoord = vertexTCoord;\n\
+        color = vertexColor;\n\
+        vec3 n = vertexNormal;\n\
+        gl_PointSize = 1.0;\n\
+        \n\
     }";
 
 static FS_SRC: &'static str = "\n\
+    uniform sampler2D tex0;\n\
+    varying vec2 tcoord;\n\
     varying vec4 color;\n\
-    void main() {\n\
-       gl_FragColor = color;\n\
+    \n\
+    void main(void) {\n\
+        \n\
+        vec4 texcolor = texture2D(tex0, tcoord);\n\
+        gl_FragColor = color * texcolor;\n\
+        \n\
     }";
 
 pub struct Shader {
