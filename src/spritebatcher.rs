@@ -10,6 +10,7 @@ use texture::Texture;
 use log::Log;
 use std::i32;
 use std::vec;
+use std::rc::Rc;
 use vertexpositioncolortexture::VertexPositionColorTexture;
 
 pub struct SpriteBatcher<'a, 't: 'a> {
@@ -18,7 +19,7 @@ pub struct SpriteBatcher<'a, 't: 'a> {
     initial_vertex_array_size: i32,
     renderer: &'a Canvas<Window>,
     //graphics_device: &'a GraphicsDevice,
-    batch_item_list: Vec<SpriteBatchItem<'a, 't>>, /// The list of batch items to process.
+    batch_item_list: Vec<SpriteBatchItem<'t>>, /// The list of batch items to process.
     batch_item_count: i32, /// Index pointer to the next available SpriteBatchItem in _batchItemList.
     index: Vec<i32>, /// Vertex index array. The values in this array never change.
     vertex_array: Vec<VertexPositionColorTexture>,
@@ -48,7 +49,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         sb
     }
 
-    pub fn create_batch_item(&mut self) -> &mut SpriteBatchItem<'a, 't> {
+    pub fn create_batch_item<'b: 'a>(&'b mut self) -> &mut SpriteBatchItem<'t> {
         if self.batch_item_count >= self.batch_item_list.len() as i32 {
             let oldSize = self.batch_item_list.len();
             let mut newSize = oldSize + oldSize / 2; // grow by x1.5
@@ -125,7 +126,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
             // setup the vertexArray array
             let mut startIndex: i32 = 0;
             let mut index: i32 = 0;
-            let mut tex: Option<&'a Texture<'t>> = None;
+            let mut tex: Option<Rc<Texture<'t>>> = None;
 
             let mut numBatchesToProcess: i32 = batch_count;
             if numBatchesToProcess > self.max_batch_size {
@@ -193,7 +194,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         self.batch_item_count = 0;
     }
 
-    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<&'a Texture<'t>>, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
+    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture<'t>>>, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
         if start == end {
             return;
         }

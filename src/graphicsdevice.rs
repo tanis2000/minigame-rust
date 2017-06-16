@@ -12,6 +12,7 @@ use std::vec;
 use std::f32;
 use std::ops::Mul;
 use std::ffi::CString;
+use std::rc::Rc;
 use vertexpositioncolortexture::VertexPositionColorTexture;
 use renderstate::RenderState;
 use blendmode::BlendMode;
@@ -34,7 +35,7 @@ pub struct GraphicsDevice {
 }
 
 impl GraphicsDevice {
-    pub fn new() -> GraphicsDevice {
+    pub fn new() -> Self {
         GraphicsDevice {
             vertexAttribute: 0,
             texCoordAttribute: 0,
@@ -151,7 +152,7 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn applyTexture(texture: &Texture) {
+    pub fn applyTexture<'t>(texture: Rc<Texture<'t>>) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
 
