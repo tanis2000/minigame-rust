@@ -38,6 +38,7 @@ use shader::Shader;
 use camera::Camera;
 use viewportadapter::ScalingViewportAdapter;
 use viewportadapter::ViewportAdapterTrait;
+use scene::Scene;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -319,6 +320,10 @@ pub fn run_loop() {
     let mut playerCamera = Camera::new();
     playerCamera.set_viewport_adapter(Some(playerVA));
 
+    let mut scene = Scene::new(32);
+    let e = scene.create_entity();
+    scene.add(e);
+
 
     //
     // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -378,6 +383,8 @@ pub fn run_loop() {
 
         // Wait for 0.5 sec
         thread::sleep(Duration::from_millis(500));
+        // Replace with the following once we're done with testing
+        //thread::sleep(Duration::from_millis(0))
     }
 
      // Cleanup

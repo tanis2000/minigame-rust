@@ -35,6 +35,14 @@ pub mod texturemanager;
 pub mod camera;
 pub mod utils;
 pub mod viewportadapter;
+pub mod entity;
+pub mod component;
+pub mod componentlist;
+pub mod entitylist;
+pub mod scene;
+pub mod collider;
+pub mod colliderlist;
+pub mod subtexture;
 
 #[no_mangle]
 #[allow(non_snake_case)]
