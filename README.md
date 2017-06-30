@@ -41,6 +41,9 @@ To get iOS running:
 - Clone the SDL repo
 - Open the Xcode-iOS project and build the library for both the simulator and the device
 - Copy the resulting libraries in your target/[platform] folders 
+- Clone the sdl2-image repo from http://hg.libsdl.org/SDL_image/
+- Open the Xcode-iOS project and build the library for both the simulator and the device
+- Copy the resulting libraries in your target/[platform] folders 
 - Open the ios/minigame Xcode project and run it
 
 # Building the Android standalone toolchain

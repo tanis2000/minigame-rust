@@ -14,11 +14,11 @@
 
 @implementation ViewController
 
-extern void run_loop();
+extern void SDL_main();
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-  run_loop();
+  SDL_main();
 }
 
 
