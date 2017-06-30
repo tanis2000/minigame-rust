@@ -338,8 +338,14 @@ impl Engine {
         //e.add(ic);
         scene.add(e);
 
+        let mut rng = rand::thread_rng();
 
-        let mut bunnies = [Bunny::new(); 5];
+
+        let mut bunnies = [Bunny::new(); 100];
+        for bunny in bunnies.iter_mut() {
+            bunny.speed.x = rng.gen::<f32>() * 5.0;
+            bunny.speed.x = (rng.gen::<f32>() * 5.0) - 2.5;
+        }
 
 
         //
@@ -398,7 +404,7 @@ impl Engine {
 
             canvas.present();
 
-            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
             // The rest of the game loop goes here...
 
 
@@ -437,7 +443,7 @@ impl Bunny {
             speed: Vector2::new(rng.gen::<f32>() * 5.0, (rng.gen::<f32>() * 5.0) - 2.5),
             min: Vector2::new(0.0, 0.0),
             max: Vector2::new(800.0, 600.0),
-            gravity: 0.98,
+            gravity: 0.5,
         }
     }
 

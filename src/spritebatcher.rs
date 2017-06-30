@@ -196,6 +196,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
 
                 // Release the texture.
                 item.set_texture(None);
+                batch_index += 1;
             }
             // flush the remaining vertexArray data
             self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);

@@ -194,6 +194,9 @@ impl<'t> SpriteBatchItem<'t> {
 
     pub fn set_texture(&mut self, texture: Option<Rc<Texture<'t>>>) {
         Log::debug("Setting the texture of the SpriteBatchItem");
+        if texture.is_none() {
+            Log::debug("Texture is None");
+        }
         self.texture = texture;
     }
 }
