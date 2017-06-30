@@ -160,18 +160,18 @@ impl ViewportAdapterTrait for ScalingViewportAdapter {
     }
         
     fn reset(&mut self) {
-        let oldWindowSize = Vector2::new(self.virtual_width, self.virtual_height);
-        let newWindowSize = Vector2::new(self.base.original_viewport.w, self.base.original_viewport.h);
-        let ratioX = newWindowSize.x / oldWindowSize.x;
-        let ratioY = newWindowSize.y / oldWindowSize.y;
-        let originalViewport = self.get_original_viewport();
-        self.base.viewport.x = originalViewport.x * ratioX as f32;
-        self.base.viewport.y = originalViewport.y * ratioY as f32;
-        self.base.viewport.w = originalViewport.w * ratioX;
-        self.base.viewport.h = originalViewport.h * ratioY;
-        let scaleX = (self.get_viewport_width() / self.virtual_width) as f32;
-        let scaleY = (self.get_viewport_height() / self.virtual_height) as f32;
-        self.base.scale_matrix = Matrix4::from_nonuniform_scale(scaleX, scaleY, 1.0);
+        let old_window_size = Vector2::new(self.virtual_width, self.virtual_height);
+        let new_window_size = Vector2::new(self.base.original_viewport.w, self.base.original_viewport.h);
+        let ratio_x = new_window_size.x / old_window_size.x;
+        let ratio_y = new_window_size.y / old_window_size.y;
+        let original_viewport = self.get_original_viewport();
+        self.base.viewport.x = original_viewport.x * ratio_x as f32;
+        self.base.viewport.y = original_viewport.y * ratio_y as f32;
+        self.base.viewport.w = original_viewport.w * ratio_x;
+        self.base.viewport.h = original_viewport.h * ratio_y;
+        let scale_x = (self.get_viewport_width() / self.virtual_width) as f32;
+        let scale_y = (self.get_viewport_height() / self.virtual_height) as f32;
+        self.base.scale_matrix = Matrix4::from_nonuniform_scale(scale_x, scale_y, 1.0);
     }
   
     fn set_viewport(&mut self, viewport: Rectangle) {

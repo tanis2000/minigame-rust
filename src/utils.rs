@@ -3,8 +3,6 @@ extern crate cgmath;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 
-use std::ops::Mul;
-
 pub trait Clamp {
     fn clamp(self, low: f32, high: f32) -> f32;
 }

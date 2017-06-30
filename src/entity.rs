@@ -1,13 +1,10 @@
 extern crate cgmath;
 
-use scene::Scene;
 use component::Component;
 use componentlist::ComponentList;
 use collider::Collider;
 use colliderlist::ColliderList;
 use std::vec::Vec;
-use std::option::Option;
-use std::rc::Rc;
 use self::cgmath::Vector2;
 
 pub type IdNumber = u32;

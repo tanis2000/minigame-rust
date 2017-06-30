@@ -453,34 +453,24 @@ impl Bunny {
         self.position.y += self.speed.y;
         self.speed.y += self.gravity;
 
-        if (self.position.x > self.max.x) {
-
+        if self.position.x > self.max.x {
             self.speed.x *= -1.0;
             self.position.x = self.max.x;
-
-        } else if (self.position.x < self.min.x) {
-
+        } else if self.position.x < self.min.x {
             self.speed.x *= -1.0;
             self.position.x = self.min.x;
-
         }
 
-        if (self.position.y > self.max.y) {
-
+        if self.position.y > self.max.y {
             self.speed.y *= -0.8;
             self.position.y = self.max.y;
 
-            if (rng.gen::<f32>() > 0.5) {
-
+            if rng.gen::<f32>() > 0.5 {
                 self.speed.y -= 3.0 + rng.gen::<f32>() * 4.0;
-
             }
-
-        } else if (self.position.y < self.min.y) {
-
+        } else if self.position.y < self.min.y {
             self.speed.y = 0.0;
             self.position.y = self.min.y;
-
         }
 
     }

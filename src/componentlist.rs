@@ -1,12 +1,8 @@
 use component::Component;
-use entity::Entity;
 use log::Log;
 use std::vec::Vec;
 use std::rc::Rc;
 use std::boxed::Box;
-use std::option::Option;
-use std::cell::Cell;
-use std::collections::HashMap;
 use std::any::Any;
 
 pub enum LockMode {
@@ -45,7 +41,7 @@ impl ComponentList {
                     None => { 
                         comp = Some(component);
                     }, 
-                    Some(v) => {
+                    Some(_) => {
                         Log::warning("Component already exists");
                     }
                 }
@@ -64,8 +60,8 @@ impl ComponentList {
                     comp = Some(component);
                     index = Some(e);
                 });
-                let mut c = comp.unwrap();
-                let mut e = index.unwrap();
+                let c = comp.unwrap();
+                let e = index.unwrap();
                 c.removed();    
                 self.components.remove(e); 
             }
@@ -85,30 +81,30 @@ impl ComponentList {
                     None => {
                         comp = Some(component);
                     },
-                    Some(v) => {
+                    Some(_) => {
                         Log::warning("Component has already been added before to this same entity");
                     }
                 }
-                let mut c = comp.unwrap();
+                let c = comp.unwrap();
                 c.added();
                 self.components.push(Rc::new(Box::new(c)));
             },
             LockMode::Locked => {
-                let mut found_comp = false;
+                let found_comp: bool;
                 match self.components.iter().find(|&c| &***c as *const _ == &component as *const _) {
                     None => {
                         found_comp = false;
                     },
-                    Some(v) => {
+                    Some(_) => {
                         found_comp = true;
                     }
                 }
-                let mut found_to_add = false;
+                let found_to_add: bool;
                 match self.to_add.iter().find(|&c| &***c as *const _ == &component as *const _) {
                     None => {
                         found_to_add = false;
                     },
-                    Some(v) => {
+                    Some(_) => {
                         found_to_add = true;
                     }
                 }

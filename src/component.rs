@@ -1,8 +1,3 @@
-use entity::Entity;
-use entity::EntityTrait;
-use scene::Scene;
-use std::option::Option;
-use std::rc::Rc;
 use std::any::Any;
 
 pub trait Component: Any {

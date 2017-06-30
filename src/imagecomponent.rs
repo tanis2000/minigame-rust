@@ -84,7 +84,7 @@ impl<'t> ImageComponent<'t> {
 
     pub fn render_position(&self, entity: Option<&Entity>) -> Vector2<f32> {
         match entity {
-            Some(v) => {
+            Some(_) => {
                 return entity.unwrap().position + self.position;
             },
             None => {
