@@ -3,7 +3,18 @@ use entity::EntityTrait;
 use scene::Scene;
 use std::option::Option;
 use std::rc::Rc;
+use std::any::Any;
 
+pub trait Component: Any {
+    fn added(&self) {}
+    fn removed(&self) {}
+}
+
+impl<T: Any> Component for T {
+
+}
+
+/*
 type IdNumber = u32;
 
 pub struct Component {
@@ -68,3 +79,4 @@ impl PartialEq for Component {
         self.id == other.id
     }
 }
+*/

@@ -22,10 +22,8 @@ pub trait EntityTrait {
     fn update();
     fn render();
     fn debug_render();
-    */
     fn add(&mut self, component: Component);
     fn remove(&mut self, component: &Component);
-    /*
     fn get() -> Rc<Component>;
     fn add_collider(collider: &Collider);
     fn remove_collider(collider: &Collider);
@@ -39,7 +37,7 @@ pub trait EntityTrait {
 
 pub struct Entity {
     id: u32,
-    position: Vector2<f32>,
+    pub position: Vector2<f32>,
     active: bool,
     visibile: bool,
     collidable: bool,
@@ -67,14 +65,11 @@ impl Entity {
         e
     }
 
-}
-
-impl EntityTrait for Entity {
-    fn add(&mut self, component: Component) {
+    pub fn add<C: Component>(&mut self, component: C) {
         self.components.add(component);
     }
 
-    fn remove(&mut self, component: &Component) {
+    pub fn remove(&mut self, component: &Component) {
         self.components.remove(component);
     }
 

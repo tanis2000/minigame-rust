@@ -10,6 +10,7 @@ sdl2 = { version = "0.30", default-features = false, features = ["image"] }
 cgmath = "0.14.1"
 rusttype = "0.2.1"
 png = "0.7.0"
+rand = "*"
 
 [build-dependencies]
 gl_generator = "0.5.3"

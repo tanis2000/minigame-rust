@@ -114,8 +114,15 @@ impl GraphicsDevice {
             gl::DisableVertexAttribArray (self.texCoordAttribute as GLuint);
             gl::UseProgram (gl::ZERO);
 
-            let mut texture = state.texture.as_ref().unwrap().texture.borrow_mut();
-            texture.gl_unbind_texture();
+            match state.texture.as_ref() {
+                None => {
+                    Log::warning("GraphicsDevice::draw: Missing texture");
+                }, 
+                Some(v) => {
+                    let mut texture = state.texture.as_ref().unwrap().texture.borrow_mut();
+                    texture.gl_unbind_texture();
+                }
+            }
         }
     }
 
@@ -154,9 +161,15 @@ impl GraphicsDevice {
     pub fn applyTexture<'t>(texture: &Option<Rc<Texture<'t>>>) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
-
-            let mut t = texture.as_ref().unwrap().texture.borrow_mut();
-            let (texW, texH) = t.gl_bind_texture();
+            match texture.as_ref() {
+                None => {
+                    Log::warning("GraphicsDevice::applyTexture: Missing texture");
+                },
+                Some(v) => {
+                    let mut t = texture.as_ref().unwrap().texture.borrow_mut();
+                    let (texW, texH) = t.gl_bind_texture();
+                }
+            }
         }
     }
 

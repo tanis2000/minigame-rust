@@ -2,7 +2,7 @@
 
 extern crate minigame;
 
-use minigame::engine::run_loop;
+use minigame::engine::Engine;
 
 fn main() {
     main2();
@@ -17,5 +17,6 @@ pub extern "C" fn SDL_main() -> i32 {
 }
 
 fn main2() {
-    run_loop();
+    let mut e = Engine::new();
+    e.run_loop();
 }

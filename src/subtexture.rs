@@ -6,9 +6,9 @@ use self::cgmath::Vector2;
 use std::rc::Rc;
 use std::option::Option;
 
-struct Subtexture<'t> {
-    texture: Option<Rc<Texture<'t>>>,
-    rect: Rectangle,
+pub struct Subtexture<'t> {
+    pub texture: Option<Rc<Texture<'t>>>,
+    pub rect: Rectangle,
 }
 
 impl<'t> Subtexture<'t> {

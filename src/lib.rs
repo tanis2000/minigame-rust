@@ -1,4 +1,6 @@
 extern crate sdl2;
+extern crate rand;
+
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;
 #[cfg(target_os="android")]
@@ -43,11 +45,14 @@ pub mod scene;
 pub mod collider;
 pub mod colliderlist;
 pub mod subtexture;
+pub mod imagecomponent;
 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "C" fn SDL_main() -> i32 {
-    engine::run_loop();
+    let mut e = engine::Engine::new();
+    e.run_loop();
+    //engine::run_loop();
     0
 }
 

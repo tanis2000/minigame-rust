@@ -7,6 +7,7 @@ use std::boxed::Box;
 use std::option::Option;
 use std::cell::Cell;
 use std::collections::HashMap;
+use std::any::Any;
 
 pub enum LockMode {
     Open,
@@ -15,9 +16,9 @@ pub enum LockMode {
 }
 
 pub struct ComponentList {
-    components: Vec<Rc<Component>>,
-    to_add: Vec<Rc<Component>>,
-    to_remove: Vec<Rc<Component>>,
+    components: Vec<Rc<Box<Any>>>,
+    to_add: Vec<Rc<Box<Any>>>,
+    to_remove: Vec<Rc<Box<Any>>>,
     lock_mode: LockMode,
 }
 
@@ -40,7 +41,7 @@ impl ComponentList {
         if self.to_add.len() > 0 {
             for component in &self.to_add {
                 let mut comp = None;
-                match self.components.iter().find(|&c| *c == *component) {
+                match self.components.iter().find(|&c| c as *const _ == component as *const _) {
                     None => { 
                         comp = Some(component);
                     }, 
@@ -59,7 +60,7 @@ impl ComponentList {
             for component in &self.to_remove {
                 let mut comp = None;
                 let mut index = None;
-                self.components.iter().position(|c| *c == *component).map(|e| {
+                self.components.iter().position(|c| c as *const _ == component as *const _).map(|e| {
                     comp = Some(component);
                     index = Some(e);
                 });
@@ -72,15 +73,15 @@ impl ComponentList {
         }
     }
 
-    pub fn get_components(&self) -> &Vec<Rc<Component>> {
+    pub fn get_components(&self) -> &Vec<Rc<Box<Any>>> {
         &self.components
     }
 
-    pub fn add(&mut self, component: Component) {
+    pub fn add<C: Component>(&mut self, component: C) {
         match self.lock_mode {
             LockMode::Open => {
                 let mut comp = None;
-                match self.components.iter().find(|&c| **c == component) {
+                match self.components.iter().find(|&c| &***c as *const _ == &component as *const _) {
                     None => {
                         comp = Some(component);
                     },
@@ -90,11 +91,11 @@ impl ComponentList {
                 }
                 let mut c = comp.unwrap();
                 c.added();
-                self.components.push(Rc::new(c));
+                self.components.push(Rc::new(Box::new(c)));
             },
             LockMode::Locked => {
                 let mut found_comp = false;
-                match self.components.iter().find(|&c| **c == component) {
+                match self.components.iter().find(|&c| &***c as *const _ == &component as *const _) {
                     None => {
                         found_comp = false;
                     },
@@ -103,7 +104,7 @@ impl ComponentList {
                     }
                 }
                 let mut found_to_add = false;
-                match self.to_add.iter().find(|&c| **c == component) {
+                match self.to_add.iter().find(|&c| &***c as *const _ == &component as *const _) {
                     None => {
                         found_to_add = false;
                     },
@@ -112,7 +113,7 @@ impl ComponentList {
                     }
                 }
                 if !found_to_add && !found_comp {
-                    self.to_add.push(Rc::new(component));
+                    self.to_add.push(Rc::new(Box::new(component)));
                 } else {
                     Log::warning("Component has already been added before to this same entity");
                 }

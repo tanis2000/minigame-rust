@@ -3,6 +3,7 @@ extern crate dynamic_reload;
 
 extern crate sdl2;
 extern crate cgmath;
+extern crate rand;
 
 //#[cfg(not(feature = "hotload"))]
 //extern crate minigame;
@@ -26,6 +27,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::render::TextureCreator;
 use sdl2::render::Texture as SdlTexture;
 use sdl2::video::WindowContext;
+use rand::Rng;
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
 
@@ -39,6 +41,7 @@ use camera::Camera;
 use viewportadapter::ScalingViewportAdapter;
 use viewportadapter::ViewportAdapterTrait;
 use scene::Scene;
+use imagecomponent::ImageComponent;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -234,166 +237,245 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
     println!("Value {}", shared_fun());
 }
 
+pub struct Engine {
+}
 
-//#[cfg(feature = "hotload")]
-pub fn run_loop() {
-    let (mut plugs, mut reload_handler) = plugin_load();
+impl Engine {
+    pub fn new() -> Self {
+        Engine {
+        }
+    }
 
-    // Init SDL2
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+    //#[cfg(feature = "hotload")]
+    pub fn run_loop(&mut self) {
+        let (mut plugs, mut reload_handler) = plugin_load();
 
-    let window = video_subsystem
-        .window("minigame-rust", 800, 600)
-        .position_centered()
-        .opengl()
+        // Init SDL2
+        let sdl_context = sdl2::init().unwrap();
+        let video_subsystem = sdl_context.video().unwrap();
+
+        let window = video_subsystem
+            .window("minigame-rust", 800, 600)
+            .position_centered()
+            .opengl()
+            .build()
+            .unwrap();
+
+        sdl2::log::log("Looking for OpenGL drivers");
+        let mut canvas = window
+        .into_canvas()
+        .index(find_sdl_gl_driver().unwrap())
         .build()
         .unwrap();
 
-    sdl2::log::log("Looking for OpenGL drivers");
-    let mut canvas = window
-    .into_canvas()
-    .index(find_sdl_gl_driver().unwrap())
-    .build()
-    .unwrap();
+        sdl2::log::log("Loading GL extensions");
+        gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const _);
+        sdl2::log::log("Setting current GL context");
+        canvas.window().gl_set_context_to_current();
 
-    sdl2::log::log("Loading GL extensions");
-    gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const _);
-    sdl2::log::log("Setting current GL context");
-    canvas.window().gl_set_context_to_current();
-
-    // Create GLSL shaders
-    /*
-    sdl2::log::log("Compiling vertex shader");
-    let vs_src = precision()+VS_SRC;
-    let vs = compile_shader(&vs_src, gl::VERTEX_SHADER);
-    sdl2::log::log("Compiling fragment shader");
-    let fs_src = precision()+FS_SRC;
-    let fs = compile_shader(&fs_src, gl::FRAGMENT_SHADER);
-    sdl2::log::log("Linking shaders");
-    let program = link_program(vs, fs);
-
-    let mut vao = 0;
-    let mut vbo = 0;
-*/
-    unsafe {
+        // Create GLSL shaders
         /*
-        // Use shader program
-        gl::UseProgram(program);
+        sdl2::log::log("Compiling vertex shader");
+        let vs_src = precision()+VS_SRC;
+        let vs = compile_shader(&vs_src, gl::VERTEX_SHADER);
+        sdl2::log::log("Compiling fragment shader");
+        let fs_src = precision()+FS_SRC;
+        let fs = compile_shader(&fs_src, gl::FRAGMENT_SHADER);
+        sdl2::log::log("Linking shaders");
+        let program = link_program(vs, fs);
 
-        //let col_attr = gl::GetAttribLocation(program, CString::new("color").unwrap().as_ptr());
-
-        // Specify the layout of the vertex data
-        let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
-        gl::EnableVertexAttribArray(pos_attr as GLuint);
-        gl::VertexAttribPointer(pos_attr as GLuint,
-                                2,
-                                gl::FLOAT,
-                                gl::FALSE as GLboolean,
-                                0,
-                                mem::transmute(&VERTEX_DATA[0]));
-        */
-    }
-
-    let mut event_pump = sdl_context.event_pump().unwrap();
-
-    /*
-    // test_shared is generated in build.rs
-    match reload_handler.add_library("test_shared", PlatformName::Yes) {
-        Ok(lib) => plugs.add_plugin(&lib),
-        Err(e) => {
-            println!("Unable to load dynamic lib, err {:?}", e);
-            return;
-        }
-    }
+        let mut vao = 0;
+        let mut vbo = 0;
     */
+        unsafe {
+            /*
+            // Use shader program
+            gl::UseProgram(program);
 
-    let mut shader = Shader::new();
-    shader.load_default();
+            //let col_attr = gl::GetAttribLocation(program, CString::new("color").unwrap().as_ptr());
 
-    let texture_creator = canvas.texture_creator();
-    let mut tm = TextureManager::new(&texture_creator);
-    tm.load(String::from("wabbit"), Path::new("assets/wabbit_alpha.png"));
-    let wabbit = tm.get(&String::from("wabbit"));
+            // Specify the layout of the vertex data
+            let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
+            gl::EnableVertexAttribArray(pos_attr as GLuint);
+            gl::VertexAttribPointer(pos_attr as GLuint,
+                                    2,
+                                    gl::FLOAT,
+                                    gl::FALSE as GLboolean,
+                                    0,
+                                    mem::transmute(&VERTEX_DATA[0]));
+            */
+        }
 
-    let playerVA = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
-    let mut playerCamera = Camera::new();
-    playerCamera.set_viewport_adapter(Some(playerVA));
-
-    let mut scene = Scene::new(32);
-    let e = scene.create_entity();
-    scene.add(e);
-
-
-    //
-    // While this is running (printing a number) change return value in file src/test_shared.rs
-    // build the project with cargo build and notice that this code will now return the new value
-    //
-    'running: loop {
-        plugin_update(&mut plugs, &mut reload_handler);
+        let mut event_pump = sdl_context.event_pump().unwrap();
 
         /*
-        reload_handler.update(Plugins::reload_callback, &mut plugs);
-
-        if plugs.plugins.len() > 0 {
-            // In a real program you want to cache the symbol and not do it every time if your
-            // application is performance critical
-            let fun: Symbol<extern "C" fn() -> i32> =
-                unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
-
-            println!("Value {}", fun());
-        }
-        */
-
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. } |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'running,
-                _ => {}
+        // test_shared is generated in build.rs
+        match reload_handler.add_library("test_shared", PlatformName::Yes) {
+            Ok(lib) => plugs.add_plugin(&lib),
+            Err(e) => {
+                println!("Unable to load dynamic lib, err {:?}", e);
+                return;
             }
         }
-
-        canvas.set_draw_color(SdlColor::RGB(255, 0, 0));
-        canvas.clear();
-
-        /*
-        sdl2::log::log("Drawing triangle");
-        unsafe {
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
-        }
         */
 
-        {
-            let mut sb = SpriteBatch::new(&canvas);
-            let position = Vector2::new(0.0, 0.0);
-            let matrix: Matrix4<f32> = Matrix4::one();
-            sdl2::log::log(&wabbit.get_height().to_string());
-            sdl2::log::log(&wabbit.get_width().to_string());
-            sb.begin(SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
-            sb.draw(wabbit.clone(), Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
-            sb.end();
+        let mut shader = Shader::new();
+        shader.load_default();
+
+        let mut tc = canvas.texture_creator();
+        let mut tm = TextureManager::new(&tc);
+        tm.load(String::from("wabbit"), Path::new("assets/wabbit_alpha.png"));
+        let wabbit = tm.get(&String::from("wabbit"));
+
+        let playerVA = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
+        let mut playerCamera = Camera::new();
+        playerCamera.set_viewport_adapter(Some(playerVA));
+
+        let mut scene = Scene::new(32);
+        let mut e = scene.create_entity();
+        //let tm = self.texture_manager.as_ref().unwrap();
+        //let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
+        //e.add(ic);
+        scene.add(e);
+
+
+        let mut bunnies = [Bunny::new(); 5];
+
+
+        //
+        // While this is running (printing a number) change return value in file src/test_shared.rs
+        // build the project with cargo build and notice that this code will now return the new value
+        //
+        'running: loop {
+            plugin_update(&mut plugs, &mut reload_handler);
+
+            /*
+            reload_handler.update(Plugins::reload_callback, &mut plugs);
+
+            if plugs.plugins.len() > 0 {
+                // In a real program you want to cache the symbol and not do it every time if your
+                // application is performance critical
+                let fun: Symbol<extern "C" fn() -> i32> =
+                    unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
+
+                println!("Value {}", fun());
+            }
+            */
+
+            for event in event_pump.poll_iter() {
+                match event {
+                    Event::Quit { .. } |
+                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'running,
+                    _ => {}
+                }
+            }
+
+            canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
+            canvas.clear();
+
+            /*
+            sdl2::log::log("Drawing triangle");
+            unsafe {
+                gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            }
+            */
+
+            {
+                let mut sb = SpriteBatch::new(&canvas);
+                let position = Vector2::new(0.0, 0.0);
+                let matrix: Matrix4<f32> = Matrix4::one();
+                sdl2::log::log("wabbit width and height follows");
+                sdl2::log::log(&wabbit.get_height().to_string());
+                sdl2::log::log(&wabbit.get_width().to_string());
+                sb.begin(SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
+                for bunny in bunnies.iter_mut() {
+                    bunny.update();
+                    sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
+                }
+                sb.end();
+            }
+
+
+            canvas.present();
+
+            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            // The rest of the game loop goes here...
+
+
+            // Wait for 0.5 sec
+            //thread::sleep(Duration::from_millis(500));
+            // Replace with the following once we're done with testing
+            thread::sleep(Duration::from_millis(0))
         }
 
+        // Cleanup
+        unsafe {
+            /*
+            gl::DeleteProgram(program);
+            gl::DeleteShader(fs);
+            gl::DeleteShader(vs);
+            gl::DeleteBuffers(1, &vbo);
+            */
+        }
+    }
+}
 
-        canvas.present();
+#[derive(Clone, Copy, Debug)]
+struct Bunny {
+    position: Vector2<f32>,
+    speed: Vector2<f32>,
+    min: Vector2<f32>,
+    max: Vector2<f32>,
+    gravity: f32,
+}
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-        // The rest of the game loop goes here...
-
-
-        // Wait for 0.5 sec
-        thread::sleep(Duration::from_millis(500));
-        // Replace with the following once we're done with testing
-        //thread::sleep(Duration::from_millis(0))
+impl Bunny {
+    pub fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        Bunny {
+            position: Vector2::new(0.0, 0.0),
+            speed: Vector2::new(rng.gen::<f32>() * 5.0, (rng.gen::<f32>() * 5.0) - 2.5),
+            min: Vector2::new(0.0, 0.0),
+            max: Vector2::new(800.0, 600.0),
+            gravity: 0.98,
+        }
     }
 
-     // Cleanup
-    unsafe {
-        /*
-        gl::DeleteProgram(program);
-        gl::DeleteShader(fs);
-        gl::DeleteShader(vs);
-        gl::DeleteBuffers(1, &vbo);
-        */
+    pub fn update(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.position.x += self.speed.x;
+        self.position.y += self.speed.y;
+        self.speed.y += self.gravity;
+
+        if (self.position.x > self.max.x) {
+
+            self.speed.x *= -1.0;
+            self.position.x = self.max.x;
+
+        } else if (self.position.x < self.min.x) {
+
+            self.speed.x *= -1.0;
+            self.position.x = self.min.x;
+
+        }
+
+        if (self.position.y > self.max.y) {
+
+            self.speed.y *= -0.8;
+            self.position.y = self.max.y;
+
+            if (rng.gen::<f32>() > 0.5) {
+
+                self.speed.y -= 3.0 + rng.gen::<f32>() * 4.0;
+
+            }
+
+        } else if (self.position.y < self.min.y) {
+
+            self.speed.y = 0.0;
+            self.position.y = self.min.y;
+
+        }
+
     }
 }

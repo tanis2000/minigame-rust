@@ -156,6 +156,8 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
                     shouldFlush = true;
                 } else if self.batch_item_list[batch_index as usize].texture.is_none() && tex.is_some() {
                     shouldFlush = true;
+                } else if self.batch_item_list[batch_index as usize].texture.is_none() && tex.is_none() {
+                    shouldFlush = false;
                 } else {
                     shouldFlush = &**self.batch_item_list[batch_index as usize].texture.as_ref().unwrap() as *const _ != &**tex.as_ref().unwrap() as *const _;
                     //let a = self.batch_item_list[batch_index as usize].texture.unwrap();
