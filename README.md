@@ -33,7 +33,7 @@ cargo build --no-default-features --lib
 
 To build for iOS simulator:
 ```
-cargo build --no-default-features --target x86_64-apple-ios
+cargo build --no-default-features --target x86_64-apple-ios --lib
 ```
 
 To get iOS running:
