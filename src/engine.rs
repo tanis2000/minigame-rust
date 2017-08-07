@@ -42,6 +42,7 @@ use viewportadapter::ScalingViewportAdapter;
 use viewportadapter::ViewportAdapterTrait;
 use scene::Scene;
 use imagecomponent::ImageComponent;
+use log::Log;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -79,7 +80,7 @@ impl Plugins {
         match state {
             UpdateState::Before => Self::unload_plugins(self, lib.unwrap()),
             UpdateState::After => Self::reload_plugin(self, lib.unwrap()),
-            UpdateState::ReloadFailed(_) => println!("Failed to reload"),
+            UpdateState::ReloadFailed(_) => Log::error("Failed to reload"),
         }
     }
 }
@@ -205,7 +206,7 @@ fn plugin_load<'a>() -> (Plugins, DynamicReload<'a>) {
     match reload_handler.add_library("test_shared", PlatformName::Yes) {
         Ok(lib) => plugs.add_plugin(&lib),
         Err(e) => {
-            println!("Unable to load dynamic lib, err {:?}", e);
+            //Log::error("Unable to load dynamic lib, err {:?}", e);
             return (plugs, reload_handler);
         }
     }
@@ -228,13 +229,13 @@ fn plugin_update<'a>(mut plugs: &mut Plugins, mut reload_handler: &mut DynamicRe
             let fun: Symbol<extern "C" fn() -> i32> =
                 unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
 
-            println!("Value {}", fun());
+            //Log::info("Value {}", fun());
         }
 }
 
 #[cfg(not(feature = "hotload"))]
 fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
-    println!("Value {}", shared_fun());
+    //Log::info("Value {}", shared_fun());
 }
 
 pub struct Engine {
@@ -313,7 +314,7 @@ impl Engine {
         match reload_handler.add_library("test_shared", PlatformName::Yes) {
             Ok(lib) => plugs.add_plugin(&lib),
             Err(e) => {
-                println!("Unable to load dynamic lib, err {:?}", e);
+                Log::error("Unable to load dynamic lib, err {:?}", e);
                 return;
             }
         }
@@ -347,6 +348,8 @@ impl Engine {
             bunny.speed.x = (rng.gen::<f32>() * 5.0) - 2.5;
         }
 
+        let mut sb = SpriteBatch::new();
+
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -364,7 +367,7 @@ impl Engine {
                 let fun: Symbol<extern "C" fn() -> i32> =
                     unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
 
-                println!("Value {}", fun());
+                Log::info("Value {}", fun());
             }
             */
 
@@ -387,18 +390,17 @@ impl Engine {
             */
 
             {
-                let mut sb = SpriteBatch::new(&canvas);
                 let position = Vector2::new(0.0, 0.0);
                 let matrix: Matrix4<f32> = Matrix4::one();
-                sdl2::log::log("wabbit width and height follows");
-                sdl2::log::log(&wabbit.get_height().to_string());
-                sdl2::log::log(&wabbit.get_width().to_string());
-                sb.begin(SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
+                //sdl2::log::log("wabbit width and height follows");
+                //sdl2::log::log(&wabbit.get_height().to_string());
+                //sdl2::log::log(&wabbit.get_width().to_string());
+                sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
                     bunny.update();
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                 }
-                sb.end();
+                sb.end(&mut canvas);
             }
 
 

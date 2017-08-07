@@ -11,13 +11,13 @@ use log::Log;
 use std::i32;
 use std::vec;
 use std::rc::Rc;
+use std::cell::RefCell;
 use vertexpositioncolortexture::VertexPositionColorTexture;
 
-pub struct SpriteBatcher<'a> {
+pub struct SpriteBatcher {
     initial_batch_size: i32,
     max_batch_size: i32,
     initial_vertex_array_size: i32,
-    renderer: &'a Canvas<Window>,
     //graphics_device: &'a GraphicsDevice,
     batch_item_list: Vec<SpriteBatchItem>, /// The list of batch items to process.
     batch_item_count: i32, /// Index pointer to the next available SpriteBatchItem in _batchItemList.
@@ -25,8 +25,8 @@ pub struct SpriteBatcher<'a> {
     vertex_array: Vec<VertexPositionColorTexture>,
 }
 
-impl<'a> SpriteBatcher<'a> {
-    pub fn new(renderer: &'a Canvas<Window>/*, graphics_device: &'a GraphicsDevice*/) -> Self {
+impl SpriteBatcher {
+    pub fn new(/*, graphics_device: &'a GraphicsDevice*/) -> Self {
         let mut bil = Vec::new();
         for i in 0..256 {
             bil.push(SpriteBatchItem::new());
@@ -36,7 +36,6 @@ impl<'a> SpriteBatcher<'a> {
             initial_batch_size: 256,
             max_batch_size: i32::MAX / 6, // 6 = 4 vertices unique and 2 shared, per quad
             initial_vertex_array_size: 256, 
-            renderer: renderer,
             //graphics_device: graphics_device,
             batch_item_list: bil,
             batch_item_count: 0,
@@ -102,7 +101,7 @@ impl<'a> SpriteBatcher<'a> {
         self.vertex_array.resize(neededCapacity as usize, VertexPositionColorTexture::new());
     }
 
-    pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
+    pub fn draw_batch<'a>(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
         Log::debug("draw_batch: batch_item_count follows");
         Log::debug(&self.batch_item_count.to_string());
 
@@ -187,12 +186,12 @@ impl<'a> SpriteBatcher<'a> {
                 index = index + 1;
 
                 Log::debug("SpriteBatcher::draw_batch()");
-                println!("{:?}", self.vertex_array[(index-6) as usize].position);
-                println!("{:?}", self.vertex_array[(index-5) as usize].position);
-                println!("{:?}", self.vertex_array[(index-4) as usize].position);
-                println!("{:?}", self.vertex_array[(index-3) as usize].position);
-                println!("{:?}", self.vertex_array[(index-2) as usize].position);
-                println!("{:?}", self.vertex_array[(index-1) as usize].position);
+                //Log::debug("{:?}", self.vertex_array[(index-6) as usize].position);
+                //Log::debug("{:?}", self.vertex_array[(index-5) as usize].position);
+                //Log::debug("{:?}", self.vertex_array[(index-4) as usize].position);
+                //Log::debug("{:?}", self.vertex_array[(index-3) as usize].position);
+                //Log::debug("{:?}", self.vertex_array[(index-2) as usize].position);
+                //Log::debug("{:?}", self.vertex_array[(index-1) as usize].position);
 
                 // Release the texture.
                 item.set_texture(None);
@@ -208,7 +207,7 @@ impl<'a> SpriteBatcher<'a> {
         self.batch_item_count = 0;
     }
 
-    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture>>, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
+    pub fn flush_vertex_array<'a>(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture>>, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
         if start == end {
             return;
         }
@@ -217,7 +216,7 @@ impl<'a> SpriteBatcher<'a> {
         render_state.set_texture(texture);
 
         //Log::debug("SpriteBatcher::flush_vertex_array");
-        //println!("{:?}", self.vertex_array);
+        //Log::debug("{:?}", self.vertex_array);
         graphics_device.draw(&self.vertex_array, vertexCount, render_state);
     }
   

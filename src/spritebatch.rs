@@ -21,6 +21,7 @@ use std::option::Option;
 use std::f32;
 use std::rc::Rc;
 use std::ops::Mul;
+use std::cell::RefCell;
 
 #[derive(Copy, Clone)]
 pub enum SpriteSortMode
@@ -48,10 +49,9 @@ pub enum SpriteSortMode
 }
 
 pub struct SpriteBatch<'sb> {
-    renderer: &'sb Canvas<Window>,
     render_state: RenderState<'sb>,
     graphics_device: GraphicsDevice,
-    batcher: SpriteBatcher<'sb>,
+    batcher: SpriteBatcher,
     begin_called: bool,
     matrix: Matrix4<f32>,
     temp_rect: Rectangle,
@@ -70,14 +70,13 @@ pub struct SpriteBatch<'sb> {
 }
 
 impl <'sb> SpriteBatch<'sb> {
-    pub fn new(renderer: &'sb Canvas<Window>) -> SpriteBatch<'sb> {
+    pub fn new() -> SpriteBatch<'sb> {
         let mut gd = GraphicsDevice::new();
         gd.initialize();
         SpriteBatch {
-            renderer: renderer,
             render_state: RenderState::new(None, None),
             graphics_device: gd,
-            batcher: SpriteBatcher::new(renderer),
+            batcher: SpriteBatcher::new(),
             begin_called: false,
             matrix: Matrix4::one(),
             temp_rect: Rectangle::new(0.0, 0.0, 0, 0),
@@ -118,10 +117,8 @@ impl <'sb> SpriteBatch<'sb> {
         }
     }
 
-    pub fn compute_cull_rectangle(&mut self) {
-        let vp = self.renderer.viewport();
-        //SDL_Rect vp;
-        //SDL_RenderGetViewport(renderer, &vp);
+    pub fn compute_cull_rectangle<'c>(&mut self, renderer: &'c Canvas<Window>) {
+        let vp = renderer.viewport();
         
         self.cull_rect.x = vp.x as f32;
         self.cull_rect.y = vp.y as f32;
@@ -129,7 +126,7 @@ impl <'sb> SpriteBatch<'sb> {
         self.cull_rect.h = vp.h;
     }
 
-    pub fn begin(&mut self, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<&'sb Shader>, transformMatrix: Option<Matrix4<f32>>) {
+    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<&'sb Shader>, transformMatrix: Option<Matrix4<f32>>) {
         self.render_state.shader = shader;
         if transformMatrix.is_some() {
             self.matrix = transformMatrix.unwrap();
@@ -138,11 +135,11 @@ impl <'sb> SpriteBatch<'sb> {
         }
         self.render_state.transform = self.matrix;
         self.sort_mode = sortMode;
-        self.compute_cull_rectangle();
+        self.compute_cull_rectangle(renderer);
         match self.sort_mode
         {
             SpriteSortMode::SpriteSortModeImmediate => {
-                self.setup();
+                self.setup(renderer);
             },
             _ => {},
         }
@@ -150,19 +147,19 @@ impl <'sb> SpriteBatch<'sb> {
         self.begin_called = true;
     }
 
-    pub fn end(&'sb mut self) {
+    pub fn end<'c>(&mut self, renderer: &'c Canvas<Window>) {
         self.begin_called = false;
         match self.sort_mode {
             SpriteSortMode::SpriteSortModeImmediate => {},
             _ => {
-                self.setup();
+                self.setup(renderer);
             },
         }
         self.batcher.draw_batch(self.sort_mode, &mut self.render_state, &mut self.graphics_device);
     }
 
-    pub fn setup(&mut self) {
-        let vp = self.renderer.viewport();
+    pub fn setup<'c>(&mut self, renderer: &'c Canvas<Window>) {
+        let vp = renderer.viewport();
 
         //In OpenGL the viewport is bottom left origin, so we flip the y
         //when submitting our top left based coordinates.
@@ -170,7 +167,7 @@ impl <'sb> SpriteBatch<'sb> {
         //when rendering to the screen matches the window and when
         //rendering to a texture/render target, matches the target.
         let mut _y: f32 = 0.0;
-        let (rendererWidth, rendererHeight) = self.renderer.output_size().unwrap();
+        let (rendererWidth, rendererHeight) = renderer.output_size().unwrap();
         _y = (rendererHeight - (vp.y as u32 + vp.h as u32)) as f32;
 
         self.render_state.viewport = Rectangle::new(vp.x as f32, _y, vp.w as i32, vp.h as i32);
@@ -244,10 +241,10 @@ impl <'sb> SpriteBatch<'sb> {
                         -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
                         rotation.sin(), rotation.cos(), color, self.texCoordTL,
                         self.texCoordBR, depth, texture);
-            println!("{:?}", item.vertexTL.position);
-            println!("{:?}", item.vertexTR.position);
-            println!("{:?}", item.vertexBL.position);
-            println!("{:?}", item.vertexBR.position);
+            //Log::debug("{:?}", item.vertexTL.position);
+            //Log::debug("{:?}", item.vertexTR.position);
+            //Log::debug("{:?}", item.vertexBL.position);
+            //Log::debug("{:?}", item.vertexBR.position);
 
             // set SortKey based on SpriteSortMode.
             match self.sort_mode {
@@ -312,9 +309,9 @@ impl <'sb> SpriteBatch<'sb> {
             Log::error(
                 "Calling draw_vector_scale");
             Log::debug("SpriteBatch::draw() sourceRectangle");
-            println!("{:?}", sourceRectangle);
+            //Log::debug("{:?}", sourceRectangle);
             Log::debug("SpriteBatch::draw() position");
-            println!("{:?}", position);
+            //Log::debug("{:?}", position);
             self.draw_vector_scale(texture, position, sourceRectangle, color, rotation, baseOrigin, baseScale,
                 /*effects,*/ layerDepth);
         } else {

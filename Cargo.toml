@@ -11,6 +11,7 @@ cgmath = "0.14.1"
 rusttype = "0.2.1"
 png = "0.7.0"
 rand = "*"
+log = "0.3.8"
 
 [build-dependencies]
 gl_generator = "0.5.3"
