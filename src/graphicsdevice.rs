@@ -158,7 +158,7 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn applyTexture<'t>(texture: &Option<Rc<Texture<'t>>>) {
+    pub fn applyTexture(texture: &Option<Rc<Texture>>) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
             match texture.as_ref() {

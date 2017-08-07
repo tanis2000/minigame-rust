@@ -1,12 +1,12 @@
 use sdl2::render::Texture as SdlTexture;
 use std::cell::RefCell;
 
-pub struct Texture<'t> {
-    pub texture: RefCell<SdlTexture<'t>>,
+pub struct Texture {
+    pub texture: RefCell<SdlTexture>,
 }
 
-impl<'t> Texture<'t> {
-    pub fn new<'sdlt: 't>(t: SdlTexture<'sdlt>) -> Texture<'t> {
+impl Texture {
+    pub fn new(t: SdlTexture) -> Texture {
         Texture {
             texture: RefCell::new(t),
         }

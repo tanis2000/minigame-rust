@@ -13,19 +13,19 @@ use std::vec;
 use std::rc::Rc;
 use vertexpositioncolortexture::VertexPositionColorTexture;
 
-pub struct SpriteBatcher<'a, 't: 'a> {
+pub struct SpriteBatcher<'a> {
     initial_batch_size: i32,
     max_batch_size: i32,
     initial_vertex_array_size: i32,
     renderer: &'a Canvas<Window>,
     //graphics_device: &'a GraphicsDevice,
-    batch_item_list: Vec<SpriteBatchItem<'t>>, /// The list of batch items to process.
+    batch_item_list: Vec<SpriteBatchItem>, /// The list of batch items to process.
     batch_item_count: i32, /// Index pointer to the next available SpriteBatchItem in _batchItemList.
     index: Vec<i32>, /// Vertex index array. The values in this array never change.
     vertex_array: Vec<VertexPositionColorTexture>,
 }
 
-impl<'a, 't> SpriteBatcher<'a, 't> {
+impl<'a> SpriteBatcher<'a> {
     pub fn new(renderer: &'a Canvas<Window>/*, graphics_device: &'a GraphicsDevice*/) -> Self {
         let mut bil = Vec::new();
         for i in 0..256 {
@@ -49,7 +49,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         sb
     }
 
-    pub fn create_batch_item(&mut self) -> &mut SpriteBatchItem<'t> {
+    pub fn create_batch_item(&mut self) -> &mut SpriteBatchItem {
         if self.batch_item_count >= self.batch_item_list.len() as i32 {
             let oldSize = self.batch_item_list.len();
             let mut newSize = oldSize + oldSize / 2; // grow by x1.5
@@ -102,7 +102,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         self.vertex_array.resize(neededCapacity as usize, VertexPositionColorTexture::new());
     }
 
-    pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
+    pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
         Log::debug("draw_batch: batch_item_count follows");
         Log::debug(&self.batch_item_count.to_string());
 
@@ -128,7 +128,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
             // setup the vertexArray array
             let mut startIndex: i32 = 0;
             let mut index: i32 = 0;
-            let mut tex: Option<Rc<Texture<'t>>> = None;
+            let mut tex: Option<Rc<Texture>> = None;
 
             let mut numBatchesToProcess: i32 = batch_count;
             if numBatchesToProcess > self.max_batch_size {
@@ -208,7 +208,7 @@ impl<'a, 't> SpriteBatcher<'a, 't> {
         self.batch_item_count = 0;
     }
 
-    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture<'t>>>, render_state: &mut RenderState<'a, 't>, graphics_device: &mut GraphicsDevice) {
+    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture>>, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
         if start == end {
             return;
         }

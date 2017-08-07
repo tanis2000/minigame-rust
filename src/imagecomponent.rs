@@ -10,18 +10,18 @@ use self::cgmath::Vector2;
 use std::rc::Rc;
 use std::option::Option;
 
-pub struct ImageComponent<'t> {
+pub struct ImageComponent {
     position: Vector2<f32>,
     origin: Vector2<f32>,
     scale: Vector2<f32>,
     zoom: f32,
     rotation: f32,
     color: Color,
-    texture: Option<Rc<Texture<'t>>>,
+    texture: Option<Rc<Texture>>,
     clip_rect: Rectangle,
 }
 
-impl<'t> ImageComponent<'t> {
+impl ImageComponent {
     pub fn new() -> Self {
         ImageComponent {
             position: Vector2::new(0.0, 0.0),
@@ -35,14 +35,14 @@ impl<'t> ImageComponent<'t> {
         }
     }
 
-    pub fn with_texture(texture: Rc<Texture<'t>>) -> Self {
+    pub fn with_texture(texture: Rc<Texture>) -> Self {
         let mut ic = ImageComponent::new();
         ic.texture = Some(texture);
         ic.clip_rect = Rectangle::new(0.0, 0.0, ic.texture.as_ref().unwrap().get_width() as i32, ic.texture.as_ref().unwrap().get_height() as i32);
         ic
     }
 
-    pub fn render<'ic>(&self, entity: Option<&Entity>, spritebatch: &mut SpriteBatch<'ic, 't>) {
+    pub fn render<'ic>(&self, entity: Option<&Entity>, spritebatch: &mut SpriteBatch<'ic>) {
         let render_pos = self.render_position(entity);
         let scaled_vec = self.scale * self.zoom;
         let t = self.texture.as_ref().unwrap().clone();
@@ -73,7 +73,7 @@ impl<'t> ImageComponent<'t> {
         self.origin.y = self.height() * y;
     }
 
-    pub fn swap_subtexture(&mut self, subtexture: Option<Rc<Subtexture<'t>>>, clip_rect: Option<Rectangle>) {
+    pub fn swap_subtexture(&mut self, subtexture: Option<Rc<Subtexture>>, clip_rect: Option<Rectangle>) {
         self.texture = subtexture.as_ref().unwrap().clone().texture.clone();
         if clip_rect.is_some() {
             self.clip_rect = clip_rect.unwrap();

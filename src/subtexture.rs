@@ -6,12 +6,12 @@ use self::cgmath::Vector2;
 use std::rc::Rc;
 use std::option::Option;
 
-pub struct Subtexture<'t> {
-    pub texture: Option<Rc<Texture<'t>>>,
+pub struct Subtexture {
+    pub texture: Option<Rc<Texture>>,
     pub rect: Rectangle,
 }
 
-impl<'t> Subtexture<'t> {
+impl Subtexture {
     pub fn new() -> Self {
         Subtexture {
             texture: None,
@@ -19,14 +19,14 @@ impl<'t> Subtexture<'t> {
         }
     }
 
-    pub fn with_texture(texture: Option<Rc<Texture<'t>>>, x: i32, y: i32, width: i32, height: i32) -> Self {
+    pub fn with_texture(texture: Option<Rc<Texture>>, x: i32, y: i32, width: i32, height: i32) -> Self {
         Subtexture {
             texture: texture,
             rect: Rectangle::new(x as f32, y as f32, width, height),
         }
     }
 
-    pub fn with_subtexture(sub: Subtexture<'t>, x: i32, y: i32, width: i32, height: i32) -> Self {
+    pub fn with_subtexture(sub: Subtexture, x: i32, y: i32, width: i32, height: i32) -> Self {
         Subtexture {
             texture: sub.texture,
             rect: Rectangle::new(x as f32, y as f32, width, height),

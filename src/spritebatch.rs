@@ -47,11 +47,11 @@ pub enum SpriteSortMode
     SpriteSortModeFrontToBack
 }
 
-pub struct SpriteBatch<'sb, 't: 'sb> {
+pub struct SpriteBatch<'sb> {
     renderer: &'sb Canvas<Window>,
-    render_state: RenderState<'sb, 't>,
+    render_state: RenderState<'sb>,
     graphics_device: GraphicsDevice,
-    batcher: SpriteBatcher<'sb, 't>,
+    batcher: SpriteBatcher<'sb>,
     begin_called: bool,
     matrix: Matrix4<f32>,
     temp_rect: Rectangle,
@@ -69,8 +69,8 @@ pub struct SpriteBatch<'sb, 't: 'sb> {
     vertexToCullBR: Vector2<f32>,
 }
 
-impl <'sb, 't> SpriteBatch<'sb, 't> {
-    pub fn new(renderer: &'sb Canvas<Window>) -> SpriteBatch<'sb, 't> {
+impl <'sb> SpriteBatch<'sb> {
+    pub fn new(renderer: &'sb Canvas<Window>) -> SpriteBatch<'sb> {
         let mut gd = GraphicsDevice::new();
         gd.initialize();
         SpriteBatch {
@@ -183,7 +183,7 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         projection = Matrix4::mul(self.matrix, projection);
     }
 
-    pub fn draw_internal(&mut self, texture: Rc<Texture<'t>>,
+    pub fn draw_internal(&mut self, texture: Rc<Texture>,
                             /* destinationRectangle: Rectangle, */
                                sourceRectangle: Option<Rectangle>, color: Color,
                                rotation: f32, /* origin: Vector2<f32>, */
@@ -282,7 +282,7 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         }
     }
 
-    pub fn draw(&mut self, texture: Rc<Texture<'t>>, position: Option<Vector2<f32>>,
+    pub fn draw(&mut self, texture: Rc<Texture>, position: Option<Vector2<f32>>,
                destinationRectangle: Option<Rectangle>,
                sourceRectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
                rotation: f32, scale: Option<Vector2<f32>>, color: Color,
@@ -326,7 +326,7 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         }
     }
 
-    pub fn draw_vector_scale(&mut self, texture: Rc<Texture<'t>>, position: Option<Vector2<f32>>,
+    pub fn draw_vector_scale(&mut self, texture: Rc<Texture>, position: Option<Vector2<f32>>,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: Vector2<f32>,
                        /*SpriteEffects *effects,*/
@@ -361,7 +361,7 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
                     layerDepth, true);
     }
 
-    pub fn draw_float_scale(&mut self, texture: Rc<Texture<'t>>, position: Vector2<f32>,
+    pub fn draw_float_scale(&mut self, texture: Rc<Texture>, position: Vector2<f32>,
                        sourceRectangle: Rectangle, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: f32,
                        /*SpriteEffects effects,*/
@@ -371,11 +371,11 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
         self.draw_vector_scale(texture, Some(position), Some(sourceRectangle), color, rotation, origin, s, layerDepth);
     }
 
-    pub fn draw_position(&mut self, texture: Rc<Texture<'t>>, position: Vector2<f32>) {
+    pub fn draw_position(&mut self, texture: Rc<Texture>, position: Vector2<f32>) {
         self.draw(texture, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
     }
 
-    pub fn draw_noscale(&mut self, texture: Rc<Texture<'t>>, destinationRectangle: Rectangle,
+    pub fn draw_noscale(&mut self, texture: Rc<Texture>, destinationRectangle: Rectangle,
                        sourceRectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>,
                        /*SpriteEffects effects,*/
@@ -413,7 +413,7 @@ impl <'sb, 't> SpriteBatch<'sb, 't> {
                     layerDepth, true);
     }
 
-    pub fn draw_dst_src_color(&mut self, texture: Rc<Texture<'t>>, destinationRectangle: Rectangle,
+    pub fn draw_dst_src_color(&mut self, texture: Rc<Texture>, destinationRectangle: Rectangle,
                         sourceRectangle : Rectangle, color: Color) {
         self.draw_noscale(texture, destinationRectangle, Some(sourceRectangle), color, 0.0, Vector2::new(0.0, 0.0),
         /*SpriteEffects.None,*/ 0.0);

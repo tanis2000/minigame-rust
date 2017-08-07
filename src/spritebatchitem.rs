@@ -9,8 +9,8 @@ use std::cmp::Ordering;
 use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct SpriteBatchItem<'t> {
-    pub texture: Option<Rc<Texture<'t>>>,
+pub struct SpriteBatchItem {
+    pub texture: Option<Rc<Texture>>,
     pub vertexTL: VertexPositionColorTexture,
     pub vertexTR: VertexPositionColorTexture,
     pub vertexBL: VertexPositionColorTexture,
@@ -18,7 +18,7 @@ pub struct SpriteBatchItem<'t> {
     pub sortKey: f32,
 }
 
-impl<'t> SpriteBatchItem<'t> {
+impl SpriteBatchItem {
     pub fn new() -> Self {
         SpriteBatchItem {
             vertexTL: VertexPositionColorTexture::new(),
@@ -30,7 +30,7 @@ impl<'t> SpriteBatchItem<'t> {
         }
     }
 
-    pub fn with_position(x: f32, y: f32, w: f32, h: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture<'t>>) -> Self {
+    pub fn with_position(x: f32, y: f32, w: f32, h: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture>) -> Self {
         SpriteBatchItem {
             vertexTL: VertexPositionColorTexture {
                 position: Vector2 {
@@ -81,7 +81,7 @@ impl<'t> SpriteBatchItem<'t> {
         }
     }
 
-    pub fn with_rotation(x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture<'t>>) -> Self {
+    pub fn with_rotation(x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture>) -> Self {
         SpriteBatchItem {
             vertexTL: VertexPositionColorTexture {
                 position: Vector2 {
@@ -132,7 +132,7 @@ impl<'t> SpriteBatchItem<'t> {
         }
     }
 
-    pub fn set_with_rotation(&mut self, x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture<'t>>) {
+    pub fn set_with_rotation(&mut self, x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture>) {
         Log::debug("SpriteBatchItem::set_with_rotation");
         Log::debug(&texture.get_height().to_string());
         self.vertexTL = VertexPositionColorTexture {
@@ -192,7 +192,7 @@ impl<'t> SpriteBatchItem<'t> {
         }
     }
 
-    pub fn set_texture(&mut self, texture: Option<Rc<Texture<'t>>>) {
+    pub fn set_texture(&mut self, texture: Option<Rc<Texture>>) {
         Log::debug("Setting the texture of the SpriteBatchItem");
         if texture.is_none() {
             Log::debug("Texture is None");
@@ -201,8 +201,8 @@ impl<'t> SpriteBatchItem<'t> {
     }
 }
 
-impl<'t> Default for SpriteBatchItem<'t> {
-    fn default() -> SpriteBatchItem<'t> {
+impl Default for SpriteBatchItem {
+    fn default() -> SpriteBatchItem {
         SpriteBatchItem::new()
     }
 }

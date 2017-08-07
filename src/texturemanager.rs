@@ -9,10 +9,10 @@ use texture::Texture;
 
 pub struct TextureManager<'tm> {
     texture_creator: &'tm TextureCreator<WindowContext>,
-    items: HashMap<String, Rc<Texture<'tm>>>,
+    items: HashMap<String, Rc<Texture>>,
 }
 
-impl<'tm> TextureManager<'tm> {
+impl <'tm>TextureManager<'tm> {
     pub fn new(texture_creator: &'tm TextureCreator<WindowContext>) -> TextureManager<'tm> {
         TextureManager {
             texture_creator: texture_creator,
@@ -26,7 +26,7 @@ impl<'tm> TextureManager<'tm> {
         self.items.insert(id, Rc::new(tex));
     }
 
-    pub fn get(&self, id: &String) -> Rc<Texture<'tm>> {
+    pub fn get(&self, id: &String) -> Rc<Texture> {
         let entry = self.items.get(id).unwrap();
         entry.clone()
     }
