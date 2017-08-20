@@ -1,5 +1,6 @@
 extern crate sdl2;
 extern crate rand;
+extern crate imgui;
 
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;
@@ -46,6 +47,7 @@ pub mod collider;
 pub mod colliderlist;
 pub mod subtexture;
 pub mod imagecomponent;
+pub mod renderer;
 
 #[no_mangle]
 #[allow(non_snake_case)]

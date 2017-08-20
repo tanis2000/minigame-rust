@@ -48,8 +48,8 @@ pub enum SpriteSortMode
     SpriteSortModeFrontToBack
 }
 
-pub struct SpriteBatch<'sb> {
-    render_state: RenderState<'sb>,
+pub struct SpriteBatch {
+    render_state: RenderState,
     graphics_device: GraphicsDevice,
     batcher: SpriteBatcher,
     begin_called: bool,
@@ -69,8 +69,8 @@ pub struct SpriteBatch<'sb> {
     vertexToCullBR: Vector2<f32>,
 }
 
-impl <'sb> SpriteBatch<'sb> {
-    pub fn new() -> SpriteBatch<'sb> {
+impl SpriteBatch {
+    pub fn new() -> SpriteBatch {
         let mut gd = GraphicsDevice::new();
         gd.initialize();
         SpriteBatch {
@@ -126,7 +126,7 @@ impl <'sb> SpriteBatch<'sb> {
         self.cull_rect.h = vp.h;
     }
 
-    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<&'sb Shader>, transformMatrix: Option<Matrix4<f32>>) {
+    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transformMatrix: Option<Matrix4<f32>>) {
         self.render_state.shader = shader;
         if transformMatrix.is_some() {
             self.matrix = transformMatrix.unwrap();

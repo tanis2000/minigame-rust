@@ -4,6 +4,7 @@ extern crate dynamic_reload;
 extern crate sdl2;
 extern crate cgmath;
 extern crate rand;
+extern crate imgui;
 
 //#[cfg(not(feature = "hotload"))]
 //extern crate minigame;
@@ -28,6 +29,8 @@ use sdl2::render::TextureCreator;
 use sdl2::render::Texture as SdlTexture;
 use sdl2::video::WindowContext;
 use rand::Rng;
+use imgui::*;
+
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
 
@@ -350,6 +353,9 @@ impl Engine {
 
         let mut sb = SpriteBatch::new();
 
+        let mut imgui = ImGui::init();
+        //let ui = imgui.frame((800, 600), (800, 600), 0.0);
+        //imgui.set_texture_id(0);
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -389,13 +395,25 @@ impl Engine {
             }
             */
 
+            /*
+            ui.window(im_str!("Hello world"))
+                .size((300.0, 100.0), ImGuiSetCond_FirstUseEver)
+                .build(|| {
+                    ui.text(im_str!("Hello world!"));
+                    ui.text(im_str!("This...is...imgui-rs!"));
+                    ui.separator();
+                    let mouse_pos = ui.imgui().mouse_pos();
+                    ui.text(im_str!("Mouse Position: ({:.1},{:.1})", mouse_pos.0, mouse_pos.1));
+                });
+            */
+            
             {
                 let position = Vector2::new(0.0, 0.0);
                 let matrix: Matrix4<f32> = Matrix4::one();
                 //sdl2::log::log("wabbit width and height follows");
                 //sdl2::log::log(&wabbit.get_height().to_string());
                 //sdl2::log::log(&wabbit.get_width().to_string());
-                sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(&shader), Some(matrix));
+                sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
                     bunny.update();
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);

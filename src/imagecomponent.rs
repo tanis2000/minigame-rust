@@ -42,7 +42,7 @@ impl ImageComponent {
         ic
     }
 
-    pub fn render<'ic>(&self, entity: Option<&Entity>, spritebatch: &mut SpriteBatch<'ic>) {
+    pub fn render(&self, entity: Option<&Entity>, spritebatch: &mut SpriteBatch) {
         let render_pos = self.render_position(entity);
         let scaled_vec = self.scale * self.zoom;
         let t = self.texture.as_ref().unwrap().clone();

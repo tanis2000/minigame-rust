@@ -10,16 +10,16 @@ use self::cgmath::One;
 use std::ptr;
 use std::rc::Rc;
 
-pub struct RenderState<'a> {
+pub struct RenderState {
     pub blendMode: BlendMode,
     pub transform: Matrix4<f32>,
     pub texture: Option<Rc<Texture>>,
-    pub shader: Option<&'a Shader>,
+    pub shader: Option<Shader>,
     pub viewport: Rectangle,
 }
 
-impl<'a> RenderState<'a> {
-    pub fn new(texture: Option<Rc<Texture>>, shader: Option<&'a Shader>) -> RenderState<'a> {
+impl RenderState {
+    pub fn new(texture: Option<Rc<Texture>>, shader: Option<Shader>) -> RenderState {
         RenderState {
             blendMode: BlendAlpha,
             transform: Matrix4::one(),

@@ -53,12 +53,11 @@ static FS_SRC: &'static str = "\n\
         \n\
     }";
 
+#[derive(Debug, Copy, Clone)]
 pub struct Shader {
     vertShader: GLuint,
     fragShader: GLuint,
     pub program: GLuint,
-    vertexSource: String,
-    fragmentSource: String,
 }
 
 fn defaultVertexSource() -> String {
@@ -75,8 +74,6 @@ impl Shader {
             fragShader: 0,
             vertShader: 0,
             program: 0,
-            vertexSource: defaultVertexSource(),
-            fragmentSource: defaultFragmentSource(),
         }
     }
 

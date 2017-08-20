@@ -79,7 +79,7 @@ impl GraphicsDevice {
         GraphicsDevice::resetGLStates();
         GraphicsDevice::applyCurrentView(&state.viewport);
         GraphicsDevice::applyBlendMode(&state.blendMode);
-        self.applyShader(state.shader.unwrap());
+        self.applyShader(&state.shader.unwrap());
         GraphicsDevice::applyTexture(&state.texture);
 
         let projectionMatrix: Matrix4<f32> = GraphicsDevice::createOrthographicMatrixOffCenter(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);

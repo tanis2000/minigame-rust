@@ -22,6 +22,7 @@ pub trait ViewportAdapterTrait {
     fn get_scale_matrix(&self) -> Matrix4<f32>;
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct ViewportAdapter {
     viewport: Rectangle,
     original_viewport: Rectangle,
@@ -101,6 +102,7 @@ impl ViewportAdapterTrait for ViewportAdapter {
 
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct ScalingViewportAdapter {
     base: ViewportAdapter,
     virtual_width: i32,

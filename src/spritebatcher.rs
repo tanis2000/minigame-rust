@@ -101,7 +101,7 @@ impl SpriteBatcher {
         self.vertex_array.resize(neededCapacity as usize, VertexPositionColorTexture::new());
     }
 
-    pub fn draw_batch<'a>(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
+    pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState, graphics_device: &mut GraphicsDevice) {
         Log::debug("draw_batch: batch_item_count follows");
         Log::debug(&self.batch_item_count.to_string());
 
@@ -207,7 +207,7 @@ impl SpriteBatcher {
         self.batch_item_count = 0;
     }
 
-    pub fn flush_vertex_array<'a>(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture>>, render_state: &mut RenderState<'a>, graphics_device: &mut GraphicsDevice) {
+    pub fn flush_vertex_array(&mut self, start: i32, end: i32 /*, Effect effect*/, texture: Option<Rc<Texture>>, render_state: &mut RenderState, graphics_device: &mut GraphicsDevice) {
         if start == end {
             return;
         }
