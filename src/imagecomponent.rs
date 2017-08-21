@@ -17,7 +17,7 @@ pub struct ImageComponent {
     zoom: f32,
     rotation: f32,
     color: Color,
-    texture: Option<Rc<Texture>>,
+    pub texture: Option<Rc<Texture>>,
     clip_rect: Rectangle,
 }
 

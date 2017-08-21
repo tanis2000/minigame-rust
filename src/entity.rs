@@ -5,6 +5,7 @@ use componentlist::ComponentList;
 use collider::Collider;
 use colliderlist::ColliderList;
 use std::vec::Vec;
+use std::rc::Rc;
 use self::cgmath::Vector2;
 
 pub type IdNumber = u32;
@@ -62,7 +63,7 @@ impl Entity {
         e
     }
 
-    pub fn add<C: Component>(&mut self, component: C) {
+    pub fn add(&mut self, component: Rc<Component>) {
         self.components.add(component);
     }
 
@@ -70,6 +71,9 @@ impl Entity {
         self.components.remove(component);
     }
 
+    pub fn render(&self) {
+        self.components.render_components();
+    }
 }
 
 impl PartialEq for Entity {

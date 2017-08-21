@@ -4,9 +4,11 @@ use entity::Entity;
 use entitylist::EntityList;
 use collider::Collider;
 use rectangle::Rectangle;
+use renderer::Renderer;
 use std::vec::Vec;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
+use std::boxed::Box;
 use self::cgmath::Vector2;
 
 pub trait SceneTrait {
@@ -43,6 +45,7 @@ pub struct Scene {
     actual_depth_lookup: HashMap<i32, f32>,
     tmp_rect: Rectangle,
     colliding_bodies: Vec<Rc<Collider>>,
+    renderers: Vec<Rc<Renderer>>,
 }
 
 impl Scene {
@@ -54,6 +57,7 @@ impl Scene {
             actual_depth_lookup: HashMap::new(),
             tmp_rect: Rectangle::new(0.0, 0.0, 0, 0),
             colliding_bodies: Vec::new(),
+            renderers: Vec::new(),
         };
         s
     }
@@ -64,5 +68,13 @@ impl Scene {
 
     pub fn add(&mut self, entity: Rc<Entity>) {
         self.entities.add(entity)
+    }
+
+    pub fn render_entities(&self) {
+        self.entities.render_entities();
+    }
+
+    pub fn add_renderer(&mut self, renderer: Rc<Renderer>) {
+        self.renderers.push(renderer);
     }
 }

@@ -21,6 +21,7 @@ use std::ptr;
 use std::mem;
 use std::path::Path;
 use std::cell::RefCell;
+use std::ops::Deref;
 use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
@@ -46,6 +47,7 @@ use viewportadapter::ViewportAdapterTrait;
 use scene::Scene;
 use imagecomponent::ImageComponent;
 use log::Log;
+use everythingrenderer::EverythingRenderer;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -337,15 +339,20 @@ impl Engine {
 
         let mut scene = Scene::new(32);
         let mut e = scene.create_entity();
+        //assert!(Rc::make_mut(&mut e).is_some());
         //let tm = self.texture_manager.as_ref().unwrap();
-        //let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
-        //e.add(ic);
+        let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
+        ic.texture = Some(tm.get(&String::from("wabbit")));
+        //e.add(Rc::new(ic));
         scene.add(e);
+
+        let mut er = EverythingRenderer::new();
+        scene.add_renderer(Rc::new(er));
 
         let mut rng = rand::thread_rng();
 
 
-        let mut bunnies = [Bunny::new(); 100];
+        let mut bunnies = [Bunny::new(); 1];
         for bunny in bunnies.iter_mut() {
             bunny.speed.x = rng.gen::<f32>() * 5.0;
             bunny.speed.x = (rng.gen::<f32>() * 5.0) - 2.5;
@@ -431,7 +438,8 @@ impl Engine {
             // Wait for 0.5 sec
             //thread::sleep(Duration::from_millis(500));
             // Replace with the following once we're done with testing
-            thread::sleep(Duration::from_millis(0))
+            //thread::sleep(Duration::from_millis(0))
+            thread::yield_now();
         }
 
         // Cleanup

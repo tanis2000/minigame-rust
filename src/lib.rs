@@ -48,6 +48,7 @@ pub mod colliderlist;
 pub mod subtexture;
 pub mod imagecomponent;
 pub mod renderer;
+pub mod everythingrenderer;
 
 #[no_mangle]
 #[allow(non_snake_case)]

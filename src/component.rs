@@ -3,6 +3,7 @@ use std::any::Any;
 pub trait Component: Any {
     fn added(&self) {}
     fn removed(&self) {}
+    fn render(&self) {}
 }
 
 impl<T: Any> Component for T {

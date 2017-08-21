@@ -125,4 +125,10 @@ impl ComponentList {
     // TODO
     }
 
+    pub fn render_components(&self) {
+        for c in &self.components {
+            c.render();
+        }
+    }
+
 }

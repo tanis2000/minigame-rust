@@ -4,13 +4,17 @@ use spritebatch::SpriteSortMode;
 use shader::Shader;
 use viewportadapter::ViewportAdapter;
 use viewportadapter::ViewportAdapterTrait;
+use scene::Scene;
 use sdl2::video::Window;
 use sdl2::render::Canvas;
 use sdl2::rect::Rect;
 
 pub trait Renderer {
-    fn before_render();
-    fn render <'sb>(renderer: &'sb mut Canvas<Window>, camera: &'sb mut Camera<ViewportAdapter>, spritebatch: &'sb mut SpriteBatch, shader: Shader) {
+    fn before_render(&self) {
+
+    }
+
+    fn render_begin <'sb>(&self, renderer: &'sb mut Canvas<Window>, camera: &'sb mut Camera<ViewportAdapter>, spritebatch: &'sb mut SpriteBatch, shader: Shader) {
         // Sets the current camera viewport if the camera has one
         match camera.get_viewport_adapter() {
             &Some(ViewportAdapter) => {
@@ -28,5 +32,10 @@ pub trait Renderer {
         let m = camera.get_transform_matrix();
         spritebatch.begin(renderer, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(m));
     }
-    fn after_render();
+    
+    fn render_end <'sb>(&self, scene: &Scene, renderer: &'sb mut Canvas<Window>, spritebatch: &'sb mut SpriteBatch);
+    
+    fn after_render(&self) {
+
+    }
 }

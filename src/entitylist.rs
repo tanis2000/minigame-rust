@@ -39,4 +39,10 @@ impl EntityList {
             self.to_add.push(entity);
         }
     }
+
+    pub fn render_entities(&self) {
+        for e in &self.entities {
+            e.render();
+        }
+    }
 }
