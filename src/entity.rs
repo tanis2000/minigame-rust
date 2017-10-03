@@ -74,6 +74,39 @@ impl Entity {
     pub fn render(&self) {
         self.components.render_components();
     }
+
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
+
+    pub fn entity_added(&self) {
+        /*
+        this->scene = scene;
+        for (auto const &component : components.GetComponents()) {
+            component->EntityAdded();
+        }
+        for (auto const &collider : *colliders.GetColliders()) {
+            collider->EntityAdded();
+        }
+        scene->SetActualDepth(this);
+        */
+    }
+
+    pub fn entity_removed(&self) {
+        /*
+        for (auto const &component : components.GetComponents()) {
+            component->EntityRemoved();
+        }
+        for (auto const &collider : *colliders.GetColliders()) {
+            collider->EntityRemoved();
+        }
+        scene = NULL;
+        */
+    }
+
+    pub fn awake(&self) {
+        
+    }
 }
 
 impl PartialEq for Entity {

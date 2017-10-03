@@ -338,13 +338,24 @@ impl Engine {
         playerCamera.set_viewport_adapter(Some(playerVA));
 
         let mut scene = Scene::new(32);
-        let mut e = scene.create_entity();
-        //assert!(Rc::make_mut(&mut e).is_some());
-        //let tm = self.texture_manager.as_ref().unwrap();
-        let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
-        ic.texture = Some(tm.get(&String::from("wabbit")));
-        //e.add(Rc::new(ic));
-        scene.add(e);
+        let mut entity_id = scene.create_entity();
+        sdl2::log::log("Entity id follows");
+        sdl2::log::log(&entity_id.to_string());
+        {
+            let mut e = scene.get_entity_mut(entity_id);
+            //assert!(Rc::make_mut(&mut e).is_some());
+            //let tm = self.texture_manager.as_ref().unwrap();
+            let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
+            ic.texture = Some(tm.get(&String::from("wabbit")));
+            match e {
+                Some(entity) => {
+                    entity.add(Rc::new(ic));
+                },
+                None => {
+                    sdl2::log::log("Something went wrong with the entity")
+                },
+            }
+        }
 
         let mut er = EverythingRenderer::new();
         scene.add_renderer(Rc::new(er));

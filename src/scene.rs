@@ -62,11 +62,11 @@ impl Scene {
         s
     }
 
-    pub fn create_entity(&mut self) -> Rc<Entity> {
+    pub fn create_entity(&mut self) -> u32 {
         self.entities.create_entity()
     }
 
-    pub fn add(&mut self, entity: Rc<Entity>) {
+    pub fn add(&mut self, entity: Entity) {
         self.entities.add(entity)
     }
 
@@ -76,5 +76,20 @@ impl Scene {
 
     pub fn add_renderer(&mut self, renderer: Rc<Renderer>) {
         self.renderers.push(renderer);
+    }
+
+    pub fn get_entity_mut(&mut self, entity_id: u32) -> Option<&mut Entity> {
+        self.entities.get_entity_mut(entity_id)
+    }
+
+    pub fn before_update(&mut self) {
+        //timeActive += Game::deltaTime;
+
+        self.entities.update_lists();
+        //tagLists.UpdateLists();
+    }
+
+    pub fn update(&self) {
+        //self.entities.update();
     }
 }
