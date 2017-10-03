@@ -39,7 +39,6 @@ pub struct Scene {
     focused: bool,
     entities: EntityList,
     //tag_lists: TagLists,
-    //renderers: Vec<&Renderer>,
     //helper_entity: Entity,
     //spatial_hash: SpatialHash,
     actual_depth_lookup: HashMap<i32, f32>,
@@ -82,6 +81,20 @@ impl Scene {
         self.entities.get_entity_mut(entity_id)
     }
 
+    pub fn begin(&mut self) {
+        self.focused = true;
+        for entity in self.entities.get_entities() {
+            entity.scene_begin();
+        }
+    }
+
+    pub fn end(&mut self) {
+        self.focused = false;
+        for entity in self.entities.get_entities() {
+            entity.scene_end();
+        }
+    }
+
     pub fn before_update(&mut self) {
         //timeActive += Game::deltaTime;
 
@@ -90,6 +103,28 @@ impl Scene {
     }
 
     pub fn update(&self) {
-        //self.entities.update();
+        self.entities.update();
+    }
+
+    pub fn after_update(&self) {
+
+    }
+
+    pub fn before_render(&self) {
+        for renderer in &self.renderers {
+            renderer.before_render(self);
+        }
+    }
+
+    pub fn render(&self) {
+        for renderer in &self.renderers {
+            renderer.render(self);
+        }
+    }
+
+    pub fn after_render(&self) {
+        for renderer in &self.renderers {
+            renderer.after_render(self);
+        }
     }
 }

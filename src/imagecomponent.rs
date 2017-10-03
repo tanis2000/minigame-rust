@@ -9,6 +9,7 @@ use entity::Entity;
 use self::cgmath::Vector2;
 use std::rc::Rc;
 use std::option::Option;
+use log::Log;
 
 pub struct ImageComponent {
     position: Vector2<f32>,
@@ -43,6 +44,7 @@ impl ImageComponent {
     }
 
     pub fn render(&self, entity: Option<&Entity>, spritebatch: &mut SpriteBatch) {
+        Log::info("Render called");
         let render_pos = self.render_position(entity);
         let scaled_vec = self.scale * self.zoom;
         let t = self.texture.as_ref().unwrap().clone();

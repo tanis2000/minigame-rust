@@ -1,3 +1,5 @@
+extern crate cgmath;
+
 use camera::Camera;
 use spritebatch::SpriteBatch;
 use spritebatch::SpriteSortMode;
@@ -8,9 +10,10 @@ use scene::Scene;
 use sdl2::video::Window;
 use sdl2::render::Canvas;
 use sdl2::rect::Rect;
+use self::cgmath::Matrix4;
 
 pub trait Renderer {
-    fn before_render(&self) {
+    fn before_render(&self, scene: &Scene) {
 
     }
 
@@ -35,7 +38,15 @@ pub trait Renderer {
     
     fn render_end <'sb>(&self, scene: &Scene, renderer: &'sb mut Canvas<Window>, spritebatch: &'sb mut SpriteBatch);
     
-    fn after_render(&self) {
+    fn after_render(&self, scene: &Scene) {
 
+    }
+
+    fn render(&self, scene: &Scene) {
+        //self.camera.force_matrix_update();
+        //let m = self.camera.get_transform_matrix();
+        //spritebatch.begin(renderer, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(m));
+        //Game::GetSpriteBatch()->Begin(
+        //  SpriteBatch::SpriteSortModeDeferred, shader, &m, camera->GetViewportAdapter()->GetViewport());
     }
 }

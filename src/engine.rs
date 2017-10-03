@@ -363,11 +363,13 @@ impl Engine {
         let mut rng = rand::thread_rng();
 
 
+        /*
         let mut bunnies = [Bunny::new(); 1];
         for bunny in bunnies.iter_mut() {
             bunny.speed.x = rng.gen::<f32>() * 5.0;
             bunny.speed.x = (rng.gen::<f32>() * 5.0) - 2.5;
         }
+        */
 
         let mut sb = SpriteBatch::new();
 
@@ -431,14 +433,17 @@ impl Engine {
                 //sdl2::log::log("wabbit width and height follows");
                 //sdl2::log::log(&wabbit.get_height().to_string());
                 //sdl2::log::log(&wabbit.get_width().to_string());
+                /*
                 sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
                     bunny.update();
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                 }
                 sb.end(&mut canvas);
+                */
             }
 
+            scene.render_entities();
 
             canvas.present();
 

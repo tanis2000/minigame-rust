@@ -131,4 +131,16 @@ impl ComponentList {
         }
     }
 
+    pub fn update(&self) {
+        /*
+        self.set_lock_mode(LockMode::Locked);
+        for component in self.components {
+            if component.get_active() {
+                component.update();
+            }
+        }
+        self.set_lock_mode(LockMode::Open);
+        */
+    }
+
 }

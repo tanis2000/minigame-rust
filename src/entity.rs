@@ -107,6 +107,23 @@ impl Entity {
     pub fn awake(&self) {
         
     }
+
+    pub fn scene_begin(&self) {
+
+    }
+
+    pub fn scene_end(&self) {
+
+    }
+
+    pub fn get_active(&self) -> bool {
+        self.active
+    }
+
+    pub fn update(&self) {
+        self.components.update();
+        //self.colliders.update();
+    }
 }
 
 impl PartialEq for Entity {

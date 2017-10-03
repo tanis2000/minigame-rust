@@ -93,4 +93,16 @@ impl EntityList {
         }
         return None;
     }
+
+    pub fn get_entities(&self) -> &Vec<Entity> {
+        &self.entities
+    }
+
+    pub fn update(&self) {
+        for entity in &self.entities {
+            if entity.get_active() {
+                entity.update();
+            }
+        }
+    }
 }
