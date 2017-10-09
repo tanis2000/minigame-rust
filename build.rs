@@ -40,6 +40,7 @@ fn main() {
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/armeabi",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/armeabi-v7a",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/x86",);
+        println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/arm64-v8a",);
 
         // We should also add the following instead of defining our toolchain in .cargo/config
         // -C link-arg=--sysroot=$NDK_ROOT/platforms/android-<api level you are targeting>/arch-arm
