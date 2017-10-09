@@ -1,6 +1,7 @@
 extern crate sdl2;
 extern crate rand;
 extern crate imgui;
+extern crate stb_image;
 
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;

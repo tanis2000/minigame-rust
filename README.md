@@ -20,7 +20,7 @@ Run `cargo run --no-default-features` to run the application with all of the cod
 rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
 
 # Android.
-rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 ```
 
 # Building without hot reloading
@@ -51,6 +51,7 @@ To get iOS running:
 /Users/tanis/Documents/android-sdk/ndk-bundle/build/tools/make_standalone_toolchain.py --arch arm --install-dir /Users/tanis/Documents/android-ndk-arm
 /Users/tanis/Documents/android-sdk/ndk-bundle/build/tools/make_standalone_toolchain.py --arch arm64 --install-dir /Users/tanis/Documents/android-ndk-arm64
 /Users/tanis/Documents/android-sdk/ndk-bundle/build/tools/make_standalone_toolchain.py --arch x86 --install-dir /Users/tanis/Documents/android-ndk-x86
+/Users/tanis/Documents/android-sdk/ndk-bundle/build/tools/make_standalone_toolchain.py --arch x86_64 --install-dir /Users/tanis/Documents/android-ndk-x86_64
 ```
 
 # Configuration for Android linking
@@ -69,6 +70,10 @@ linker = "/Users/tanis/Documents/android-ndk-arm64/bin/aarch64-linux-android-gcc
 
 [target.i686-linux-android]
 linker = "/Users/tanis/Documents/android-ndk-x86/bin/i686-linux-android-gcc"
+
+[target.x86_64-linux-android]
+linker = "/Users/tanis/Documents/android-ndk-x86_64/bin/x86_64-linux-android-gcc"
+
 ```
 
 # Building the SDL2 library for Android
@@ -80,9 +85,22 @@ cd android/Minigame/sdl
 
 # Building the Rust library for Android
 
+The following used to work until I introduced dependent cargo libraries that wrap C/C++ code. It looks like `.cargo/config` parameters aren't being passed down the line, so we need a workaround.
+
 ```
 cargo build --no-default-features --target armv7-linux-androideabi --lib
 cargo build --no-default-features --target i686-linux-android --lib
+cargo build --no-default-features --target x86_64-linux-android --lib
+```
+
+The workaround is to use the following and pass the reference to C, CXX and AR by hand (ugly!):
+
+```
+CC=/Users/tanis/Documents/android-ndk-arm/bin/arm-linux-androideabi-gcc CXX=/Users/tanis/Documents/android-ndk-arm/bin/arm-linux-androideabi-g++ AR=/Users/tanis/Documents/android-ndk-arm/bin/arm-linux-androideabi-ar cargo build --no-default-features --target armv7-linux-androideabi --lib
+
+CC=/Users/tanis/Documents/android-ndk-x86/bin/i686-linux-android-gcc CXX=/Users/tanis/Documents/android-ndk-x86/bin/i686-linux-android-g++ AR=/Users/tanis/Documents/android-ndk-x86/bin/i686-linux-android-ar cargo build --no-default-features --target i686-linux-android --lib
+
+CC=/Users/tanis/Documents/android-ndk-x86_64/bin/x86_64-linux-android-gcc CXX=/Users/tanis/Documents/android-ndk-x86_64/bin/x86_64-linux-android-g++ AR=/Users/tanis/Documents/android-ndk-x86_64/bin/x86_64-linux-android-ar cargo build --no-default-features --target x86_64-linux-android --lib
 ```
 
 # Copying the Rust library to the Android project
@@ -91,6 +109,7 @@ cargo build --no-default-features --target i686-linux-android --lib
 cp target/armv7-linux-androideabi/debug/libminigame.so android/Minigame/app/src/main/jniLibs/armeabi/
 cp target/armv7-linux-androideabi/debug/libminigame.so android/Minigame/app/src/main/jniLibs/armeabi-v7a/
 cp target/i686-linux-android/debug/libminigame.so android/Minigame/app/src/main/jniLibs/x86/
+cp target/x86_64-linux-android/debug/libminigame.so android/Minigame/app/src/main/jniLibs/x86_64/
 ```
 
 # Buiding the actual Android application

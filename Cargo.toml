@@ -6,13 +6,14 @@ build = "build.rs"
 
 [dependencies]
 dynamic_reload = {version = "0.2.1", optional=true}
-sdl2 = { default-features = false, features = ["image", "unsafe_textures"], git = "https://github.com/Rust-SDL2/rust-sdl2.git", branch = "unsafe-textures-feature" }
+sdl2 = { default-features = false, features = ["unsafe_textures"], git = "https://github.com/Rust-SDL2/rust-sdl2.git", branch = "unsafe-textures-feature" }
 cgmath = "0.14.1"
 rusttype = "0.2.1"
 png = "0.7.0"
 rand = "*"
 log = "0.3.8"
 imgui = "0.0.15"
+stb_image = "0.2.2"
 
 [build-dependencies]
 gl_generator = "0.5.3"

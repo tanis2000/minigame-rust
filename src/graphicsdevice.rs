@@ -119,8 +119,9 @@ impl GraphicsDevice {
                     Log::warning("GraphicsDevice::draw: Missing texture");
                 }, 
                 Some(v) => {
-                    let mut texture = state.texture.as_ref().unwrap().texture.borrow_mut();
-                    texture.gl_unbind_texture();
+                    gl::BindTexture(gl::TEXTURE_2D, 0);
+                    //let mut texture = state.texture.as_ref().unwrap().texture.borrow_mut();
+                    //texture.gl_unbind_texture();
                 }
             }
         }
@@ -166,8 +167,10 @@ impl GraphicsDevice {
                     Log::warning("GraphicsDevice::applyTexture: Missing texture");
                 },
                 Some(v) => {
-                    let mut t = texture.as_ref().unwrap().texture.borrow_mut();
-                    let (texW, texH) = t.gl_bind_texture();
+                    gl::BindTexture(gl::TEXTURE_2D, texture.as_ref().unwrap().tex_id);
+                    //gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA, texW, texH, 0, gl::RGBA, gl::UNSIGNED_BYTE, texture.as_ref().unwrap.image);
+                    //let mut t = texture.as_ref().unwrap().texture.borrow_mut();
+                    //let (texW, texH) = t.gl_bind_texture();
                 }
             }
         }

@@ -11,7 +11,6 @@ extern crate imgui;
 
 #[cfg(feature = "hotload")]
 use dynamic_reload::{DynamicReload, Lib, Symbol, Search, PlatformName, UpdateState};
-#[cfg(feature = "hotload")]
 use std::rc::Rc;
 use std::time::Duration;
 use std::thread;
@@ -22,7 +21,7 @@ use std::mem;
 use std::path::Path;
 use std::cell::RefCell;
 use std::ops::Deref;
-use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
+//use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -363,13 +362,11 @@ impl Engine {
         let mut rng = rand::thread_rng();
 
 
-        /*
         let mut bunnies = [Bunny::new(); 1];
         for bunny in bunnies.iter_mut() {
             bunny.speed.x = rng.gen::<f32>() * 5.0;
             bunny.speed.x = (rng.gen::<f32>() * 5.0) - 2.5;
         }
-        */
 
         let mut sb = SpriteBatch::new();
 
@@ -433,14 +430,13 @@ impl Engine {
                 //sdl2::log::log("wabbit width and height follows");
                 //sdl2::log::log(&wabbit.get_height().to_string());
                 //sdl2::log::log(&wabbit.get_width().to_string());
-                /*
+
                 sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
                     bunny.update();
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                 }
                 sb.end(&mut canvas);
-                */
             }
 
             scene.render_entities();
