@@ -251,6 +251,17 @@ impl Engine {
         }
     }
 
+    #[cfg(any(target_os="android", target_os="ios"))]
+    fn assets_path(&self) -> String {
+        String::from("")
+    }
+
+    #[cfg(not(any(target_os="android", target_os="ios")))]
+    fn assets_path(&self) -> String {
+        String::from("assets/")
+    }
+
+
     //#[cfg(feature = "hotload")]
     pub fn run_loop(&mut self) {
         let (mut plugs, mut reload_handler) = plugin_load();
@@ -329,7 +340,8 @@ impl Engine {
 
         let mut tc = canvas.texture_creator();
         let mut tm = TextureManager::new(&tc);
-        tm.load(String::from("wabbit"), Path::new("assets/wabbit_alpha.png"));
+        let mut wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
+        tm.load(String::from("wabbit"), Path::new(&String::from(wabbit_path)));
         let wabbit = tm.get(&String::from("wabbit"));
 
         let playerVA = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
