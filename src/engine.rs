@@ -233,13 +233,13 @@ fn plugin_update<'a>(mut plugs: &mut Plugins, mut reload_handler: &mut DynamicRe
             let fun: Symbol<extern "C" fn() -> i32> =
                 unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
 
-            //Log::info("Value {}", fun());
+            //println!("Value {}", fun());
         }
 }
 
 #[cfg(not(feature = "hotload"))]
 fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
-    //Log::info("Value {}", shared_fun());
+    //println!("Value {}", shared_fun());
 }
 
 pub struct Engine {
