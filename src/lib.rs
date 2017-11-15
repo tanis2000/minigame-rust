@@ -50,6 +50,8 @@ pub mod subtexture;
 pub mod imagecomponent;
 pub mod renderer;
 pub mod everythingrenderer;
+pub mod debugnamecomponentmanager;
+pub mod timer;
 
 #[no_mangle]
 #[allow(non_snake_case)]

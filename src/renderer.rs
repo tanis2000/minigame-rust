@@ -20,7 +20,7 @@ pub trait Renderer {
     fn render_begin <'sb>(&self, renderer: &'sb mut Canvas<Window>, camera: &'sb mut Camera<ViewportAdapter>, spritebatch: &'sb mut SpriteBatch, shader: Shader) {
         // Sets the current camera viewport if the camera has one
         match camera.get_viewport_adapter() {
-            &Some(ViewportAdapter) => {
+            &Some(va) => {
                 let r = camera.get_viewport_adapter();
                 let rr = r.unwrap().get_viewport();
                 let vp = Rect::new(rr.x as i32, rr.y as i32, rr.w as u32, rr.h as u32);

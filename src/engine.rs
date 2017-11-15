@@ -28,6 +28,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::render::TextureCreator;
 use sdl2::render::Texture as SdlTexture;
 use sdl2::video::WindowContext;
+use sdl2::sys::timer;
 use rand::Rng;
 use imgui::*;
 
@@ -47,6 +48,10 @@ use scene::Scene;
 use imagecomponent::ImageComponent;
 use log::Log;
 use everythingrenderer::EverythingRenderer;
+use debugnamecomponentmanager::DebugNameComponentManager;
+use debugnamecomponentmanager::InstanceData;
+use debugnamecomponentmanager::Instance;
+use timer::Timer;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -348,10 +353,16 @@ impl Engine {
         let mut playerCamera = Camera::new();
         playerCamera.set_viewport_adapter(Some(playerVA));
 
+        let mut debug_name_manager = DebugNameComponentManager::new();
+
         let mut scene = Scene::new(32);
         let mut entity_id = scene.create_entity();
         sdl2::log::log("Entity id follows");
         sdl2::log::log(&entity_id.to_string());
+        let mut debug_name_instance = debug_name_manager.create(entity_id);
+        Log::debug("Debug name instance");
+        Log::debug(&debug_name_instance.i.to_string());
+        debug_name_manager.set_name(debug_name_instance, String::from("entity1"));
         {
             let mut e = scene.get_entity_mut(entity_id);
             //assert!(Rc::make_mut(&mut e).is_some());
@@ -385,6 +396,26 @@ impl Engine {
         let mut imgui = ImGui::init();
         //let ui = imgui.frame((800, 600), (800, 600), 0.0);
         //imgui.set_texture_id(0);
+
+        let mut framerate_timer = Timer::new();
+        framerate_timer.start();
+        /// How many frames per second we're running.
+        let mut framerate: u32 = 60;
+
+        /// Time (in milliseconds) each frame must have.
+        ///
+        /// If the actual delay passed is less than this,
+        /// we'll wait.
+        /// If the delay is greater, we'll skip right away.
+        ///
+        let mut frame_delay: u32 = 0;
+
+        /// How much time have passed since
+        /// last frame (in milliseconds).
+        ///
+        let mut current_frame_delta: u32 = 0;
+
+
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -451,6 +482,7 @@ impl Engine {
                 sb.end(&mut canvas);
             }
 
+            debug_name_manager.update(0.0);
             scene.render_entities();
 
             canvas.present();
@@ -463,6 +495,28 @@ impl Engine {
             //thread::sleep(Duration::from_millis(500));
             // Replace with the following once we're done with testing
             //thread::sleep(Duration::from_millis(0))
+
+
+            // How many milliseconds the last frame took
+            current_frame_delta = framerate_timer.delta();
+
+            frame_delay = 1000 / framerate;
+            if frame_delay < current_frame_delta {
+                frame_delay = 0;
+            } else {
+                frame_delay = frame_delay - current_frame_delta;
+            }
+
+
+            if current_frame_delta < frame_delay {
+                unsafe {
+                    sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
+                }
+            }
+
+            framerate_timer.restart();
+
+
             thread::yield_now();
         }
 
