@@ -31,6 +31,7 @@ use sdl2::video::WindowContext;
 use sdl2::sys::timer;
 use rand::Rng;
 use imgui::*;
+use time;
 
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
@@ -293,6 +294,8 @@ impl Engine {
         gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const _);
         sdl2::log::log("Setting current GL context");
         canvas.window().gl_set_context_to_current();
+        Log::info("Enabling VSYNC");
+        video_subsystem.gl_set_swap_interval(1);
 
         // Create GLSL shaders
         /*
@@ -385,10 +388,10 @@ impl Engine {
         let mut rng = rand::thread_rng();
 
 
-        let mut bunnies = [Bunny::new(); 1];
+        let mut bunnies = [Bunny::new(); 10];
         for bunny in bunnies.iter_mut() {
-            bunny.speed.x = rng.gen::<f32>() * 5.0;
-            bunny.speed.x = (rng.gen::<f32>() * 5.0) - 2.5;
+            bunny.speed.x = rng.gen::<f64>() * 500.0;
+            bunny.speed.x = (rng.gen::<f64>() * 500.0) - 250.0;
         }
 
         let mut sb = SpriteBatch::new();
@@ -400,22 +403,23 @@ impl Engine {
         let mut framerate_timer = Timer::new();
         framerate_timer.start();
         /// How many frames per second we're running.
-        let mut framerate: u32 = 60;
+        let mut framerate: u64 = 60;
 
-        /// Time (in milliseconds) each frame must have.
+        /// Time (in nanoseconds) each frame must have.
         ///
         /// If the actual delay passed is less than this,
         /// we'll wait.
         /// If the delay is greater, we'll skip right away.
         ///
-        let mut frame_delay: u32 = 0;
+        let mut frame_delay: u64 = 0;
 
         /// How much time have passed since
-        /// last frame (in milliseconds).
+        /// last frame (in nanoseconds).
         ///
-        let mut current_frame_delta: u32 = 0;
+        let mut current_frame_delta: u64 = 0;
 
-
+        // Last time (in nanoseconds)
+        let mut last_time = time::precise_time_ns();
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -467,6 +471,9 @@ impl Engine {
                 });
             */
             
+            let current_time = time::precise_time_ns();
+            let delta_time = ((current_time - last_time) as f64) / 1_000_000_000.0;
+            last_time = current_time;
             {
                 let position = Vector2::new(0.0, 0.0);
                 let matrix: Matrix4<f32> = Matrix4::one();
@@ -476,7 +483,7 @@ impl Engine {
 
                 sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
-                    bunny.update();
+                    bunny.update(delta_time);
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                 }
                 sb.end(&mut canvas);
@@ -497,27 +504,33 @@ impl Engine {
             //thread::sleep(Duration::from_millis(0))
 
 
-            // How many milliseconds the last frame took
+            // How many nanoseconds the last frame took
             current_frame_delta = framerate_timer.delta();
 
-            frame_delay = 1000 / framerate;
+            frame_delay = 1_000_000_000 / framerate;
             if frame_delay < current_frame_delta {
                 frame_delay = 0;
             } else {
                 frame_delay = frame_delay - current_frame_delta;
             }
 
+            thread::sleep(Duration::from_millis((frame_delay / 1_000_000) as u64));
+
 
             if current_frame_delta < frame_delay {
                 unsafe {
-                    sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
+                    //sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
+                    //thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
                 }
             }
 
+            /*
+            let f = (1_000_000_000.0 / framerate_timer.delta() as f64); // frames per second
+            println!("FPS: {}",  &f.to_string());
+            */
+
+            //thread::yield_now();
             framerate_timer.restart();
-
-
-            thread::yield_now();
         }
 
         // Cleanup
@@ -535,10 +548,11 @@ impl Engine {
 #[derive(Clone, Copy, Debug)]
 struct Bunny {
     position: Vector2<f32>,
-    speed: Vector2<f32>,
+    sub_position: Vector2<f32>,
+    speed: Vector2<f64>,
     min: Vector2<f32>,
     max: Vector2<f32>,
-    gravity: f32,
+    gravity: f64,
 }
 
 impl Bunny {
@@ -546,17 +560,18 @@ impl Bunny {
         let mut rng = rand::thread_rng();
         Bunny {
             position: Vector2::new(0.0, 0.0),
-            speed: Vector2::new(rng.gen::<f32>() * 5.0, (rng.gen::<f32>() * 5.0) - 2.5),
+            sub_position: Vector2::new(0.0, 0.0),
+            speed: Vector2::new(rng.gen::<f64>() * 500.0, (rng.gen::<f64>() * 500.0) - 250.0),
             min: Vector2::new(0.0, 0.0),
             max: Vector2::new(800.0, 600.0),
-            gravity: 0.5,
+            gravity: 0.5 * 100.0,
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, dt: f64) {
         let mut rng = rand::thread_rng();
-        self.position.x += self.speed.x;
-        self.position.y += self.speed.y;
+        self.position.x += (self.speed.x * dt) as f32;
+        self.position.y += (self.speed.y * dt) as f32;
         self.speed.y += self.gravity;
 
         if self.position.x > self.max.x {
@@ -571,8 +586,8 @@ impl Bunny {
             self.speed.y *= -0.8;
             self.position.y = self.max.y;
 
-            if rng.gen::<f32>() > 0.5 {
-                self.speed.y -= 3.0 + rng.gen::<f32>() * 4.0;
+            if rng.gen::<f64>() > 0.5 {
+                self.speed.y -= 3.0 + rng.gen::<f64>() * 4.0;
             }
         } else if self.position.y < self.min.y {
             self.speed.y = 0.0;

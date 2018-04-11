@@ -134,10 +134,10 @@ impl<T: ViewportAdapterTrait> Camera<T> {
         
         if self.are_bounds_dirty {
             // top-left and bottom-right are needed by either rotated or non-rotated bounds
-            let topLeft = self.screen_to_world_point(
+            let top_left = self.screen_to_world_point(
                 Vector2::new(self.viewport_adapter.as_ref().unwrap().get_viewport().x, self.viewport_adapter.as_ref().unwrap().get_viewport().y)
                 );
-            let bottomRight = self.screen_to_world_point(
+            let bottom_right = self.screen_to_world_point(
                 Vector2::new(self.viewport_adapter.as_ref().unwrap().get_viewport().x + self.viewport_adapter.as_ref().unwrap().get_viewport().w as f32, 
                 self.viewport_adapter.as_ref().unwrap().get_viewport().y + self.viewport_adapter.as_ref().unwrap().get_viewport().h as f32) 
                 );
@@ -145,25 +145,25 @@ impl<T: ViewportAdapterTrait> Camera<T> {
             if self.rotation != 0.0
             {
                 // special care for rotated bounds. we need to find our absolute min/max values and create the bounds from that
-                let topRight = self.screen_to_world_point( Vector2::new( self.viewport_adapter.as_ref().unwrap().get_viewport().x + self.viewport_adapter.as_ref().unwrap().get_viewport().w as f32, self.viewport_adapter.as_ref().unwrap().get_viewport().y ) );
-                let bottomLeft = self.screen_to_world_point( Vector2::new( self.viewport_adapter.as_ref().unwrap().get_viewport().x, self.viewport_adapter.as_ref().unwrap().get_viewport().y + self.viewport_adapter.as_ref().unwrap().get_viewport().h as f32 ) );
+                let top_right = self.screen_to_world_point( Vector2::new( self.viewport_adapter.as_ref().unwrap().get_viewport().x + self.viewport_adapter.as_ref().unwrap().get_viewport().w as f32, self.viewport_adapter.as_ref().unwrap().get_viewport().y ) );
+                let bottom_left = self.screen_to_world_point( Vector2::new( self.viewport_adapter.as_ref().unwrap().get_viewport().x, self.viewport_adapter.as_ref().unwrap().get_viewport().y + self.viewport_adapter.as_ref().unwrap().get_viewport().h as f32 ) );
                 
-                let minX = f32::min_of( topLeft.x, bottomRight.x, topRight.x, bottomLeft.x );
-                let maxX = f32::max_of( topLeft.x, bottomRight.x, topRight.x, bottomLeft.x );
-                let minY = f32::min_of( topLeft.y, bottomRight.y, topRight.y, bottomLeft.y );
-                let maxY = f32::max_of( topLeft.y, bottomRight.y, topRight.y, bottomLeft.y );
+                let min_x = f32::min_of( top_left.x, bottom_right.x, top_right.x, bottom_left.x );
+                let max_x = f32::max_of( top_left.x, bottom_right.x, top_right.x, bottom_left.x );
+                let min_y = f32::min_of( top_left.y, bottom_right.y, top_right.y, bottom_left.y );
+                let max_y = f32::max_of( top_left.y, bottom_right.y, top_right.y, bottom_left.y );
                 
-                self.bounds.x = minX;
-                self.bounds.y = minY;
-                self.bounds.w = ( maxX - minX ) as i32;
-                self.bounds.h = ( maxY - minY ) as i32;
+                self.bounds.x = min_x;
+                self.bounds.y = min_y;
+                self.bounds.w = ( max_x - min_x ) as i32;
+                self.bounds.h = ( max_y - min_y ) as i32;
             }
             else
             {
-                self.bounds.x = topLeft.x;
-                self.bounds.y = topLeft.y;
-                self.bounds.w = ( bottomRight.x - topLeft.x ) as i32;
-                self.bounds.h = ( bottomRight.y - topLeft.y ) as i32;
+                self.bounds.x = top_left.x;
+                self.bounds.y = top_left.y;
+                self.bounds.w = ( bottom_right.x - top_left.x ) as i32;
+                self.bounds.h = ( bottom_right.y - top_left.y ) as i32;
             }
             
             self.are_bounds_dirty = false;
@@ -199,16 +199,16 @@ impl<T: ViewportAdapterTrait> Camera<T> {
     }
 
     pub fn update_matrixes(&mut self) {
-        let mut tempMat: Matrix4<f32> = Matrix4::zero();
+        let mut temp_mat: Matrix4<f32> = Matrix4::zero();
         
         self.transform_matrix = Matrix4::from_translation(Vector3::new(-self.position.x, -self.position.y, 0.0)); // position
-        tempMat = Matrix4::from_nonuniform_scale(self.zoom, self.zoom, 1.0); // scale
-        self.transform_matrix = self.transform_matrix.mul(tempMat);
-        tempMat = Matrix4::from_angle_z(Rad(self.rotation)); // rotation
-        self.transform_matrix = self.transform_matrix.mul(tempMat);
-        // TODO: clamp origin to integer values, see -> tempMat.CreateTranslation( (int)origin.x, (int)origin.y, 0.0f );
-        tempMat = Matrix4::from_translation(Vector3::new(self.origin.x, self.origin.y, 0.0)); // translate -origin
-        self.transform_matrix = self.transform_matrix.mul(tempMat);
+        temp_mat = Matrix4::from_nonuniform_scale(self.zoom, self.zoom, 1.0); // scale
+        self.transform_matrix = self.transform_matrix.mul(temp_mat);
+        temp_mat = Matrix4::from_angle_z(Rad(self.rotation)); // rotation
+        self.transform_matrix = self.transform_matrix.mul(temp_mat);
+        // TODO: clamp origin to integer values, see -> temp_mat.CreateTranslation( (int)origin.x, (int)origin.y, 0.0f );
+        temp_mat = Matrix4::from_translation(Vector3::new(self.origin.x, self.origin.y, 0.0)); // translate -origin
+        self.transform_matrix = self.transform_matrix.mul(temp_mat);
         
         // if we have a ViewportAdapter take it into account
         if self.viewport_adapter.is_some() {
@@ -321,7 +321,7 @@ impl<T: ViewportAdapterTrait> Camera<T> {
     pub fn get_projection_matrix(&self) -> Matrix4<f32>
     {
         // not currently blocked with a dirty flag due to the core engine not using this
-        GraphicsDevice::createOrthographicMatrixOffCenter( 0.0, self.viewport_adapter.as_ref().unwrap().get_viewport().w as f32, self.viewport_adapter.as_ref().unwrap().get_viewport().h as f32, 0.0, self.near, self.far )
+        GraphicsDevice::create_orthographic_matrix_off_center( 0.0, self.viewport_adapter.as_ref().unwrap().get_viewport().w as f32, self.viewport_adapter.as_ref().unwrap().get_viewport().h as f32, 0.0, self.near, self.far )
     }
     
     

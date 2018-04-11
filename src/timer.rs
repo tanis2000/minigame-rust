@@ -1,10 +1,11 @@
 use sdl2::sys::timer;
 use sdl2;
+use time;
 
 pub struct Timer {
-    start_mark: u32,
-    stop_mark: u32,
-    paused_mark: u32,
+    start_mark: u64,
+    stop_mark: u64,
+    paused_mark: u64,
     running: bool,
     paused: bool,
 }
@@ -24,9 +25,12 @@ impl Timer {
         if self.running {
             return;
         }
+        self.start_mark = time::precise_time_ns();
+        /*
         unsafe {
             self.start_mark = sdl2::sys::timer::SDL_GetTicks();
         }
+        */
         self.stop_mark = 0;
         self.paused_mark = 0;
         self.running = true;
@@ -37,9 +41,12 @@ impl Timer {
         if !self.running {
             return;
         }
+        self.stop_mark = time::precise_time_ns();
+        /*
         unsafe {
             self.stop_mark = sdl2::sys::timer::SDL_GetTicks();
         }
+        */
         self.running = false;
         self.paused = false;
     }
@@ -53,9 +60,12 @@ impl Timer {
         if !self.running || self.paused {
             return;
         }
+        self.paused_mark = time::precise_time_ns() - self.start_mark;
+        /*
         unsafe {
             self.paused_mark = sdl2::sys::timer::SDL_GetTicks() - self.start_mark;
         }
+        */
         self.running = false;
         self.paused = true;
     }
@@ -64,9 +74,12 @@ impl Timer {
         if self.running || !self.paused {
             return;
         }
+        self.start_mark = time::precise_time_ns() - self.paused_mark;
+        /*
         unsafe {
             self.start_mark = sdl2::sys::timer::SDL_GetTicks() - self.paused_mark;
         }
+        */
         self.paused_mark = 0;
         self.running = true;
         self.paused = false;
@@ -80,7 +93,7 @@ impl Timer {
         self.paused
     }
 
-    pub fn delta(&mut self) -> u32 {
+    pub fn delta(&mut self) -> u64 {
         if self.running {
             return self.current_time();
         }
@@ -96,18 +109,21 @@ impl Timer {
         return self.stop_mark - self.start_mark;
     }
 
-    pub fn delta_ms(&mut self) -> u32 {
-        self.delta() % 1000
+    pub fn delta_ms(&mut self) -> f64 {
+        self.delta() as f64 / 1_000_000.0
     }
         
-    pub fn delta_s(&mut self) -> u32 {
-        self.delta() / 1000
+    pub fn delta_s(&mut self) -> f64 {
+        self.delta() as f64 / 1_000_000_000.0
     }
 
-    pub fn current_time(&mut self) -> u32 {
+    pub fn current_time(&mut self) -> u64 {
+        return time::precise_time_ns() - self.start_mark;
+        /*
         unsafe {
             return sdl2::sys::timer::SDL_GetTicks() - self.start_mark;
         }
+        */
     }
 
 }

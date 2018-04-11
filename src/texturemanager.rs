@@ -34,26 +34,33 @@ impl <'tm>TextureManager<'tm> {
                 match r.len() {
                     Some(size) => {
                         data = vec![0; size];
-                        r.read(&mut data);
-                        //let stbimg = image::load(path);
-                        let stbimg = image::load_from_memory(&data);
-                        match stbimg {
-                            ImageU8(img) => {
-                                let sdltex = img;
-                                let mut tex = Texture::new();
-                                tex.from_image_u8(sdltex);
-                                self.items.insert(id, Rc::new(tex));
+                        match r.read(&mut data) {
+                            Ok(rd) => {
+                                //let stbimg = image::load(path);
+                                let stbimg = image::load_from_memory(&data);
+                                match stbimg {
+                                    ImageU8(img) => {
+                                        let sdltex = img;
+                                        let mut tex = Texture::new();
+                                        tex.from_image_u8(sdltex);
+                                        self.items.insert(id, Rc::new(tex));
+                                    },
+                                    ImageF32(img) => {
+                                        let sdltex = img;
+                                        let mut tex = Texture::new();
+                                        tex.from_image_f32(sdltex);
+                                        self.items.insert(id, Rc::new(tex));
+                                    },
+                                    Error => {
+                                        Log::error("Error loading texture");
+                                        return;
+                                    },
+                                }
                             },
-                            ImageF32(img) => {
-                                let sdltex = img;
-                                let mut tex = Texture::new();
-                                tex.from_image_f32(sdltex);
-                                self.items.insert(id, Rc::new(tex));
-                            },
-                            Error => {
-                                Log::error("Error loading texture");
+                            Err(e) => {
+                                Log::error(&e.to_string());
                                 return;
-                            },
+                            }
                         }
                     },
                     None => {

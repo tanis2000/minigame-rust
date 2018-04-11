@@ -3,6 +3,11 @@ extern crate cgmath;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 
+use std::path::Path;
+use std::io::Read;
+use sdl2::rwops::RWops;
+use log::Log;
+
 pub trait Clamp {
     fn clamp(self, low: f32, high: f32) -> f32;
 }
@@ -66,3 +71,35 @@ impl Mul for Vector2<f32> {
 }
 */
 
+pub fn load_string_from_file(path: &Path) -> Option<String> {
+    let fs = RWops::from_file(path, "rb");
+    match fs {
+        Ok(mut r) => {
+            let mut data : Vec<u8>;
+            match r.len() {
+                Some(size) => {
+                    let mut data = vec![0; size];
+                    let read_res = r.read(&mut data);
+                    match read_res {
+                        Ok(rd) => {
+                            let src = String::from_utf8(data).unwrap();
+                            return Some(src);
+                        },
+                        Err(e) => {
+                            Log::error(&e.to_string());
+                            return None;
+                        }
+                    }
+                },
+                None => {
+                    Log::error("Cannot read size of stream");
+                    return None;
+                }
+            }
+        },
+        Err(s) => {
+            Log::error(&s);
+            return None;
+        }
+    }
+}

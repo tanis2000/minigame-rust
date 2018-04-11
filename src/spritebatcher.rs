@@ -50,10 +50,10 @@ impl SpriteBatcher {
 
     pub fn create_batch_item(&mut self) -> &mut SpriteBatchItem {
         if self.batch_item_count >= self.batch_item_list.len() as i32 {
-            let oldSize = self.batch_item_list.len();
-            let mut newSize = oldSize + oldSize / 2; // grow by x1.5
-            newSize = (newSize + 63) & (!63);        // grow in chunks of 64.
-            self.batch_item_list.resize(newSize as usize, SpriteBatchItem::new());
+            let old_size = self.batch_item_list.len();
+            let mut new_size = old_size + old_size / 2; // grow by x1.5
+            new_size = (new_size + 63) & (!63);        // grow in chunks of 64.
+            self.batch_item_list.resize(new_size as usize, SpriteBatchItem::new());
         }
         let mut item = &mut self.batch_item_list[self.batch_item_count as usize];
         self.batch_item_count = self.batch_item_count + 1;
@@ -61,17 +61,17 @@ impl SpriteBatcher {
     }
 
     pub fn ensure_array_capacity(&mut self, num_batch_items: i32) {
-        let neededCapacity = 6 * num_batch_items;
-        if neededCapacity <= self.index.len() as i32 {
+        let needed_capacity = 6 * num_batch_items;
+        if needed_capacity <= self.index.len() as i32 {
             // Short circuit out of here because we have enough capacity.
             return;
         }
 
-        let mut newIndex: Vec<i32> = Vec::with_capacity(neededCapacity as usize);
+        let mut new_index: Vec<i32> = Vec::with_capacity(needed_capacity as usize);
         let start = 0;
 
         for i in 0..self.index.len() as usize {
-            newIndex.push(self.index[i]);
+            new_index.push(self.index[i]);
         }
 
         let start = self.index.len() / 6;
@@ -88,17 +88,17 @@ impl SpriteBatcher {
             *  BL    BR
             */
             // Triangle 1
-            newIndex.insert((i * 6 + 0) as usize, (i * 4) as i32);
-            newIndex.insert((i * 6 + 1) as usize, (i * 4 + 1) as i32);
-            newIndex.insert((i * 6 + 2) as usize, (i * 4 + 2) as i32);
+            new_index.insert((i * 6 + 0) as usize, (i * 4) as i32);
+            new_index.insert((i * 6 + 1) as usize, (i * 4 + 1) as i32);
+            new_index.insert((i * 6 + 2) as usize, (i * 4 + 2) as i32);
             // Triangle 2
-            newIndex.insert((i * 6 + 3) as usize, (i * 4 + 1) as i32);
-            newIndex.insert((i * 6 + 4) as usize, (i * 4 + 3) as i32);
-            newIndex.insert((i * 6 + 5) as usize, (i * 4 + 2) as i32);
+            new_index.insert((i * 6 + 3) as usize, (i * 4 + 1) as i32);
+            new_index.insert((i * 6 + 4) as usize, (i * 4 + 3) as i32);
+            new_index.insert((i * 6 + 5) as usize, (i * 4 + 2) as i32);
         }
-        self.index = newIndex;
+        self.index = new_index;
 
-        self.vertex_array.resize(neededCapacity as usize, VertexPositionColorTexture::new());
+        self.vertex_array.resize(needed_capacity as usize, VertexPositionColorTexture::new());
     }
 
     pub fn draw_batch(&mut self, sort_mode: SpriteSortMode/*, Effect effect*/, render_state: &mut RenderState, graphics_device: &mut GraphicsDevice) {
@@ -125,23 +125,23 @@ impl SpriteBatcher {
         // Iterate through the batches, doing short.MaxValue sets of vertices only.
         while batch_count > 0 {
             // setup the vertexArray array
-            let mut startIndex: i32 = 0;
+            let mut start_index: i32 = 0;
             let mut index: i32 = 0;
             let mut tex: Option<Rc<Texture>> = None;
 
-            let mut numBatchesToProcess: i32 = batch_count;
-            if numBatchesToProcess > self.max_batch_size {
-                numBatchesToProcess = self.max_batch_size;
+            let mut num_batches_to_process: i32 = batch_count;
+            if num_batches_to_process > self.max_batch_size {
+                num_batches_to_process = self.max_batch_size;
             }
             
             {
-                self.ensure_array_capacity(numBatchesToProcess);
+                self.ensure_array_capacity(num_batches_to_process);
             }
 
             // Draw the batches
-            for i in 0..numBatchesToProcess {
+            for i in 0..num_batches_to_process {
                 // if the texture changed, we need to flush and bind the new texture
-                let mut shouldFlush: bool = false;
+                let mut should_flush: bool = false;
                 Log::debug("batch index follows");
                 Log::debug(&batch_index.to_string());
                 if self.batch_item_list[batch_index as usize].texture.is_some() {
@@ -152,21 +152,21 @@ impl SpriteBatcher {
                 }
 
                 if self.batch_item_list[batch_index as usize].texture.is_some() && tex.is_none() {
-                    shouldFlush = true;
+                    should_flush = true;
                 } else if self.batch_item_list[batch_index as usize].texture.is_none() && tex.is_some() {
-                    shouldFlush = true;
+                    should_flush = true;
                 } else if self.batch_item_list[batch_index as usize].texture.is_none() && tex.is_none() {
-                    shouldFlush = false;
+                    should_flush = false;
                 } else {
-                    shouldFlush = &**self.batch_item_list[batch_index as usize].texture.as_ref().unwrap() as *const _ != &**tex.as_ref().unwrap() as *const _;
+                    should_flush = &**self.batch_item_list[batch_index as usize].texture.as_ref().unwrap() as *const _ != &**tex.as_ref().unwrap() as *const _;
                     //let a = self.batch_item_list[batch_index as usize].texture.unwrap();
                 }
                 //let b:() = &**tex.as_ref().unwrap();
-                if shouldFlush {
-                    self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);
+                if should_flush {
+                    self.flush_vertex_array(start_index, index /*, effect*/, tex, render_state, graphics_device);
 
                     tex = self.batch_item_list[batch_index as usize].texture.clone();
-                    startIndex = 0;
+                    start_index = 0;
                     index = 0;
                 }
 
@@ -198,10 +198,10 @@ impl SpriteBatcher {
                 batch_index += 1;
             }
             // flush the remaining vertexArray data
-            self.flush_vertex_array(startIndex, index /*, effect*/, tex, render_state, graphics_device);
+            self.flush_vertex_array(start_index, index /*, effect*/, tex, render_state, graphics_device);
             // Update our batch count to continue the process of culling down
             // large batches
-            batch_count -= numBatchesToProcess;
+            batch_count -= num_batches_to_process;
         }
         // return items to the pool.
         self.batch_item_count = 0;
@@ -212,12 +212,12 @@ impl SpriteBatcher {
             return;
         }
 
-        let vertexCount: i32 = end - start;
+        let vertex_count: i32 = end - start;
         render_state.set_texture(texture);
 
         //Log::debug("SpriteBatcher::flush_vertex_array");
         //Log::debug("{:?}", self.vertex_array);
-        graphics_device.draw(&self.vertex_array, vertexCount, render_state);
+        graphics_device.draw(&self.vertex_array, vertex_count, render_state);
     }
   
 

@@ -176,13 +176,13 @@ impl SpriteBatch {
         // Normal 3D cameras look into the -z direction (z = 1 is in font of z = 0). The
         // sprite batch layer depth is the opposite (z = 0 is in front of z = 1).
         // --> We get the correct matrix with near plane 0 and far plane -1.
-        let mut projection: Matrix4<f32> = GraphicsDevice::createOrthographicMatrixOffCenter(0.0, vp.w as f32, vp.h as f32, 0.0, 0.0, -1.0);
+        let mut projection: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, vp.w as f32, vp.h as f32, 0.0, 0.0, -1.0);
         projection = Matrix4::mul(self.matrix, projection);
     }
 
     pub fn draw_internal(&mut self, texture: Rc<Texture>,
-                            /* destinationRectangle: Rectangle, */
-                               sourceRectangle: Option<Rectangle>, color: Color,
+                            /* destination_rectangle: Rectangle, */
+                               source_rectangle: Option<Rectangle>, color: Color,
                                rotation: f32, /* origin: Vector2<f32>, */
                                /*SpriteEffects *effects, */ depth: f32,
                                autoFlush: bool) {
@@ -205,8 +205,8 @@ impl SpriteBatch {
             return;
         }*/
 
-        if sourceRectangle.is_some() {
-            let src = sourceRectangle.unwrap();
+        if source_rectangle.is_some() {
+            let src = source_rectangle.unwrap();
             self.temp_rect.x = src.x;
             self.temp_rect.y = src.y;
             self.temp_rect.w = src.w;
@@ -280,8 +280,8 @@ impl SpriteBatch {
     }
 
     pub fn draw(&mut self, texture: Rc<Texture>, position: Option<Vector2<f32>>,
-               destinationRectangle: Option<Rectangle>,
-               sourceRectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
+               destination_rectangle: Option<Rectangle>,
+               source_rectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
                rotation: f32, scale: Option<Vector2<f32>>, color: Color,
                /*SpriteEffects *effects, */ layerDepth: f32) {
         let mut baseOrigin = Vector2::new(0.0, 0.0);
@@ -300,31 +300,30 @@ impl SpriteBatch {
 
         // If both drawRectangle and position are null, or if both have been assigned
         // a value, raise an error
-        if (destinationRectangle.is_some() && position.is_some()) ||
-            (destinationRectangle.is_none() && position.is_none()) {
+        if (destination_rectangle.is_some() && position.is_some()) ||
+            (destination_rectangle.is_none() && position.is_none()) {
             Log::error(
                 "Expected drawRectangle or position, but received neither or both.");
         } else if position.is_some() {
             // Call Draw() using position
-            Log::error(
-                "Calling draw_vector_scale");
-            Log::debug("SpriteBatch::draw() sourceRectangle");
-            //Log::debug("{:?}", sourceRectangle);
+            Log::debug("SpriteBatch::draw() source_rectangle");
+            //Log::debug("{:?}", source_rectangle);
             Log::debug("SpriteBatch::draw() position");
             //Log::debug("{:?}", position);
-            self.draw_vector_scale(texture, position, sourceRectangle, color, rotation, baseOrigin, baseScale,
+            Log::debug("Calling draw_vector_scale");
+            self.draw_vector_scale(texture, position, source_rectangle, color, rotation, baseOrigin, baseScale,
                 /*effects,*/ layerDepth);
         } else {
             // Call Draw() using drawRectangle
             Log::error(
                 "This should call with drawRectangle but we're not yet supporting it");
-            // Draw(texture, (Rectangle)destinationRectangle, sourceRectangle,
+            // Draw(texture, (Rectangle)destination_rectangle, source_rectangle,
             // (Color)color, rotation, (Vector2)origin, effects, layerDepth);
         }
     }
 
     pub fn draw_vector_scale(&mut self, texture: Rc<Texture>, position: Option<Vector2<f32>>,
-                       sourceRectangle: Option<Rectangle>, color: Color,
+                       source_rectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: Vector2<f32>,
                        /*SpriteEffects *effects,*/
                        layerDepth: f32) {
@@ -333,7 +332,7 @@ impl SpriteBatch {
         let mut w = texture.get_width() as f32 * scale.x;
         let mut h = texture.get_height() as f32 * scale.y;
         let mut src: Option<Rectangle>;
-        match sourceRectangle
+        match source_rectangle
         {
             Some(v) => {
                 w = v.w as f32 * scale.x;
@@ -359,60 +358,60 @@ impl SpriteBatch {
     }
 
     pub fn draw_float_scale(&mut self, texture: Rc<Texture>, position: Vector2<f32>,
-                       sourceRectangle: Rectangle, color: Color,
+                       source_rectangle: Rectangle, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: f32,
                        /*SpriteEffects effects,*/
                        layerDepth: f32) {
         // CheckValid(texture);
         let s = Vector2::new(scale, scale);
-        self.draw_vector_scale(texture, Some(position), Some(sourceRectangle), color, rotation, origin, s, layerDepth);
+        self.draw_vector_scale(texture, Some(position), Some(source_rectangle), color, rotation, origin, s, layerDepth);
     }
 
     pub fn draw_position(&mut self, texture: Rc<Texture>, position: Vector2<f32>) {
         self.draw(texture, Some(position), None, None, None, 0.0, None, Color::white(), 0.0);
     }
 
-    pub fn draw_noscale(&mut self, texture: Rc<Texture>, destinationRectangle: Rectangle,
-                       sourceRectangle: Option<Rectangle>, color: Color,
+    pub fn draw_noscale(&mut self, texture: Rc<Texture>, destination_rectangle: Rectangle,
+                       source_rectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>,
                        /*SpriteEffects effects,*/
                        layerDepth: f32) {
         // CheckValid(texture);
 
-        self.origin_rect.x = destinationRectangle.x;
-        self.origin_rect.y = destinationRectangle.y;
-        self.origin_rect.w = destinationRectangle.w;
-        self.origin_rect.h = destinationRectangle.h;
+        self.origin_rect.x = destination_rectangle.x;
+        self.origin_rect.y = destination_rectangle.y;
+        self.origin_rect.w = destination_rectangle.w;
+        self.origin_rect.h = destination_rectangle.h;
 
-        if sourceRectangle.is_some() && sourceRectangle.unwrap().w != 0 {
+        if source_rectangle.is_some() && source_rectangle.unwrap().w != 0 {
             self.scaled_origin.x =
-                origin.x * (destinationRectangle.w as f32 /
-                            sourceRectangle.unwrap().w as f32);
+                origin.x * (destination_rectangle.w as f32 /
+                            source_rectangle.unwrap().w as f32);
         } else {
             self.scaled_origin.x =
-                origin.x * (destinationRectangle.w as f32 /
+                origin.x * (destination_rectangle.w as f32 /
                             texture.get_width() as f32);
         }
 
-        if sourceRectangle.is_some() && sourceRectangle.unwrap().h != 0 {
+        if source_rectangle.is_some() && source_rectangle.unwrap().h != 0 {
             self.scaled_origin.y =
-                origin.y * (destinationRectangle.h as f32 /
-                            sourceRectangle.unwrap().h as f32);
+                origin.y * (destination_rectangle.h as f32 /
+                            source_rectangle.unwrap().h as f32);
         } else {
             self.scaled_origin.y =
-                origin.y * (destinationRectangle.h as f32 /
+                origin.y * (destination_rectangle.h as f32 /
                             texture.get_height() as f32);
         }
 
-        self.draw_internal(texture, /* self.origin_rect,*/ sourceRectangle, color, rotation,
+        self.draw_internal(texture, /* self.origin_rect,*/ source_rectangle, color, rotation,
                     /*self.scaled_origin,*/
                     /*effects,*/
                     layerDepth, true);
     }
 
-    pub fn draw_dst_src_color(&mut self, texture: Rc<Texture>, destinationRectangle: Rectangle,
-                        sourceRectangle : Rectangle, color: Color) {
-        self.draw_noscale(texture, destinationRectangle, Some(sourceRectangle), color, 0.0, Vector2::new(0.0, 0.0),
+    pub fn draw_dst_src_color(&mut self, texture: Rc<Texture>, destination_rectangle: Rectangle,
+                        source_rectangle : Rectangle, color: Color) {
+        self.draw_noscale(texture, destination_rectangle, Some(source_rectangle), color, 0.0, Vector2::new(0.0, 0.0),
         /*SpriteEffects.None,*/ 0.0);
     }
 

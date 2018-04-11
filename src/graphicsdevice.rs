@@ -24,26 +24,26 @@ use rectangle::Rectangle;
 use shader::Shader;
 
 pub struct GraphicsDevice {
-    vertexAttribute: GLint,
-    texCoordAttribute: GLint,
-    colorAttribute: GLint,
-    normalAttribute: GLint,
-    projectionMatrixUniform: GLint,
-    modelViewMatrixUniform: GLint,
-    imageUniform: GLint,
+    vertex_attribute: GLint,
+    tex_coord_attribute: GLint,
+    color_attribute: GLint,
+    normal_attribute: GLint,
+    projection_matrix_uniform: GLint,
+    model_view_matrix_uniform: GLint,
+    image_uniform: GLint,
     vbo: GLuint,
 }
 
 impl GraphicsDevice {
     pub fn new() -> Self {
         GraphicsDevice {
-            vertexAttribute: 0,
-            texCoordAttribute: 0,
-            colorAttribute: 0,
-            normalAttribute: 0,
-            projectionMatrixUniform: 0,
-            modelViewMatrixUniform: 0,
-            imageUniform: 0,
+            vertex_attribute: 0,
+            tex_coord_attribute: 0,
+            color_attribute: 0,
+            normal_attribute: 0,
+            projection_matrix_uniform: 0,
+            model_view_matrix_uniform: 0,
+            image_uniform: 0,
             vbo: 0,
         }
     }
@@ -57,14 +57,14 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn createOrthographicMatrixOffCenter(left: f32, right: f32, bottom: f32, top: f32, z_near_plane: f32, z_far_plane: f32) -> Matrix4<f32> {
+    pub fn create_orthographic_matrix_off_center(left: f32, right: f32, bottom: f32, top: f32, z_near_plane: f32, z_far_plane: f32) -> Matrix4<f32> {
         Matrix4::from_cols(Vector4::new(2.0 / (right - left), 0.0, 0.0, 0.0),
                            Vector4::new(0.0, 2.0 / (top - bottom), 0.0, 0.0),
                            Vector4::new(0.0, 0.0, 1.0 / (z_near_plane - z_far_plane), 0.0),
                            Vector4::new((left + right) / (left - right), (top + bottom) / (bottom - top), z_near_plane / (z_near_plane - z_far_plane), 1.0))
     }
 
-    pub fn createModelViewMatrix(x: f32, y: f32, scale: f32, rotation: f32) -> Matrix4<f32> {
+    pub fn create_model_view_matrix(x: f32, y: f32, scale: f32, rotation: f32) -> Matrix4<f32> {
         let theta: f32 = rotation * f32::consts::PI / 180.0;
         let c: f32 = theta.cos();
         let s: f32 = theta.sin();
@@ -76,19 +76,19 @@ impl GraphicsDevice {
     }
 
     pub fn draw(&mut self, vertices: &Vec<VertexPositionColorTexture>, vertexCount: i32, state: &RenderState) {
-        GraphicsDevice::resetGLStates();
-        GraphicsDevice::applyCurrentView(&state.viewport);
-        GraphicsDevice::applyBlendMode(&state.blendMode);
-        self.applyShader(&state.shader.unwrap());
-        GraphicsDevice::applyTexture(&state.texture);
+        GraphicsDevice::reset_gl_states();
+        GraphicsDevice::apply_current_view(&state.viewport);
+        GraphicsDevice::apply_blend_mode(&state.blendMode);
+        self.apply_shader(&state.shader.unwrap());
+        GraphicsDevice::apply_texture(&state.texture);
 
-        let projectionMatrix: Matrix4<f32> = GraphicsDevice::createOrthographicMatrixOffCenter(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
-        let modelViewMatrix: Matrix4<f32> = GraphicsDevice::createModelViewMatrix(0.0, 0.0, 1.0, 0.0);
+        let projectionMatrix: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
+        let modelViewMatrix: Matrix4<f32> = GraphicsDevice::create_model_view_matrix(0.0, 0.0, 1.0, 0.0);
         
         unsafe {
-            gl::EnableVertexAttribArray (self.vertexAttribute as GLuint);
-            gl::EnableVertexAttribArray (self.colorAttribute as GLuint);
-            gl::EnableVertexAttribArray (self.texCoordAttribute as GLuint);
+            gl::EnableVertexAttribArray (self.vertex_attribute as GLuint);
+            gl::EnableVertexAttribArray (self.color_attribute as GLuint);
+            gl::EnableVertexAttribArray (self.tex_coord_attribute as GLuint);
             
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
             Log::debug("GraphicsDevice::draw()");
@@ -96,22 +96,23 @@ impl GraphicsDevice {
             Log::debug(&vertexCount.to_string());
             gl::BufferData(gl::ARRAY_BUFFER, (mem::size_of::<VertexPositionColorTexture>() as i32 * vertexCount) as GLsizeiptr, mem::transmute(&vertices[0]), gl::STATIC_DRAW);
             
-            gl::VertexAttribPointer(self.vertexAttribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, ptr::null());
-            gl::VertexAttribPointer(self.colorAttribute as GLuint, 4, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (2 * mem::size_of::<GLfloat>()) as *const _);
-            gl::VertexAttribPointer(self.texCoordAttribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (4 * mem::size_of::<GLfloat>() + 2 * mem::size_of::<GLfloat>()) as *const _);
+            gl::VertexAttribPointer(self.vertex_attribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, ptr::null());
+            gl::VertexAttribPointer(self.color_attribute as GLuint, 4, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (2 * mem::size_of::<GLfloat>()) as *const _);
+            gl::VertexAttribPointer(self.tex_coord_attribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (4 * mem::size_of::<GLfloat>() + 2 * mem::size_of::<GLfloat>()) as *const _);
             
             let finalMatrix = Matrix4::mul(state.transform,projectionMatrix);
             let inverseMatrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
 
-            gl::UniformMatrix4fv( self.projectionMatrixUniform, 1, gl::FALSE, finalMatrix.as_ptr() );
-            gl::UniformMatrix4fv( self.modelViewMatrixUniform, 1, gl::FALSE, inverseMatrix.as_ptr() );
+            gl::UniformMatrix4fv( self.projection_matrix_uniform, 1, gl::FALSE, finalMatrix.as_ptr() );
+            gl::UniformMatrix4fv( self.model_view_matrix_uniform, 1, gl::FALSE, inverseMatrix.as_ptr() );
 
-            gl::Uniform1i( self.imageUniform, 0 );
+            gl::Uniform1i( self.image_uniform, 0 );
+
             gl::DrawArrays(gl::TRIANGLES, 0, vertexCount);
             
-            gl::DisableVertexAttribArray (self.vertexAttribute as GLuint);
-            gl::DisableVertexAttribArray (self.colorAttribute as GLuint);
-            gl::DisableVertexAttribArray (self.texCoordAttribute as GLuint);
+            gl::DisableVertexAttribArray (self.vertex_attribute as GLuint);
+            gl::DisableVertexAttribArray (self.color_attribute as GLuint);
+            gl::DisableVertexAttribArray (self.tex_coord_attribute as GLuint);
             gl::UseProgram (gl::ZERO);
 
             match state.texture.as_ref() {
@@ -127,7 +128,7 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn resetGLStates() {
+    pub fn reset_gl_states() {
         unsafe {
             gl::Disable(gl::CULL_FACE);
             gl::Disable(gl::DEPTH_TEST);
@@ -141,25 +142,25 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn applyTransform(transformMatrix: &Matrix4<f32>) {
+    pub fn apply_transform(transform_matrix: &Matrix4<f32>) {
 
     }
 
-    pub fn applyCurrentView(viewport: &Rectangle) {
+    pub fn apply_current_view(viewport: &Rectangle) {
         unsafe {
             gl::Viewport(viewport.x as i32, viewport.y as i32, viewport.w, viewport.h);
         }
     }
 
-    pub fn applyBlendMode(blendMode: &BlendMode) {
+    pub fn apply_blend_mode(blend_mode: &BlendMode) {
         unsafe {
             gl::BlendFunc(
-                                GraphicsDevice::factorToGLConstant(blendMode.colorSrcFactor),
-                                GraphicsDevice::factorToGLConstant(blendMode.colorDstFactor));
+                                GraphicsDevice::factor_to_gl_constant(blend_mode.colorSrcFactor),
+                                GraphicsDevice::factor_to_gl_constant(blend_mode.colorDstFactor));
         }
     }
 
-    pub fn applyTexture(texture: &Option<Rc<Texture>>) {
+    pub fn apply_texture(texture: &Option<Rc<Texture>>) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
             match texture.as_ref() {
@@ -176,29 +177,29 @@ impl GraphicsDevice {
         }
     }
 
-    pub fn applyShader(&mut self, shader: &Shader) {
+    pub fn apply_shader(&mut self, shader: &Shader) {
         unsafe {
             {
                 let c_str = CString::new("vertexPosition".as_bytes()).unwrap();
-                self.vertexAttribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());
+                self.vertex_attribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());
             }
             {let c_str = CString::new("vertexTCoord".as_bytes()).unwrap();
-            self.texCoordAttribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
+            self.tex_coord_attribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("vertexColor".as_bytes()).unwrap();
-            self.colorAttribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
+            self.color_attribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("vertexNormal".as_bytes()).unwrap();
-            self.normalAttribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
+            self.normal_attribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("projectionMatrix".as_bytes()).unwrap();
-            self.projectionMatrixUniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
+            self.projection_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("modelViewMatrix".as_bytes()).unwrap();
-            self.modelViewMatrixUniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
+            self.model_view_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("tex0".as_bytes()).unwrap();
-            self.imageUniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
+            self.image_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
             gl::UseProgram(shader.program);
         }
     }
 
-    fn factorToGLConstant(blend_factor: Factor) -> GLuint {
+    fn factor_to_gl_constant(blend_factor: Factor) -> GLuint {
         match blend_factor {
             Factor::Zero => gl::ZERO,
             Factor::One => gl::ONE,
@@ -218,7 +219,7 @@ impl GraphicsDevice {
         }
     }
 
-    fn equationToGLConstant(blend_equation: Equation) -> GLuint
+    fn equation_to_gl_constant(blend_equation: Equation) -> GLuint
     {
         match blend_equation {
             Equation::Add => gl::FUNC_ADD,

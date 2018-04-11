@@ -3,6 +3,10 @@ use engine::gl as gl;
 use std::ffi::CString;
 use std::ptr;
 use std::str;
+use std::path::Path;
+use std::io::Read;
+use sdl2::rwops::RWops;
+use log::Log;
 
 enum Type {
     Vertex,
@@ -55,32 +59,32 @@ static FS_SRC: &'static str = "\n\
 
 #[derive(Debug, Copy, Clone)]
 pub struct Shader {
-    vertShader: GLuint,
-    fragShader: GLuint,
+    pub vert_shader: GLuint,
+    pub frag_shader: GLuint,
     pub program: GLuint,
 }
 
-fn defaultVertexSource() -> String {
+fn default_vertex_source() -> String {
     precision() + VS_SRC
 }
 
-fn defaultFragmentSource() -> String {
+fn default_fragment_source() -> String {
     precision() + FS_SRC
 }
 
 impl Shader {
     pub fn new() -> Shader {
         Shader {
-            fragShader: 0,
-            vertShader: 0,
+            frag_shader: 0,
+            vert_shader: 0,
             program: 0,
         }
     }
 
-    fn compile(&mut self, vertexSource: &str, fragmentSource: &str) {
-        self.vertShader = self.compile_shader(vertexSource, gl::VERTEX_SHADER);
-        self.fragShader = self.compile_shader(fragmentSource, gl::FRAGMENT_SHADER);
-        self.program = self.link_program(self.vertShader, self.fragShader)
+    fn compile(&mut self, vertex_source: &str, fragment_source: &str) {
+        self.vert_shader = self.compile_shader(vertex_source, gl::VERTEX_SHADER);
+        self.frag_shader = self.compile_shader(fragment_source, gl::FRAGMENT_SHADER);
+        self.program = self.link_program(self.vert_shader, self.frag_shader)
     }
 
     fn compile_shader(&self, src: &str, ty: GLenum) -> GLuint {
@@ -115,7 +119,7 @@ impl Shader {
         shader
     }
 
-    fn link_program(&self, vs: GLuint, fs: GLuint) -> GLuint {
+    pub fn link_program(&self, vs: GLuint, fs: GLuint) -> GLuint {
         unsafe {
             let program = gl::CreateProgram();
             gl::AttachShader(program, vs);
@@ -145,6 +149,57 @@ impl Shader {
     }
 
     pub fn load_default(&mut self) {
-        self.compile(&defaultVertexSource(), &defaultFragmentSource());
+        self.compile(&default_vertex_source(), &default_fragment_source());
+    }
+
+    pub fn load_vert(&mut self, path: &Path) {
+        let fs = RWops::from_file(path, "rb");
+        match fs {
+            Ok(mut r) => {
+                let mut data : Vec<u8>;
+                match r.len() {
+                    Some(size) => {
+                        data = vec![0; size];
+                        r.read(&mut data);
+                        let src = String::from_utf8(data).unwrap();
+                        self.vert_shader = self.compile_shader(&src, gl::VERTEX_SHADER);
+                    },
+                    None => {
+                        Log::error("Cannot read size of stream");
+                        return;
+                    }
+                }
+            },
+            Err(s) => {
+                Log::error(&s);
+                return;
+            }
+        }
+    }
+
+    pub fn load_frag(&mut self, path: &Path, primitives: &str) {
+        let fs = RWops::from_file(path, "rb");
+        match fs {
+            Ok(mut r) => {
+                let mut data : Vec<u8>;
+                match r.len() {
+                    Some(size) => {
+                        data = vec![0; size];
+                        r.read(&mut data);
+                        let mut src = String::from_utf8(data).unwrap();
+                        src = src.replace("#include \"primitives.frag\"", primitives);
+                        self.frag_shader = self.compile_shader(&src, gl::FRAGMENT_SHADER);
+                    },
+                    None => {
+                        Log::error("Cannot read size of stream");
+                        return;
+                    }
+                }
+            },
+            Err(s) => {
+                Log::error(&s);
+                return;
+            }
+        }
     }
 }
