@@ -6,8 +6,7 @@ The idea is to have the whole show running on its own without the need of any ma
 
 ## Screenshot
 
-![Screenshot of the game]
-(doc/screenshot.png)
+![Screenshot of the game](doc/screenshot.png)
 
 ## Hot code reloading
 
