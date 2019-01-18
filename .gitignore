@@ -13,4 +13,4 @@ Cargo.lock
 
 # zip files downloaded by our scripts and the unzipped SDL stuff
 *.zip
-SDL/
+SDL2-2.0.9/

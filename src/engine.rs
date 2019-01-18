@@ -4,7 +4,7 @@ extern crate dynamic_reload;
 extern crate sdl2;
 extern crate cgmath;
 extern crate rand;
-extern crate imgui;
+//extern crate imgui;
 
 //#[cfg(not(feature = "hotload"))]
 //extern crate minigame;
@@ -23,7 +23,7 @@ use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use rand::Rng;
-use imgui::*;
+//use imgui::*;
 use time;
 
 #[cfg(not(feature = "hotload"))]
@@ -249,7 +249,7 @@ impl Engine {
 
     #[cfg(any(target_os="android", target_os="ios"))]
     fn assets_path(&self) -> String {
-        String::from("")
+        String::from("assets/")
     }
 
     #[cfg(not(any(target_os="android", target_os="ios")))]
@@ -393,7 +393,7 @@ impl Engine {
 
         let mut sb = SpriteBatch::new();
 
-        let mut imgui = ImGui::init();
+        //let mut imgui = ImGui::init();
         //let ui = imgui.frame((800, 600), (800, 600), 0.0);
         //imgui.set_texture_id(0);
 

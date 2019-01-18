@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0239B2071F06A9BB00AD3242 /* libSDL2_image.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B2061F06A9BB00AD3242 /* libSDL2_image.a */; };
 		0239B20B1F06A9F900AD3242 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B20A1F06A9F900AD3242 /* ImageIO.framework */; };
 		0239B20F1F06AA1900AD3242 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B20E1F06AA1900AD3242 /* MobileCoreServices.framework */; };
 		0239B2111F06AAD400AD3242 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 0239B2101F06AAD400AD3242 /* assets */; };
@@ -26,7 +25,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0239B2061F06A9BB00AD3242 /* libSDL2_image.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2_image.a; path = "../../../target/x86_64-apple-ios/debug/libSDL2_image.a"; sourceTree = "<group>"; };
 		0239B2081F06A9CF00AD3242 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		0239B20A1F06A9F900AD3242 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		0239B20C1F06AA0200AD3242 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
@@ -59,7 +57,6 @@
 				0239B20B1F06A9F900AD3242 /* ImageIO.framework in Frameworks */,
 				024D145F1EE70C5A00D211B4 /* AudioToolbox.framework in Frameworks */,
 				024D145D1EE70C5100D211B4 /* AVFoundation.framework in Frameworks */,
-				0239B2071F06A9BB00AD3242 /* libSDL2_image.a in Frameworks */,
 				024D145B1EE70C3D00D211B4 /* GameController.framework in Frameworks */,
 				024D14591EE70C2F00D211B4 /* CoreMotion.framework in Frameworks */,
 				024D14561EE70C1100D211B4 /* libSDL2.a in Frameworks */,
@@ -106,7 +103,6 @@
 			isa = PBXGroup;
 			children = (
 				0239B2101F06AAD400AD3242 /* assets */,
-				0239B2061F06A9BB00AD3242 /* libSDL2_image.a */,
 				024D14551EE70C1100D211B4 /* libSDL2.a */,
 				028ECE6B1EE6910F0008EC84 /* libminigame.a */,
 				028ECE571EE68FEF0008EC84 /* AppDelegate.h */,
