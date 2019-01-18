@@ -1,4 +1,6 @@
-# To set an Option field to None
+# Collection of useful snippets
+
+## To set an Option field to None
 
 ```
 #[derive(Debug)]
@@ -34,12 +36,15 @@ fn main() {
 }
 ```
 
+## Difference between optional types
+
 - Rc - multiple owners
 - Cell - mutation even if it's immutable borrow
 - Option - to value or not to value
 
 
-ECS-like from magnusi
+## ECS-like from magnusi
+
 ```
 #![allow(dead_code)]
 use std::rc::Rc;
