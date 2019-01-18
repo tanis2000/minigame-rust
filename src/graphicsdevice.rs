@@ -4,11 +4,9 @@ use engine::gl::types::*;
 use engine::gl as gl;
 use self::cgmath::Matrix4;
 use self::cgmath::Vector4;
-use self::cgmath::Rad;
 use self::cgmath::Matrix;
 use std::mem;
 use std::ptr;
-use std::vec;
 use std::f32;
 use std::ops::Mul;
 use std::ffi::CString;
@@ -75,15 +73,15 @@ impl GraphicsDevice {
                            Vector4::new(x, y, 0.0, 1.0))
     }
 
-    pub fn draw(&mut self, vertices: &Vec<VertexPositionColorTexture>, vertexCount: i32, state: &RenderState) {
+    pub fn draw(&mut self, vertices: &Vec<VertexPositionColorTexture>, vertex_count: i32, state: &RenderState) {
         GraphicsDevice::reset_gl_states();
         GraphicsDevice::apply_current_view(&state.viewport);
-        GraphicsDevice::apply_blend_mode(&state.blendMode);
+        GraphicsDevice::apply_blend_mode(&state.blend_mode);
         self.apply_shader(&state.shader.unwrap());
         GraphicsDevice::apply_texture(&state.texture);
 
-        let projectionMatrix: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
-        let modelViewMatrix: Matrix4<f32> = GraphicsDevice::create_model_view_matrix(0.0, 0.0, 1.0, 0.0);
+        let projection_matrix: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
+        let model_view_matrix: Matrix4<f32> = GraphicsDevice::create_model_view_matrix(0.0, 0.0, 1.0, 0.0);
         
         unsafe {
             gl::EnableVertexAttribArray (self.vertex_attribute as GLuint);
@@ -93,22 +91,22 @@ impl GraphicsDevice {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
             Log::debug("GraphicsDevice::draw()");
             Log::debug("vertexCount:");
-            Log::debug(&vertexCount.to_string());
-            gl::BufferData(gl::ARRAY_BUFFER, (mem::size_of::<VertexPositionColorTexture>() as i32 * vertexCount) as GLsizeiptr, mem::transmute(&vertices[0]), gl::STATIC_DRAW);
+            Log::debug(&vertex_count.to_string());
+            gl::BufferData(gl::ARRAY_BUFFER, (mem::size_of::<VertexPositionColorTexture>() as i32 * vertex_count) as GLsizeiptr, mem::transmute(&vertices[0]), gl::STATIC_DRAW);
             
             gl::VertexAttribPointer(self.vertex_attribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, ptr::null());
             gl::VertexAttribPointer(self.color_attribute as GLuint, 4, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (2 * mem::size_of::<GLfloat>()) as *const _);
             gl::VertexAttribPointer(self.tex_coord_attribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (4 * mem::size_of::<GLfloat>() + 2 * mem::size_of::<GLfloat>()) as *const _);
             
-            let finalMatrix = Matrix4::mul(state.transform,projectionMatrix);
-            let inverseMatrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
+            let final_matrix = Matrix4::mul(state.transform,projection_matrix);
+            let inverse_matrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
 
-            gl::UniformMatrix4fv( self.projection_matrix_uniform, 1, gl::FALSE, finalMatrix.as_ptr() );
-            gl::UniformMatrix4fv( self.model_view_matrix_uniform, 1, gl::FALSE, inverseMatrix.as_ptr() );
+            gl::UniformMatrix4fv( self.projection_matrix_uniform, 1, gl::FALSE, final_matrix.as_ptr() );
+            gl::UniformMatrix4fv( self.model_view_matrix_uniform, 1, gl::FALSE, inverse_matrix.as_ptr() );
 
             gl::Uniform1i( self.image_uniform, 0 );
 
-            gl::DrawArrays(gl::TRIANGLES, 0, vertexCount);
+            gl::DrawArrays(gl::TRIANGLES, 0, vertex_count);
             
             gl::DisableVertexAttribArray (self.vertex_attribute as GLuint);
             gl::DisableVertexAttribArray (self.color_attribute as GLuint);
@@ -155,8 +153,8 @@ impl GraphicsDevice {
     pub fn apply_blend_mode(blend_mode: &BlendMode) {
         unsafe {
             gl::BlendFunc(
-                                GraphicsDevice::factor_to_gl_constant(blend_mode.colorSrcFactor),
-                                GraphicsDevice::factor_to_gl_constant(blend_mode.colorDstFactor));
+                                GraphicsDevice::factor_to_gl_constant(blend_mode.color_src_factor),
+                                GraphicsDevice::factor_to_gl_constant(blend_mode.color_dst_factor));
         }
     }
 
@@ -168,7 +166,7 @@ impl GraphicsDevice {
                     Log::warning("GraphicsDevice::applyTexture: Missing texture");
                 },
                 Some(v) => {
-                    gl::BindTexture(gl::TEXTURE_2D, texture.as_ref().unwrap().tex_id);
+                    gl::BindTexture(gl::TEXTURE_2D, v.tex_id);
                     //gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA, texW, texH, 0, gl::RGBA, gl::UNSIGNED_BYTE, texture.as_ref().unwrap.image);
                     //let mut t = texture.as_ref().unwrap().texture.borrow_mut();
                     //let (texW, texH) = t.gl_bind_texture();
@@ -211,11 +209,6 @@ impl GraphicsDevice {
             Factor::OneMinusSrcAlpha => gl::ONE_MINUS_SRC_ALPHA,
             Factor::DstAlpha => gl::DST_ALPHA,
             Factor::OneMinusDstAlpha => gl::ONE_MINUS_DST_ALPHA,
-            _ => {
-                Log::error("Invalid value for BlendMode::Factor! Fallback to BlendMode::Zero.");
-                //assert(false);
-                gl::ZERO
-            }
         }
     }
 
@@ -224,11 +217,6 @@ impl GraphicsDevice {
         match blend_equation {
             Equation::Add => gl::FUNC_ADD,
             Equation::Subtract => gl::FUNC_SUBTRACT,
-            _ => {
-                Log::error("Invalid value for BlendMode::Equation! Fallback to BlendMode::Add.");
-                //assert(false);
-                gl::FUNC_ADD
-            }
         }
     }
 

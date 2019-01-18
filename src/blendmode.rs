@@ -31,73 +31,73 @@ pub enum Equation {
 }
 
 pub struct BlendMode {
-    pub colorSrcFactor: Factor, //< Source blending factor for the color channels
-    pub colorDstFactor: Factor, //< Destination blending factor for the color channels
-    pub colorEquation: Equation, //< Blending equation for the color channels
-    pub alphaSrcFactor: Factor, //< Source blending factor for the alpha channel
-    pub alphaDstFactor: Factor, //< Destination blending factor for the alpha channel
-    pub alphaEquation: Equation, //< Blending equation for the alpha channel
+    pub color_src_factor: Factor, //< Source blending factor for the color channels
+    pub color_dst_factor: Factor, //< Destination blending factor for the color channels
+    pub color_equation: Equation, //< Blending equation for the color channels
+    pub alpha_src_factor: Factor, //< Source blending factor for the alpha channel
+    pub alpha_dst_factor: Factor, //< Destination blending factor for the alpha channel
+    pub alpha_equation: Equation, //< Blending equation for the alpha channel
 }
 
 impl BlendMode {
     fn new() -> BlendMode {
         BlendMode {
-            colorSrcFactor: Factor::SrcAlpha,
-            colorDstFactor: Factor::OneMinusSrcAlpha,
-            colorEquation: Equation::Add,
-            alphaSrcFactor: Factor::One,
-            alphaDstFactor: Factor::OneMinusSrcAlpha,
-            alphaEquation: Equation::Add,
+            color_src_factor: Factor::SrcAlpha,
+            color_dst_factor: Factor::OneMinusSrcAlpha,
+            color_equation: Equation::Add,
+            alpha_src_factor: Factor::One,
+            alpha_dst_factor: Factor::OneMinusSrcAlpha,
+            alpha_equation: Equation::Add,
         }
     }
 
-    fn colorSrcFactor(&mut self, value: Factor) -> &mut BlendMode {
-        self.colorSrcFactor = value;
+    fn color_src_factor(&mut self, value: Factor) -> &mut BlendMode {
+        self.color_src_factor = value;
         self
     }
 
-    fn colorDstFactor(&mut self, value: Factor) -> &mut BlendMode {
-        self.colorDstFactor = value;
+    fn color_dst_factor(&mut self, value: Factor) -> &mut BlendMode {
+        self.color_dst_factor = value;
         self
     }
 
-    fn colorEquation(&mut self, value: Equation) -> &mut BlendMode {
-        self.colorEquation = value;
+    fn color_equation(&mut self, value: Equation) -> &mut BlendMode {
+        self.color_equation = value;
         self
     }
 
-    fn alphaSrcFactor(&mut self, value: Factor) -> &mut BlendMode {
-        self.alphaSrcFactor = value;
+    fn alpha_src_factor(&mut self, value: Factor) -> &mut BlendMode {
+        self.alpha_src_factor = value;
         self
     }
 
-    fn alphaDstFactor(&mut self, value: Factor) -> &mut BlendMode {
-        self.alphaDstFactor = value;
+    fn alpha_dst_factor(&mut self, value: Factor) -> &mut BlendMode {
+        self.alpha_dst_factor = value;
         self
     }
 
-    fn alphaEquation(&mut self, value: Equation) -> &mut BlendMode {
-        self.alphaEquation = value;
+    fn alpha_equation(&mut self, value: Equation) -> &mut BlendMode {
+        self.alpha_equation = value;
         self
     }
 
     fn build(&self) -> BlendMode {
         BlendMode {
-            colorSrcFactor: self.colorSrcFactor,
-            colorDstFactor: self.colorDstFactor,
-            colorEquation: self.colorEquation,
-            alphaSrcFactor: self.alphaSrcFactor,
-            alphaDstFactor: self.alphaDstFactor,
-            alphaEquation: self.alphaEquation,
+            color_src_factor: self.color_src_factor,
+            color_dst_factor: self.color_dst_factor,
+            color_equation: self.color_equation,
+            alpha_src_factor: self.alpha_src_factor,
+            alpha_dst_factor: self.alpha_dst_factor,
+            alpha_equation: self.alpha_equation,
         }
     }
 }
 
-pub const BlendAlpha: BlendMode = BlendMode {
-    colorSrcFactor: Factor::SrcAlpha,
-    colorDstFactor: Factor::OneMinusSrcAlpha,
-    colorEquation: Equation::Add,
-    alphaSrcFactor: Factor::One,
-    alphaDstFactor: Factor::OneMinusSrcAlpha,
-    alphaEquation: Equation::Add,
+pub const BLEND_ALPHA: BlendMode = BlendMode {
+    color_src_factor: Factor::SrcAlpha,
+    color_dst_factor: Factor::OneMinusSrcAlpha,
+    color_equation: Equation::Add,
+    alpha_src_factor: Factor::One,
+    alpha_dst_factor: Factor::OneMinusSrcAlpha,
+    alpha_equation: Equation::Add,
 };

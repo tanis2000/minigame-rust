@@ -10,7 +10,6 @@ use scene::Scene;
 use sdl2::video::Window;
 use sdl2::render::Canvas;
 use sdl2::rect::Rect;
-use self::cgmath::Matrix4;
 
 pub trait Renderer {
     fn before_render(&self, scene: &Scene) {
@@ -21,8 +20,8 @@ pub trait Renderer {
         // Sets the current camera viewport if the camera has one
         match camera.get_viewport_adapter() {
             &Some(va) => {
-                let r = camera.get_viewport_adapter();
-                let rr = r.unwrap().get_viewport();
+                let r = va;
+                let rr = r.get_viewport();
                 let vp = Rect::new(rr.x as i32, rr.y as i32, rr.w as u32, rr.h as u32);
                 renderer.set_viewport(vp);
             },

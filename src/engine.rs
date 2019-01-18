@@ -17,18 +17,11 @@ use std::thread;
 use std::str;
 use std::ffi::CString;
 use std::ptr;
-use std::mem;
 use std::path::Path;
-use std::cell::RefCell;
-use std::ops::Deref;
 //use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::render::TextureCreator;
-use sdl2::render::Texture as SdlTexture;
-use sdl2::video::WindowContext;
-use sdl2::sys::timer;
 use rand::Rng;
 use imgui::*;
 use time;
@@ -39,7 +32,6 @@ use test_shared::shared_fun;
 use spritebatch::SpriteBatch;
 use spritebatch::SpriteSortMode;
 use color::Color;
-use texture::Texture;
 use texturemanager::TextureManager;
 use shader::Shader;
 use camera::Camera;
@@ -50,8 +42,6 @@ use imagecomponent::ImageComponent;
 use log::Log;
 use everythingrenderer::EverythingRenderer;
 use debugnamecomponentmanager::DebugNameComponentManager;
-use debugnamecomponentmanager::InstanceData;
-use debugnamecomponentmanager::Instance;
 use timer::Timer;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
@@ -215,7 +205,7 @@ fn plugin_load<'a>() -> (Plugins, DynamicReload<'a>) {
     // test_shared is generated in build.rs
     match reload_handler.add_library("test_shared", PlatformName::Yes) {
         Ok(lib) => plugs.add_plugin(&lib),
-        Err(e) => {
+        Err(_e) => {
             //Log::error("Unable to load dynamic lib, err {:?}", e);
             return (plugs, reload_handler);
         }
@@ -293,7 +283,14 @@ impl Engine {
         sdl2::log::log("Loading GL extensions");
         gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const _);
         sdl2::log::log("Setting current GL context");
-        canvas.window().gl_set_context_to_current();
+        let gl_set_context_res = canvas.window().gl_set_context_to_current();
+        match gl_set_context_res {
+            Ok(_context) => {
+            },
+            Err(_error) => {
+                panic!("Cannot set current GL context");
+            }
+        }
         Log::info("Enabling VSYNC");
         video_subsystem.gl_set_swap_interval(1);
 
@@ -311,8 +308,8 @@ impl Engine {
         let mut vao = 0;
         let mut vbo = 0;
     */
+        /*
         unsafe {
-            /*
             // Use shader program
             gl::UseProgram(program);
 
@@ -327,8 +324,8 @@ impl Engine {
                                     gl::FALSE as GLboolean,
                                     0,
                                     mem::transmute(&VERTEX_DATA[0]));
-            */
         }
+        */
 
         let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -346,23 +343,23 @@ impl Engine {
         let mut shader = Shader::new();
         shader.load_default();
 
-        let mut tc = canvas.texture_creator();
+        let tc = canvas.texture_creator();
         let mut tm = TextureManager::new(&tc);
-        let mut wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
+        let wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
         tm.load(String::from("wabbit"), Path::new(&String::from(wabbit_path)));
         let wabbit = tm.get(&String::from("wabbit"));
 
-        let playerVA = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
-        let mut playerCamera = Camera::new();
-        playerCamera.set_viewport_adapter(Some(playerVA));
+        let player_va = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
+        let mut player_camera = Camera::new();
+        player_camera.set_viewport_adapter(Some(player_va));
 
         let mut debug_name_manager = DebugNameComponentManager::new();
 
         let mut scene = Scene::new(32);
-        let mut entity_id = scene.create_entity();
+        let entity_id = scene.create_entity();
         sdl2::log::log("Entity id follows");
         sdl2::log::log(&entity_id.to_string());
-        let mut debug_name_instance = debug_name_manager.create(entity_id);
+        let debug_name_instance = debug_name_manager.create(entity_id);
         Log::debug("Debug name instance");
         Log::debug(&debug_name_instance.i.to_string());
         debug_name_manager.set_name(debug_name_instance, String::from("entity1"));
@@ -382,7 +379,7 @@ impl Engine {
             }
         }
 
-        let mut er = EverythingRenderer::new();
+        let er = EverythingRenderer::new();
         scene.add_renderer(Rc::new(er));
 
         let mut rng = rand::thread_rng();
@@ -402,21 +399,21 @@ impl Engine {
 
         let mut framerate_timer = Timer::new();
         framerate_timer.start();
-        /// How many frames per second we're running.
-        let mut framerate: u64 = 60;
+        // How many frames per second we're running.
+        let framerate: u64 = 60;
 
-        /// Time (in nanoseconds) each frame must have.
-        ///
-        /// If the actual delay passed is less than this,
-        /// we'll wait.
-        /// If the delay is greater, we'll skip right away.
-        ///
-        let mut frame_delay: u64 = 0;
+        // Time (in nanoseconds) each frame must have.
+        //
+        // If the actual delay passed is less than this,
+        // we'll wait.
+        // If the delay is greater, we'll skip right away.
+        //
+        let mut frame_delay: u64;
 
-        /// How much time have passed since
-        /// last frame (in nanoseconds).
-        ///
-        let mut current_frame_delta: u64 = 0;
+        // How much time have passed since
+        // last frame (in nanoseconds).
+        //
+        let mut current_frame_delta: u64;
 
         // Last time (in nanoseconds)
         let mut last_time = time::precise_time_ns();
@@ -518,10 +515,12 @@ impl Engine {
 
 
             if current_frame_delta < frame_delay {
+                /*
                 unsafe {
-                    //sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
-                    //thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
+                    sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
+                    thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
                 }
+                */
             }
 
             /*
@@ -534,14 +533,14 @@ impl Engine {
         }
 
         // Cleanup
+        /*
         unsafe {
-            /*
             gl::DeleteProgram(program);
             gl::DeleteShader(fs);
             gl::DeleteShader(vs);
             gl::DeleteBuffers(1, &vbo);
-            */
         }
+        */
     }
 }
 

@@ -1,5 +1,3 @@
-use sdl2::sys::timer;
-use sdl2;
 use time;
 
 pub struct Timer {

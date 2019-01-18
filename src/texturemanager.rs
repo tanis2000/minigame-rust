@@ -6,7 +6,6 @@ use std::io::Read;
 use sdl2::render::TextureCreator;
 use sdl2::video::WindowContext;
 use sdl2::rwops::RWops;
-//use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use stb_image::image;
 use stb_image::image::LoadResult::ImageU8;
 use stb_image::image::LoadResult::ImageF32;
@@ -35,7 +34,7 @@ impl <'tm>TextureManager<'tm> {
                     Some(size) => {
                         data = vec![0; size];
                         match r.read(&mut data) {
-                            Ok(rd) => {
+                            Ok(_read_size) => {
                                 //let stbimg = image::load(path);
                                 let stbimg = image::load_from_memory(&data);
                                 match stbimg {

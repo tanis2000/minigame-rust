@@ -7,7 +7,7 @@ use color::Color;
 pub struct VertexPositionColorTexture {
     pub position: Vector2<f32>,
     pub color: Color,
-    pub textureCoordinate: Vector2<f32>,
+    pub texture_coordinate: Vector2<f32>,
 }
 
 impl VertexPositionColorTexture {
@@ -18,7 +18,7 @@ impl VertexPositionColorTexture {
                 y: 0.0,
             },
             color: Color::new(),
-            textureCoordinate: Vector2 {
+            texture_coordinate: Vector2 {
                 x: 0.0,
                 y: 0.0,
             }
