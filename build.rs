@@ -15,6 +15,8 @@ fn main() {
     let current_dir = std::env::current_dir().unwrap();
     let target;
     let target_os = env::var("TARGET").unwrap();
+    let android_sdk_root = env::var("ANDROID_SDK_ROOT").unwrap();
+    let android_ndk_root = env::var("ANDROID_NDK_ROOT").unwrap();
     const SDL2_FILENAME: &'static str = "SDL2-2.0.9.zip";
     const SDL2_URL: &'static str = "https://www.libsdl.org/release/SDL2-2.0.9.zip";
     const SDL2_PATH: &'static str = "SDL2-2.0.9";
@@ -52,7 +54,7 @@ fn main() {
         unzip_file(SDL2_FILENAME);
     }
 
-    //if target_os.contains("ios") {
+    if target_os.contains("ios") {
         if !Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphoneos").join("libSDL2.a").exists() {
             Command::new("xcodebuild")
             .args(&["-project", "SDL2-2.0.9/Xcode-iOS/SDL/SDL.xcodeproj", "-target", "libSDL-iOS", "-sdk", "iphoneos12.1"])
@@ -72,9 +74,17 @@ fn main() {
         println!("{:?}", Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphonesimulator").join("libSDL2.a"));
         println!("{:?}", Path::new(&current_dir).join("target").join("x86_64-apple-ios").join("debug").join("libSDL2.a"));
         fs::copy(Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphonesimulator").join("libSDL2.a"), Path::new(&current_dir).join("target").join("x86_64-apple-ios").join("debug").join("libSDL2.a")).expect("Cannot copy libSDL2 for iPhone Simulator");
-    //}
+    }
 
     if target_os.contains("android") {
+        println!("cargo:rustc-flags=-C linker=/Users/tanis/android-sdk/ndk-bundle/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-gcc",);
+
+        Command::new("../gradlew")
+        .args(&["assemble"])
+        .current_dir("android/Minigame/sdl")
+        .status()
+        .expect("Error building Android project");
+
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/armeabi",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/armeabi-v7a",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/x86",);

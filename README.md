@@ -59,7 +59,7 @@ Just open the `ios/minigame/minigame.xcodeproj` Xcode project and run it and you
 ## Configuration for Android linking
 
 For the time being you have to use a standalone toolchain. I'm pretty sure this can be solved with some clever
-code in `build.rs` by setting the correct sysroot, but that's something left for later. 
+code in `build.rs` by setting the correct sysroot, but that's something left for later.
 
 Edit `.cargo/config` and add the following:
 
