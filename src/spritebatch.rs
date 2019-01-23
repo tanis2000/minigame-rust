@@ -2,12 +2,9 @@ extern crate cgmath;
 
 use sdl2::video::Window;
 use sdl2::render::Canvas;
-use sdl2::rect::Rect;
-use sdl2::render::Texture as SdlTexture;
 use graphicsdevice::GraphicsDevice;
 use renderstate::RenderState;
 use spritebatcher::SpriteBatcher;
-use spritebatchitem::SpriteBatchItem;
 use rectangle::Rectangle;
 use spritefont::SpriteFont;
 use shader::Shader;
@@ -21,7 +18,6 @@ use std::option::Option;
 use std::f32;
 use std::rc::Rc;
 use std::ops::Mul;
-use std::cell::RefCell;
 
 #[derive(Copy, Clone)]
 pub enum SpriteSortMode
@@ -55,18 +51,18 @@ pub struct SpriteBatch {
     begin_called: bool,
     matrix: Matrix4<f32>,
     temp_rect: Rectangle,
-    texCoordTL: Vector2<f32>,
-    texCoordBR: Vector2<f32>,
+    tex_coord_tl: Vector2<f32>,
+    tex_coord_br: Vector2<f32>,
     scaled_origin: Vector2<f32>,
     origin_rect: Rectangle,
     sprite_font: SpriteFont,
     sort_mode: SpriteSortMode,
     // Culling stuff
     cull_rect: Rectangle,
-    vertexToCullTL: Vector2<f32>,
-    vertexToCullTR: Vector2<f32>,
-    vertexToCullBL: Vector2<f32>,
-    vertexToCullBR: Vector2<f32>,
+    vertex_to_cull_tl: Vector2<f32>,
+    vertex_to_cull_tr: Vector2<f32>,
+    vertex_to_cull_bl: Vector2<f32>,
+    vertex_to_cull_br: Vector2<f32>,
 }
 
 impl SpriteBatch {
@@ -80,11 +76,11 @@ impl SpriteBatch {
             begin_called: false,
             matrix: Matrix4::one(),
             temp_rect: Rectangle::new(0.0, 0.0, 0, 0),
-            texCoordTL: Vector2 {
+            tex_coord_tl: Vector2 {
                 x: 0.0,
                 y: 0.0,
             },
-            texCoordBR: Vector2 {
+            tex_coord_br: Vector2 {
                 x: 0.0,
                 y: 0.0,
             },
@@ -98,19 +94,19 @@ impl SpriteBatch {
             },
             sort_mode: SpriteSortMode::SpriteSortModeImmediate,
             cull_rect: Rectangle::new(0.0, 0.0, 0, 0),
-            vertexToCullTL: Vector2 {
+            vertex_to_cull_tl: Vector2 {
                 x: 0.0,
                 y: 0.0,
             },
-            vertexToCullTR: Vector2 {
+            vertex_to_cull_tr: Vector2 {
                 x: 0.0,
                 y: 0.0,
             },
-            vertexToCullBL: Vector2 {
+            vertex_to_cull_bl: Vector2 {
                 x: 0.0,
                 y: 0.0,
             },
-            vertexToCullBR: Vector2 {
+            vertex_to_cull_br: Vector2 {
                 x: 0.0,
                 y: 0.0,
             },
@@ -126,15 +122,15 @@ impl SpriteBatch {
         self.cull_rect.h = vp.h;
     }
 
-    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sortMode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transformMatrix: Option<Matrix4<f32>>) {
+    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sort_mode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transform_matrix: Option<Matrix4<f32>>) {
         self.render_state.shader = shader;
-        if transformMatrix.is_some() {
-            self.matrix = transformMatrix.unwrap();
+        if transform_matrix.is_some() {
+            self.matrix = transform_matrix.unwrap();
         } else {
             self.matrix = Matrix4::one();
         }
         self.render_state.transform = self.matrix;
-        self.sort_mode = sortMode;
+        self.sort_mode = sort_mode;
         self.compute_cull_rectangle(renderer);
         match self.sort_mode
         {
@@ -167,8 +163,8 @@ impl SpriteBatch {
         //when rendering to the screen matches the window and when
         //rendering to a texture/render target, matches the target.
         let mut _y: f32 = 0.0;
-        let (rendererWidth, rendererHeight) = renderer.output_size().unwrap();
-        _y = (rendererHeight - (vp.y as u32 + vp.h as u32)) as f32;
+        let (_renderer_width, renderer_height) = renderer.output_size().unwrap();
+        _y = (renderer_height - (vp.y as u32 + vp.h as u32)) as f32;
 
         self.render_state.viewport = Rectangle::new(vp.x as f32, _y, vp.w as i32, vp.h as i32);
         
@@ -176,8 +172,8 @@ impl SpriteBatch {
         // Normal 3D cameras look into the -z direction (z = 1 is in font of z = 0). The
         // sprite batch layer depth is the opposite (z = 0 is in front of z = 1).
         // --> We get the correct matrix with near plane 0 and far plane -1.
-        let mut projection: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, vp.w as f32, vp.h as f32, 0.0, 0.0, -1.0);
-        projection = Matrix4::mul(self.matrix, projection);
+        let mut _projection: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, vp.w as f32, vp.h as f32, 0.0, 0.0, -1.0);
+        _projection = Matrix4::mul(self.matrix, _projection);
     }
 
     pub fn draw_internal(&mut self, texture: Rc<Texture>,
@@ -185,20 +181,20 @@ impl SpriteBatch {
                                source_rectangle: Option<Rectangle>, color: Color,
                                rotation: f32, /* origin: Vector2<f32>, */
                                /*SpriteEffects *effects, */ depth: f32,
-                               autoFlush: bool) {
+                               auto_flush: bool) {
         
         // Cull geometry outside the viewport
-        self.vertexToCullTL.x = self.origin_rect.x + -self.scaled_origin.x * rotation.cos() - -self.scaled_origin.y * rotation.sin();
-        self.vertexToCullTL.y = self.origin_rect.y + -self.scaled_origin.x * rotation.sin() + -self.scaled_origin.y * rotation.cos();
+        self.vertex_to_cull_tl.x = self.origin_rect.x + -self.scaled_origin.x * rotation.cos() - -self.scaled_origin.y * rotation.sin();
+        self.vertex_to_cull_tl.y = self.origin_rect.y + -self.scaled_origin.x * rotation.sin() + -self.scaled_origin.y * rotation.cos();
         
-        self.vertexToCullTR.x = self.origin_rect.x + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.cos() - -self.scaled_origin.y * rotation.sin();
-        self.vertexToCullTR.y = self.origin_rect.y + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.sin() + -self.scaled_origin.y * rotation.cos();
+        self.vertex_to_cull_tr.x = self.origin_rect.x + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.cos() - -self.scaled_origin.y * rotation.sin();
+        self.vertex_to_cull_tr.y = self.origin_rect.y + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.sin() + -self.scaled_origin.y * rotation.cos();
         
-        self.vertexToCullBL.x = self.origin_rect.x + -self.scaled_origin.x * rotation.cos() - (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.sin();
-        self.vertexToCullBL.y = self.origin_rect.y + -self.scaled_origin.x * rotation.sin() + (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.cos();
+        self.vertex_to_cull_bl.x = self.origin_rect.x + -self.scaled_origin.x * rotation.cos() - (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.sin();
+        self.vertex_to_cull_bl.y = self.origin_rect.y + -self.scaled_origin.x * rotation.sin() + (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.cos();
 
-        self.vertexToCullBR.x = self.origin_rect.x + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.cos() - (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.sin();
-        self.vertexToCullBR.y = self.origin_rect.y + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.sin() + (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.cos();
+        self.vertex_to_cull_br.x = self.origin_rect.x + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.cos() - (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.sin();
+        self.vertex_to_cull_br.y = self.origin_rect.y + (-self.scaled_origin.x + self.origin_rect.w as f32) * rotation.sin() + (-self.scaled_origin.y + self.origin_rect.h as f32) * rotation.cos();
         
         
         /*if (!cullRect.containsAnyPoint(vertexToCullTL, vertexToCullTR, vertexToCullBL, vertexToCullBR)) {
@@ -218,10 +214,10 @@ impl SpriteBatch {
             self.temp_rect.h = texture.get_height() as i32;
         }
 
-        self.texCoordTL.x = self.temp_rect.x / texture.get_width() as f32;
-        self.texCoordTL.y = self.temp_rect.y / texture.get_height() as f32;
-        self.texCoordBR.x = (self.temp_rect.x + self.temp_rect.w as f32) / texture.get_width() as f32;
-        self.texCoordBR.y = (self.temp_rect.y + self.temp_rect.h as f32) / texture.get_height() as f32;
+        self.tex_coord_tl.x = self.temp_rect.x / texture.get_width() as f32;
+        self.tex_coord_tl.y = self.temp_rect.y / texture.get_height() as f32;
+        self.tex_coord_br.x = (self.temp_rect.x + self.temp_rect.w as f32) / texture.get_width() as f32;
+        self.tex_coord_br.y = (self.temp_rect.y + self.temp_rect.h as f32) / texture.get_height() as f32;
 
         /*if ((effect & SpriteEffects.FlipVertically) != 0) {
             var temp = _texCoordBR.Y;
@@ -236,11 +232,11 @@ impl SpriteBatch {
 
         //Log::debug(&texture.get_height().to_string());
         {
-            let mut item = self.batcher.create_batch_item();
+            let item = self.batcher.create_batch_item();
             item.set_with_rotation(self.origin_rect.x, self.origin_rect.y, 
                         -self.scaled_origin.x, -self.scaled_origin.y, self.origin_rect.w as f32, self.origin_rect.h as f32,
-                        rotation.sin(), rotation.cos(), color, self.texCoordTL,
-                        self.texCoordBR, depth, texture);
+                        rotation.sin(), rotation.cos(), color, self.tex_coord_tl,
+                        self.tex_coord_br, depth, texture);
             //Log::debug("{:?}", item.vertexTL.position);
             //Log::debug("{:?}", item.vertexTR.position);
             //Log::debug("{:?}", item.vertexBL.position);
@@ -254,17 +250,17 @@ impl SpriteBatch {
                 },
                     // Comparison of Depth
                 SpriteSortMode::SpriteSortModeFrontToBack => {
-                    item.sortKey = depth;
+                    item.sort_key = depth;
                 },
                     // Comparison of Depth in reverse
                 SpriteSortMode::SpriteSortModeBackToFront => {
-                    item.sortKey = -depth;
+                    item.sort_key = -depth;
                 },
                 _ => {},
             }
         }
 
-        if autoFlush {
+        if auto_flush {
             self.flush_if_needed();
         }
     }
@@ -283,19 +279,19 @@ impl SpriteBatch {
                destination_rectangle: Option<Rectangle>,
                source_rectangle: Option<Rectangle>, origin: Option<Vector2<f32>>,
                rotation: f32, scale: Option<Vector2<f32>>, color: Color,
-               /*SpriteEffects *effects, */ layerDepth: f32) {
-        let mut baseOrigin = Vector2::new(0.0, 0.0);
-        let mut baseScale = Vector2::new(1.0, 1.0);
+               /*SpriteEffects *effects, */ layer_depth: f32) {
+        let mut base_origin = Vector2::new(0.0, 0.0);
+        let mut base_scale = Vector2::new(1.0, 1.0);
         // Assign default values to null parameters here, as they are not compile-time
         // constants
         // if (color == nullptr) {
         //    color = sf::Color(255, 255, 255, 255);
         //}
         if origin.is_some() {
-            baseOrigin = origin.unwrap();
+            base_origin = origin.unwrap();
         }
         if scale.is_some() {
-            baseScale = scale.unwrap();
+            base_scale = scale.unwrap();
         }
 
         // If both drawRectangle and position are null, or if both have been assigned
@@ -311,8 +307,8 @@ impl SpriteBatch {
             Log::debug("SpriteBatch::draw() position");
             //Log::debug("{:?}", position);
             Log::debug("Calling draw_vector_scale");
-            self.draw_vector_scale(texture, position, source_rectangle, color, rotation, baseOrigin, baseScale,
-                /*effects,*/ layerDepth);
+            self.draw_vector_scale(texture, position, source_rectangle, color, rotation, base_origin, base_scale,
+                /*effects,*/ layer_depth);
         } else {
             // Call Draw() using drawRectangle
             Log::error(
@@ -326,12 +322,12 @@ impl SpriteBatch {
                        source_rectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: Vector2<f32>,
                        /*SpriteEffects *effects,*/
-                       layerDepth: f32) {
+                       layer_depth: f32) {
         // CheckValid(texture);
 
         let mut w = texture.get_width() as f32 * scale.x;
         let mut h = texture.get_height() as f32 * scale.y;
-        let mut src: Option<Rectangle>;
+        let src: Option<Rectangle>;
         match source_rectangle
         {
             Some(v) => {
@@ -354,17 +350,17 @@ impl SpriteBatch {
         self.draw_internal(texture, /*self.origin_rect,*/ src, color, rotation,
                     /*self.scaled_origin,*/
                     /*effects,*/
-                    layerDepth, true);
+                    layer_depth, true);
     }
 
     pub fn draw_float_scale(&mut self, texture: Rc<Texture>, position: Vector2<f32>,
                        source_rectangle: Rectangle, color: Color,
                        rotation: f32, origin: Vector2<f32>, scale: f32,
                        /*SpriteEffects effects,*/
-                       layerDepth: f32) {
+                       layer_depth: f32) {
         // CheckValid(texture);
         let s = Vector2::new(scale, scale);
-        self.draw_vector_scale(texture, Some(position), Some(source_rectangle), color, rotation, origin, s, layerDepth);
+        self.draw_vector_scale(texture, Some(position), Some(source_rectangle), color, rotation, origin, s, layer_depth);
     }
 
     pub fn draw_position(&mut self, texture: Rc<Texture>, position: Vector2<f32>) {
@@ -375,7 +371,7 @@ impl SpriteBatch {
                        source_rectangle: Option<Rectangle>, color: Color,
                        rotation: f32, origin: Vector2<f32>,
                        /*SpriteEffects effects,*/
-                       layerDepth: f32) {
+                       layer_depth: f32) {
         // CheckValid(texture);
 
         self.origin_rect.x = destination_rectangle.x;
@@ -406,7 +402,7 @@ impl SpriteBatch {
         self.draw_internal(texture, /* self.origin_rect,*/ source_rectangle, color, rotation,
                     /*self.scaled_origin,*/
                     /*effects,*/
-                    layerDepth, true);
+                    layer_depth, true);
     }
 
     pub fn draw_dst_src_color(&mut self, texture: Rc<Texture>, destination_rectangle: Rectangle,

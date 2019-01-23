@@ -1,17 +1,16 @@
 extern crate cgmath;
 
 use blendmode::BlendMode;
-use blendmode::BlendAlpha;
+use blendmode::BLEND_ALPHA;
 use shader::Shader;
 use texture::Texture;
 use rectangle::Rectangle;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
-use std::ptr;
 use std::rc::Rc;
 
 pub struct RenderState {
-    pub blendMode: BlendMode,
+    pub blend_mode: BlendMode,
     pub transform: Matrix4<f32>,
     pub texture: Option<Rc<Texture>>,
     pub shader: Option<Shader>,
@@ -21,7 +20,7 @@ pub struct RenderState {
 impl RenderState {
     pub fn new(texture: Option<Rc<Texture>>, shader: Option<Shader>) -> RenderState {
         RenderState {
-            blendMode: BlendAlpha,
+            blend_mode: BLEND_ALPHA,
             transform: Matrix4::one(),
             texture: texture,
             shader: shader,

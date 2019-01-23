@@ -2,7 +2,6 @@ extern crate cgmath;
 
 use component::Component;
 use componentlist::ComponentList;
-use collider::Collider;
 use colliderlist::ColliderList;
 use std::vec::Vec;
 use std::rc::Rc;

@@ -11,181 +11,182 @@ use std::rc::Rc;
 #[derive(Clone)]
 pub struct SpriteBatchItem {
     pub texture: Option<Rc<Texture>>,
-    pub vertexTL: VertexPositionColorTexture,
-    pub vertexTR: VertexPositionColorTexture,
-    pub vertexBL: VertexPositionColorTexture,
-    pub vertexBR: VertexPositionColorTexture,
-    pub sortKey: f32,
+    pub vertex_tl: VertexPositionColorTexture,
+    pub vertex_tr: VertexPositionColorTexture,
+    pub vertex_bl: VertexPositionColorTexture,
+    pub vertex_br: VertexPositionColorTexture,
+    pub sort_key: f32,
 }
 
 impl SpriteBatchItem {
     pub fn new() -> Self {
         SpriteBatchItem {
-            vertexTL: VertexPositionColorTexture::new(),
-            vertexTR: VertexPositionColorTexture::new(),
-            vertexBL: VertexPositionColorTexture::new(),
-            vertexBR: VertexPositionColorTexture::new(),
+            vertex_tl: VertexPositionColorTexture::new(),
+            vertex_tr: VertexPositionColorTexture::new(),
+            vertex_bl: VertexPositionColorTexture::new(),
+            vertex_br: VertexPositionColorTexture::new(),
             texture: None,
-            sortKey: 0.0,
+            sort_key: 0.0,
         }
     }
 
-    pub fn with_position(x: f32, y: f32, w: f32, h: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture>) -> Self {
+    pub fn with_position(x: f32, y: f32, w: f32, h: f32, color: Color, tex_coord_tl: Vector2<f32>, tex_coord_br: Vector2<f32>, depth: f32, texture: Rc<Texture>) -> Self {
         SpriteBatchItem {
-            vertexTL: VertexPositionColorTexture {
+            vertex_tl: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x,
                     y: y,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordTL.x,
-                    y: texCoordTL.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_tl.x,
+                    y: tex_coord_tl.y,
                 },
             },
-            vertexTR: VertexPositionColorTexture {
+            vertex_tr: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + w,
                     y: y,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordBR.x,
-                    y: texCoordTL.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_br.x,
+                    y: tex_coord_tl.y,
                 },
             },
-            vertexBL: VertexPositionColorTexture {
+            vertex_bl: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x,
                     y: y + h,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordTL.x,
-                    y: texCoordBR.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_tl.x,
+                    y: tex_coord_br.y,
                 },
             },
-            vertexBR: VertexPositionColorTexture {
+            vertex_br: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + w,
                     y: y + h,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordBR.x,
-                    y: texCoordBR.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_br.x,
+                    y: tex_coord_br.y,
                 },
             },
-            sortKey: 0.0,
+            sort_key: depth,
             texture: Some(texture),
         }
     }
 
-    pub fn with_rotation(x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture>) -> Self {
+    pub fn with_rotation(x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, tex_coord_tl: Vector2<f32>, tex_coord_br: Vector2<f32>, depth: f32, texture: Rc<Texture>) -> Self {
         SpriteBatchItem {
-            vertexTL: VertexPositionColorTexture {
+            vertex_tl: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + dx * cos - dy * sin,
                     y: y + dx * sin + dy * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordTL.x,
-                    y: texCoordTL.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_tl.x,
+                    y: tex_coord_tl.y,
                 },
             },
-            vertexTR: VertexPositionColorTexture {
+            vertex_tr: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + (dx + w) * cos - dy * sin,
                     y: y + (dx + w) * sin + dy * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordBR.x,
-                    y: texCoordTL.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_br.x,
+                    y: tex_coord_tl.y,
                 },
             },
-            vertexBL: VertexPositionColorTexture {
+            vertex_bl: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + dx * cos - (dy + h) * sin,
                     y: y + dx * sin + (dy + h) * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordTL.x,
-                    y: texCoordBR.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_tl.x,
+                    y: tex_coord_br.y,
                 },
             },
-            vertexBR: VertexPositionColorTexture {
+            vertex_br: VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + (dx + w) * cos - (dy + h) * sin,
                     y: y + (dx + w) * sin + (dy + h) * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordBR.x,
-                    y: texCoordBR.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_br.x,
+                    y: tex_coord_br.y,
                 },
             },
-            sortKey: 0.0,
+            sort_key: depth,
             texture: Some(texture),
         }
     }
 
-    pub fn set_with_rotation(&mut self, x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, texCoordTL: Vector2<f32>, texCoordBR: Vector2<f32>, depth: f32, texture: Rc<Texture>) {
+    pub fn set_with_rotation(&mut self, x: f32, y: f32, dx: f32, dy: f32, w: f32, h: f32, sin: f32, cos: f32, color: Color, tex_coord_tl: Vector2<f32>, tex_coord_br: Vector2<f32>, depth: f32, texture: Rc<Texture>) {
         Log::debug("SpriteBatchItem::set_with_rotation");
         Log::debug(&texture.get_height().to_string());
-        self.vertexTL = VertexPositionColorTexture {
+        self.vertex_tl = VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + dx * cos - dy * sin,
                     y: y + dx * sin + dy * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordTL.x,
-                    y: texCoordTL.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_tl.x,
+                    y: tex_coord_tl.y,
                 },
             };
-        self.vertexTR = VertexPositionColorTexture {
+        self.vertex_tr = VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + (dx + w) * cos - dy * sin,
                     y: y + (dx + w) * sin + dy * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordBR.x,
-                    y: texCoordTL.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_br.x,
+                    y: tex_coord_tl.y,
                 },
             };
-        self.vertexBL = VertexPositionColorTexture {
+        self.vertex_bl = VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + dx * cos - (dy + h) * sin,
                     y: y + dx * sin + (dy + h) * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordTL.x,
-                    y: texCoordBR.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_tl.x,
+                    y: tex_coord_br.y,
                 },
             };
-        self.vertexBR = VertexPositionColorTexture {
+        self.vertex_br = VertexPositionColorTexture {
                 position: Vector2 {
                     x: x + (dx + w) * cos - (dy + h) * sin,
                     y: y + (dx + w) * sin + (dy + h) * cos,
                 },
                 color: color,
-                textureCoordinate: Vector2 {
-                    x: texCoordBR.x,
-                    y: texCoordBR.y,
+                texture_coordinate: Vector2 {
+                    x: tex_coord_br.x,
+                    y: tex_coord_br.y,
                 },
             };
+        self.sort_key = depth;
         self.texture = Some(texture);
     }
 
     pub fn cmp(&self, other: &SpriteBatchItem) -> Ordering { 
-        if self.sortKey < other.sortKey {
+        if self.sort_key < other.sort_key {
             return Ordering::Less;
-        } else if self.sortKey > other.sortKey {
+        } else if self.sort_key > other.sort_key {
             return Ordering::Greater;
         } else {
             return Ordering::Equal;

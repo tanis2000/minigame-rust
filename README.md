@@ -17,13 +17,13 @@ Edit `src/test_shared.rs` and run `cargo build` to see hot reloading in action.
 Run `cargo run` to run with the dynamic library
 Run `cargo run --no-default-features` to run the application with all of the code statically linked and with hotloading disabled.
 
-## Installing needed targets for mobile:
+## Installing needed targets for mobile
 
 ```sh
 # iOS. Note: you need *all* five targets
 rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
 
-# Android.
+# Android
 rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 ```
 
@@ -41,15 +41,11 @@ To build for iOS simulator:
 cargo build --no-default-features --target x86_64-apple-ios --lib
 ```
 
-To get iOS running:
+This command will also download SDL2 and compile it for both the simulator and iOS device
 
-- Clone the SDL repo
-- Open the Xcode-iOS project and build the library for both the simulator and the device
-- Copy the resulting libraries in your target/[platform] folders 
-- Clone the sdl2-image repo from http://hg.libsdl.org/SDL_image/
-- Open the Xcode-iOS project and build the library for both the simulator and the device
-- Copy the resulting libraries in your target/[platform] folders 
-- Open the ios/minigame Xcode project and run it
+## Compiling the iOS project
+
+Just open the `ios/minigame/minigame.xcodeproj` Xcode project and run it and you should be done. 
 
 ## Building the Android standalone toolchain
 
@@ -63,7 +59,7 @@ To get iOS running:
 ## Configuration for Android linking
 
 For the time being you have to use a standalone toolchain. I'm pretty sure this can be solved with some clever
-code in `build.rs` by setting the correct sysroot, but that's something left for later. 
+code in `build.rs` by setting the correct sysroot, but that's something left for later.
 
 Edit `.cargo/config` and add the following:
 

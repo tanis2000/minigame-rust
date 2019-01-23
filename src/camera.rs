@@ -4,14 +4,12 @@ use self::cgmath::Matrix4;
 use self::cgmath::Vector2;
 use self::cgmath::Vector3;
 use self::cgmath::One;
-use self::cgmath::Zero;
 use self::cgmath::Rad;
 use self::cgmath::SquareMatrix;
 use std::ops::Mul;
 use utils::Clamp;
 use rectangle::Rectangle;
 use graphicsdevice::GraphicsDevice;
-use viewportadapter::ViewportAdapter;
 use viewportadapter::ViewportAdapterTrait;
 use utils::MinMax;
 use utils::mtx_mul_v;
@@ -199,7 +197,7 @@ impl<T: ViewportAdapterTrait> Camera<T> {
     }
 
     pub fn update_matrixes(&mut self) {
-        let mut temp_mat: Matrix4<f32> = Matrix4::zero();
+        let mut temp_mat: Matrix4<f32>;
         
         self.transform_matrix = Matrix4::from_translation(Vector3::new(-self.position.x, -self.position.y, 0.0)); // position
         temp_mat = Matrix4::from_nonuniform_scale(self.zoom, self.zoom, 1.0); // scale

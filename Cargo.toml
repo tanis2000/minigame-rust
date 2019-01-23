@@ -17,6 +17,8 @@ stb_image = "0.2.2"
 time = "0.1"
 
 [build-dependencies]
+cmake = "0.1.17"
+curl = "0.4.2"
 gl_generator = "0.5.3"
 
 [features]

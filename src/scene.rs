@@ -8,7 +8,6 @@ use renderer::Renderer;
 use std::vec::Vec;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
-use std::boxed::Box;
 use self::cgmath::Vector2;
 
 pub trait SceneTrait {

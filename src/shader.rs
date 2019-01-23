@@ -160,9 +160,17 @@ impl Shader {
                 match r.len() {
                     Some(size) => {
                         data = vec![0; size];
-                        r.read(&mut data);
-                        let src = String::from_utf8(data).unwrap();
-                        self.vert_shader = self.compile_shader(&src, gl::VERTEX_SHADER);
+                        let read_res = r.read(&mut data);
+                        match read_res {
+                            Ok(_read_size) => {
+                                let src = String::from_utf8(data).unwrap();
+                                self.vert_shader = self.compile_shader(&src, gl::VERTEX_SHADER);
+                            },
+                            Err(_read_error) => {
+                                Log::error("Cannot read file");
+                                return;
+                            }
+                        }
                     },
                     None => {
                         Log::error("Cannot read size of stream");
@@ -185,10 +193,18 @@ impl Shader {
                 match r.len() {
                     Some(size) => {
                         data = vec![0; size];
-                        r.read(&mut data);
-                        let mut src = String::from_utf8(data).unwrap();
-                        src = src.replace("#include \"primitives.frag\"", primitives);
-                        self.frag_shader = self.compile_shader(&src, gl::FRAGMENT_SHADER);
+                        let read_res = r.read(&mut data);
+                        match read_res {
+                            Ok(_read_size) => {
+                                let mut src = String::from_utf8(data).unwrap();
+                                src = src.replace("#include \"primitives.frag\"", primitives);
+                                self.frag_shader = self.compile_shader(&src, gl::FRAGMENT_SHADER);
+                            },
+                            Err(_read_error) => {
+                                Log::error("Cannot read file");
+                                return;
+                            }
+                        }
                     },
                     None => {
                         Log::error("Cannot read size of stream");

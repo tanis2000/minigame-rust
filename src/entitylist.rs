@@ -1,7 +1,6 @@
 use entity::Entity;
 use entity::IdNumber;
 use std::vec::Vec;
-use std::rc::Rc;
 
 pub struct EntityList {
     next_id: IdNumber,

@@ -75,13 +75,12 @@ pub fn load_string_from_file(path: &Path) -> Option<String> {
     let fs = RWops::from_file(path, "rb");
     match fs {
         Ok(mut r) => {
-            let mut data : Vec<u8>;
             match r.len() {
                 Some(size) => {
                     let mut data = vec![0; size];
                     let read_res = r.read(&mut data);
                     match read_res {
-                        Ok(rd) => {
+                        Ok(_read_size) => {
                             let src = String::from_utf8(data).unwrap();
                             return Some(src);
                         },

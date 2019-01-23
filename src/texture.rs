@@ -1,10 +1,7 @@
 use engine::gl::types::*;
 use engine::gl as gl;
-use std::cell::RefCell;
 use stb_image::image;
-use stb_image::image::*;
 use std::mem;
-use std::ptr;
 
 pub struct Texture {
     pub tex_id: GLuint,

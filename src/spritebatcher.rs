@@ -1,17 +1,11 @@
-use sdl2::render::RendererContext;
-use sdl2::render::Canvas;
-use sdl2::video::Window;
 use graphicsdevice::GraphicsDevice;
 use spritebatchitem::SpriteBatchItem;
 use spritebatch::SpriteSortMode;
-use spritebatch::SpriteBatch;
 use renderstate::RenderState;
 use texture::Texture;
 use log::Log;
 use std::i32;
-use std::vec;
 use std::rc::Rc;
-use std::cell::RefCell;
 use vertexpositioncolortexture::VertexPositionColorTexture;
 
 pub struct SpriteBatcher {
@@ -28,7 +22,7 @@ pub struct SpriteBatcher {
 impl SpriteBatcher {
     pub fn new(/*, graphics_device: &'a GraphicsDevice*/) -> Self {
         let mut bil = Vec::new();
-        for i in 0..256 {
+        for _i in 0..256 {
             bil.push(SpriteBatchItem::new());
         }
         
@@ -55,7 +49,7 @@ impl SpriteBatcher {
             new_size = (new_size + 63) & (!63);        // grow in chunks of 64.
             self.batch_item_list.resize(new_size as usize, SpriteBatchItem::new());
         }
-        let mut item = &mut self.batch_item_list[self.batch_item_count as usize];
+        let item = &mut self.batch_item_list[self.batch_item_count as usize];
         self.batch_item_count = self.batch_item_count + 1;
         item
     }
@@ -68,7 +62,6 @@ impl SpriteBatcher {
         }
 
         let mut new_index: Vec<i32> = Vec::with_capacity(needed_capacity as usize);
-        let start = 0;
 
         for i in 0..self.index.len() as usize {
             new_index.push(self.index[i]);
@@ -139,9 +132,9 @@ impl SpriteBatcher {
             }
 
             // Draw the batches
-            for i in 0..num_batches_to_process {
+            for _i in 0..num_batches_to_process {
                 // if the texture changed, we need to flush and bind the new texture
-                let mut should_flush: bool = false;
+                let mut should_flush: bool;
                 Log::debug("batch index follows");
                 Log::debug(&batch_index.to_string());
                 if self.batch_item_list[batch_index as usize].texture.is_some() {
@@ -172,17 +165,17 @@ impl SpriteBatcher {
 
                 let mut item = &mut self.batch_item_list[batch_index as usize];
                 // store the SpriteBatchItem data in our vertexArray
-                self.vertex_array[index as usize] = item.vertexTL;
+                self.vertex_array[index as usize] = item.vertex_tl;
                 index = index + 1;
-                self.vertex_array[index as usize] = item.vertexTR;
+                self.vertex_array[index as usize] = item.vertex_tr;
                 index = index + 1;
-                self.vertex_array[index as usize] = item.vertexBL;
+                self.vertex_array[index as usize] = item.vertex_bl;
                 index = index + 1;
-                self.vertex_array[index as usize] = item.vertexTR;
+                self.vertex_array[index as usize] = item.vertex_tr;
                 index = index + 1;
-                self.vertex_array[index as usize] = item.vertexBR;
+                self.vertex_array[index as usize] = item.vertex_br;
                 index = index + 1;
-                self.vertex_array[index as usize] = item.vertexBL;
+                self.vertex_array[index as usize] = item.vertex_bl;
                 index = index + 1;
 
                 Log::debug("SpriteBatcher::draw_batch()");
