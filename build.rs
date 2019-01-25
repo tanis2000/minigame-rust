@@ -9,6 +9,7 @@ use std::process::Command;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::io;
 
 fn main() {
     let profile = env::var("PROFILE").unwrap_or("Debug".to_string());
@@ -77,20 +78,26 @@ fn main() {
     }
 
     if target_os.contains("android") {
-        println!("cargo:rustc-flags=-C linker=/Users/tanis/android-sdk/ndk-bundle/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-gcc",);
+        //println!("cargo:rustc-flags=-C linker=/Users/tanis/android-sdk/ndk-bundle/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-gcc",);
 
-        Command::new("../gradlew")
+        let output = Command::new("../gradlew")
         .args(&["assemble"])
         .current_dir("android/Minigame/sdl")
-        .status()
+        .output()
         .expect("Error building Android project");
 
+        println!("status: {}", output.status);
+        io::stdout().write_all(&output.stdout).unwrap();
+        io::stderr().write_all(&output.stderr).unwrap();
+
+        panic!("hmm");
+        /*
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/armeabi",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/armeabi-v7a",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/x86",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/arm64-v8a",);
         println!("cargo:rustc-flags=-L android/Minigame/sdl/build/intermediates/cmake/debug/obj/x86_64",);
-
+        */
         // We should also add the following instead of defining our toolchain in .cargo/config
         // -C link-arg=--sysroot=$NDK_ROOT/platforms/android-<api level you are targeting>/arch-arm
 
