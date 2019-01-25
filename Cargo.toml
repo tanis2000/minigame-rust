@@ -12,7 +12,7 @@ rusttype = "0.2.1"
 png = "0.7.0"
 rand = "*"
 log = "0.3.8"
-#imgui = "0.0.15"
+#imgui = "0.0.20"
 stb_image = "0.2.2"
 time = "0.1"
 
