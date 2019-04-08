@@ -1,29 +1,37 @@
 {
-    "version": "0.1.0",
+    "version": "2.0.0",
     "command": "cargo",
-    "isShellCommand": true,
-    "showOutput": "always",
-    "suppressTaskName": true,
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+    },
     "tasks": [
         {
-            "taskName": "cargo build",
+            "label": "cargo build",
+            "type": "shell",
             "args": [
                 "build"
             ],
-            "isBuildCommand": true
+            "group": "build",
         },
         {
-            "taskName": "cargo run",
+            "label": "cargo run",
+            "type": "shell",
             "args": [
                 "run"
             ]
         },
         {
-            "taskName": "cargo test",
+            "label": "cargo test",
+            "type": "shell",
             "args": [
                 "test"
             ],
-            "isTestCommand": true
+            "group": "test",
         }
     ]
 }
