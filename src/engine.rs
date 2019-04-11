@@ -24,7 +24,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use rand::Rng;
 //use imgui::*;
-use time;
+//use time;
 
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
@@ -42,6 +42,7 @@ use imagecomponent::ImageComponent;
 use log::Log;
 use everythingrenderer::EverythingRenderer;
 use debugnamecomponentmanager::DebugNameComponentManager;
+use timer;
 use timer::Timer;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
@@ -416,7 +417,7 @@ impl Engine {
         let mut current_frame_delta: u64;
 
         // Last time (in nanoseconds)
-        let mut last_time = time::precise_time_ns();
+        let mut last_time = timer::precise_time_ns();
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -468,7 +469,7 @@ impl Engine {
                 });
             */
             
-            let current_time = time::precise_time_ns();
+            let current_time = timer::precise_time_ns();
             let delta_time = ((current_time - last_time) as f64) / 1_000_000_000.0;
             last_time = current_time;
             {

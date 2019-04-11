@@ -3,7 +3,7 @@ extern crate sdl2;
 extern crate rand;
 //extern crate imgui;
 extern crate stb_image;
-extern crate time;
+//extern crate time;
 
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;

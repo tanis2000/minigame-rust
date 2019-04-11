@@ -1,4 +1,4 @@
-use time;
+use std::time::{SystemTime, Duration, UNIX_EPOCH};
 
 pub struct Timer {
     start_mark: u64,
@@ -23,7 +23,7 @@ impl Timer {
         if self.running {
             return;
         }
-        self.start_mark = time::precise_time_ns();
+        self.start_mark = precise_time_ns();
         /*
         unsafe {
             self.start_mark = sdl2::sys::timer::SDL_GetTicks();
@@ -39,7 +39,7 @@ impl Timer {
         if !self.running {
             return;
         }
-        self.stop_mark = time::precise_time_ns();
+        self.stop_mark = precise_time_ns();
         /*
         unsafe {
             self.stop_mark = sdl2::sys::timer::SDL_GetTicks();
@@ -58,7 +58,7 @@ impl Timer {
         if !self.running || self.paused {
             return;
         }
-        self.paused_mark = time::precise_time_ns() - self.start_mark;
+        self.paused_mark = precise_time_ns() - self.start_mark;
         /*
         unsafe {
             self.paused_mark = sdl2::sys::timer::SDL_GetTicks() - self.start_mark;
@@ -72,7 +72,7 @@ impl Timer {
         if self.running || !self.paused {
             return;
         }
-        self.start_mark = time::precise_time_ns() - self.paused_mark;
+        self.start_mark = precise_time_ns() - self.paused_mark;
         /*
         unsafe {
             self.start_mark = sdl2::sys::timer::SDL_GetTicks() - self.paused_mark;
@@ -116,7 +116,7 @@ impl Timer {
     }
 
     pub fn current_time(&mut self) -> u64 {
-        return time::precise_time_ns() - self.start_mark;
+        return precise_time_ns() - self.start_mark;
         /*
         unsafe {
             return sdl2::sys::timer::SDL_GetTicks() - self.start_mark;
@@ -124,4 +124,10 @@ impl Timer {
         */
     }
 
+}
+
+pub fn precise_time_ns() -> u64 {
+    let start = SystemTime::now();
+    let since_epoch = start.duration_since(UNIX_EPOCH).expect("Moving back in time. This should not happen.");
+    return since_epoch.as_nanos() as u64;
 }
