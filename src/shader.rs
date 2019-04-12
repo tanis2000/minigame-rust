@@ -5,8 +5,8 @@ use std::ptr;
 use std::str;
 use std::path::Path;
 use std::io::Read;
-use sdl2::rwops::RWops;
 use log::Log;
+use utils;
 
 enum Type {
     Vertex,
@@ -15,12 +15,12 @@ enum Type {
 
 #[cfg(any(target_os="android", target_os="ios"))]
 fn precision() -> String {
-    String::from("precision mediump float;\n")
+    String::from("#version 120\nprecision mediump float;\n")
 }
 
 #[cfg(not(any(target_os="android", target_os="ios")))]
 fn precision() -> String {
-    String::from("")
+    String::from("#version 120\n")
 }
 
 static VS_SRC: &'static str = "\n\
@@ -153,67 +153,27 @@ impl Shader {
     }
 
     pub fn load_vert(&mut self, path: &Path) {
-        let fs = RWops::from_file(path, "rb");
-        match fs {
-            Ok(mut r) => {
-                let mut data : Vec<u8>;
-                match r.len() {
-                    Some(size) => {
-                        data = vec![0; size];
-                        let read_res = r.read(&mut data);
-                        match read_res {
-                            Ok(_read_size) => {
-                                let src = String::from_utf8(data).unwrap();
-                                self.vert_shader = self.compile_shader(&src, gl::VERTEX_SHADER);
-                            },
-                            Err(_read_error) => {
-                                Log::error("Cannot read file");
-                                return;
-                            }
-                        }
-                    },
-                    None => {
-                        Log::error("Cannot read size of stream");
-                        return;
-                    }
-                }
+        let src = utils::load_string_from_file(path);
+        match src {
+            Some(src) => {
+                self.vert_shader = self.compile_shader(&src, gl::VERTEX_SHADER);
             },
-            Err(s) => {
-                Log::error(&s);
+            None => {
+                Log::error("Cannot read content of vertex shader file");
                 return;
             }
         }
     }
 
     pub fn load_frag(&mut self, path: &Path, primitives: &str) {
-        let fs = RWops::from_file(path, "rb");
-        match fs {
-            Ok(mut r) => {
-                let mut data : Vec<u8>;
-                match r.len() {
-                    Some(size) => {
-                        data = vec![0; size];
-                        let read_res = r.read(&mut data);
-                        match read_res {
-                            Ok(_read_size) => {
-                                let mut src = String::from_utf8(data).unwrap();
-                                src = src.replace("#include \"primitives.frag\"", primitives);
-                                self.frag_shader = self.compile_shader(&src, gl::FRAGMENT_SHADER);
-                            },
-                            Err(_read_error) => {
-                                Log::error("Cannot read file");
-                                return;
-                            }
-                        }
-                    },
-                    None => {
-                        Log::error("Cannot read size of stream");
-                        return;
-                    }
-                }
+        let src = utils::load_string_from_file(path);
+        match src {
+            Some(src) => {
+                let src2 = src.replace("#include \"primitives.frag\"", primitives);
+                self.frag_shader = self.compile_shader(&src2, gl::FRAGMENT_SHADER);
             },
-            Err(s) => {
-                Log::error(&s);
+            None => {
+                Log::error("Cannot read content of fragment shader file");
                 return;
             }
         }

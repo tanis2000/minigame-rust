@@ -1,7 +1,5 @@
 extern crate cgmath;
 
-use sdl2::video::Window;
-use sdl2::render::Canvas;
 use graphicsdevice::GraphicsDevice;
 use renderstate::RenderState;
 use spritebatcher::SpriteBatcher;
@@ -113,16 +111,16 @@ impl SpriteBatch {
         }
     }
 
-    pub fn compute_cull_rectangle<'c>(&mut self, renderer: &'c Canvas<Window>) {
-        let vp = renderer.viewport();
+    pub fn compute_cull_rectangle<'c>(&mut self, viewport: cgmath::Vector4<i32>) {
+        let vp = viewport;
         
         self.cull_rect.x = vp.x as f32;
         self.cull_rect.y = vp.y as f32;
-        self.cull_rect.w = vp.w;
-        self.cull_rect.h = vp.h;
+        self.cull_rect.w = vp.z;
+        self.cull_rect.h = vp.w;
     }
 
-    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sort_mode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transform_matrix: Option<Matrix4<f32>>) {
+    pub fn begin<'c>(&mut self, viewport: cgmath::Vector4<i32>, sort_mode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transform_matrix: Option<Matrix4<f32>>) {
         self.render_state.shader = shader;
         if transform_matrix.is_some() {
             self.matrix = transform_matrix.unwrap();
@@ -131,11 +129,11 @@ impl SpriteBatch {
         }
         self.render_state.transform = self.matrix;
         self.sort_mode = sort_mode;
-        self.compute_cull_rectangle(renderer);
+        self.compute_cull_rectangle(viewport);
         match self.sort_mode
         {
             SpriteSortMode::SpriteSortModeImmediate => {
-                self.setup(renderer);
+                self.setup(viewport);
             },
             _ => {},
         }
@@ -143,19 +141,19 @@ impl SpriteBatch {
         self.begin_called = true;
     }
 
-    pub fn end<'c>(&mut self, renderer: &'c Canvas<Window>) {
+    pub fn end<'c>(&mut self, viewport: cgmath::Vector4<i32>) {
         self.begin_called = false;
         match self.sort_mode {
             SpriteSortMode::SpriteSortModeImmediate => {},
             _ => {
-                self.setup(renderer);
+                self.setup(viewport);
             },
         }
         self.batcher.draw_batch(self.sort_mode, &mut self.render_state, &mut self.graphics_device);
     }
 
-    pub fn setup<'c>(&mut self, renderer: &'c Canvas<Window>) {
-        let vp = renderer.viewport();
+    pub fn setup<'c>(&mut self, viewport: cgmath::Vector4<i32>) {
+        let vp = viewport;
 
         //In OpenGL the viewport is bottom left origin, so we flip the y
         //when submitting our top left based coordinates.
@@ -163,16 +161,17 @@ impl SpriteBatch {
         //when rendering to the screen matches the window and when
         //rendering to a texture/render target, matches the target.
         let mut _y: f32 = 0.0;
-        let (_renderer_width, renderer_height) = renderer.output_size().unwrap();
-        _y = (renderer_height - (vp.y as u32 + vp.h as u32)) as f32;
+        let _renderer_width = viewport.z;
+        let renderer_height = viewport.w;
+        _y = (renderer_height - (vp.y as i32 + vp.w as i32)) as f32;
 
-        self.render_state.viewport = Rectangle::new(vp.x as f32, _y, vp.w as i32, vp.h as i32);
+        self.render_state.viewport = Rectangle::new(vp.x as f32, _y, vp.z as i32, vp.w as i32);
         
         
         // Normal 3D cameras look into the -z direction (z = 1 is in font of z = 0). The
         // sprite batch layer depth is the opposite (z = 0 is in front of z = 1).
         // --> We get the correct matrix with near plane 0 and far plane -1.
-        let mut _projection: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, vp.w as f32, vp.h as f32, 0.0, 0.0, -1.0);
+        let mut _projection: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, vp.z as f32, vp.w as f32, 0.0, 0.0, -1.0);
         _projection = Matrix4::mul(self.matrix, _projection);
     }
 

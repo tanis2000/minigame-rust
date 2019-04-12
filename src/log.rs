@@ -1,5 +1,3 @@
-use sdl2::log::log;
-
 #[derive(Debug)]
 pub enum LogLevel {
     Debug,
@@ -17,7 +15,7 @@ impl Log {
     pub fn debug(msg: &str) {
         match LOGLEVEL {
             LogLevel::Debug => {
-                log(msg);
+                println!("{}", msg);
             },
             _ => {}
         }
@@ -26,10 +24,10 @@ impl Log {
     pub fn info(msg: &str) {
         match LOGLEVEL {
             LogLevel::Debug => {
-                log(msg);
+                println!("{}", msg);
             },
             LogLevel::Info => {
-                log(msg);
+                println!("{}", msg);
             },
             _ => {}
         }
@@ -38,13 +36,13 @@ impl Log {
     pub fn warning(msg: &str) {
         match LOGLEVEL {
             LogLevel::Debug => {
-                log(msg);
+                println!("{}", msg);
             },
             LogLevel::Info => {
-                log(msg);
+                println!("{}", msg);
             },
             LogLevel::Warning => {
-                log(msg);
+                println!("{}", msg);
             },
             _ => {}
         }
@@ -53,16 +51,16 @@ impl Log {
     pub fn error(msg: &str) {
         match LOGLEVEL {
             LogLevel::Debug => {
-                log(msg);
+                println!("{}", msg);
             },
             LogLevel::Info => {
-                log(msg);
+                println!("{}", msg);
             },
             LogLevel::Warning => {
-                log(msg);
+                println!("{}", msg);
             },
             LogLevel::Error => {
-                log(msg);
+                println!("{}", msg);
             },
         }
     }

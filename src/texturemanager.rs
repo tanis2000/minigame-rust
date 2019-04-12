@@ -1,79 +1,66 @@
 use std::rc::Rc;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fs::File;
 use std::path::Path;
 use std::string::String;
 use std::io::Read;
-use sdl2::render::TextureCreator;
-use sdl2::video::WindowContext;
-use sdl2::rwops::RWops;
-use stb_image::image;
-use stb_image::image::LoadResult::ImageU8;
-use stb_image::image::LoadResult::ImageF32;
 use texture::Texture;
 use log::Log;
 
-pub struct TextureManager<'tm> {
-    texture_creator: &'tm TextureCreator<WindowContext>,
+pub struct TextureManager {
     items: HashMap<String, Rc<Texture>>,
 }
 
-impl <'tm>TextureManager<'tm> {
-    pub fn new(texture_creator: &'tm TextureCreator<WindowContext>) -> TextureManager<'tm> {
+impl TextureManager {
+    pub fn new() -> TextureManager {
         TextureManager {
-            texture_creator: texture_creator,
             items: HashMap::new(),
         }
     }
 
     pub fn load(&mut self, id: String, path: &Path) {
-        let fs = RWops::from_file(path, "rb");
+        let fs = File::open(path);
         match fs {
-            Ok(mut r) => {
+            Ok(mut fs) => {
                 let mut data : Vec<u8>;
-                match r.len() {
-                    Some(size) => {
-                        data = vec![0; size];
-                        match r.read(&mut data) {
+                let metadata = fs.metadata();
+                match metadata {
+                    Ok(metadata) => {
+                        let file_size = metadata.len();
+                        data = vec![0; file_size as usize];
+                        match fs.read(&mut data) {
                             Ok(_read_size) => {
-                                //let stbimg = image::load(path);
-                                let stbimg = image::load_from_memory(&data);
-                                match stbimg {
-                                    ImageU8(img) => {
-                                        let sdltex = img;
+                                let img = image::load_from_memory(&data);
+                                match img {
+                                    Ok(img) => {
                                         let mut tex = Texture::new();
-                                        tex.from_image_u8(sdltex);
+                                        tex.from_image_u8(img);
                                         self.items.insert(id, Rc::new(tex));
                                     },
-                                    ImageF32(img) => {
-                                        let sdltex = img;
-                                        let mut tex = Texture::new();
-                                        tex.from_image_f32(sdltex);
-                                        self.items.insert(id, Rc::new(tex));
-                                    },
-                                    Error => {
-                                        Log::error("Error loading texture");
+                                    Err(err) => {
+                                        Log::error(err.description());
                                         return;
-                                    },
+                                    }
                                 }
                             },
-                            Err(e) => {
-                                Log::error(&e.to_string());
+                            Err(err) => {
+                                Log::error(err.description());
                                 return;
                             }
                         }
                     },
-                    None => {
-                        Log::error("Cannot read size of stream");
+                    Err(err) => {
+                        Log::error(err.description());
                         return;
                     }
                 }
             },
-            Err(s) => {
-                Log::error(&s);
+            Err(err) => {
+                Log::error(err.description());
                 return;
             }
         }
-        //let sdltex = self.texture_creator.load_texture(path).unwrap();
     }
 
     pub fn get(&self, id: &String) -> Rc<Texture> {

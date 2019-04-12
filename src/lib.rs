@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-extern crate sdl2;
 extern crate rand;
+extern crate glutin;
+extern crate image;
 //extern crate imgui;
-extern crate stb_image;
 //extern crate time;
 
 #[cfg(feature = "hotload")]

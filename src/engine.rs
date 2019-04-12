@@ -1,9 +1,9 @@
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;
 
-extern crate sdl2;
 extern crate cgmath;
 extern crate rand;
+extern crate glutin;
 //extern crate imgui;
 
 //#[cfg(not(feature = "hotload"))]
@@ -15,16 +15,13 @@ use std::rc::Rc;
 use std::time::Duration;
 use std::thread;
 use std::str;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::ptr;
 use std::path::Path;
-//use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
-use sdl2::pixels::Color as SdlColor;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use rand::Rng;
 //use imgui::*;
 //use time;
+use glutin::{ContextTrait, WindowedContext};
 
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
@@ -86,6 +83,7 @@ impl Plugins {
     }
 }
 
+/*
 fn find_sdl_gl_driver() -> Option<u32> {
     for (index, item) in sdl2::render::drivers().enumerate() {
         sdl2::log::log(item.name);
@@ -98,6 +96,7 @@ fn find_sdl_gl_driver() -> Option<u32> {
     sdl2::log::log("No OpenGL driver chosen");
     None
 }
+*/
 
 // Vertex data
 static VERTEX_DATA: [GLfloat; 6] = [0.0, 0.5, 0.5, -0.5, -0.5, -0.5];
@@ -263,7 +262,29 @@ impl Engine {
     pub fn run_loop(&mut self) {
         let (mut plugs, mut reload_handler) = plugin_load();
 
+        // Init glutin
+        let mut el = glutin::EventsLoop::new();
+        let wb = glutin::WindowBuilder::new()
+        .with_title("minigame-rust")
+        .with_dimensions(glutin::dpi::LogicalSize::new(800.0, 600.0));
+
+        let windowed_context = glutin::ContextBuilder::new()
+            .with_vsync(true)
+            .with_gl_profile(glutin::GlProfile::Compatibility)
+            //.with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGlEs, (3, 0)))
+            .build_windowed(wb, &el)
+            .unwrap();
+
+        /*let windowed_context =*/ unsafe { windowed_context.make_current().unwrap() };
+
+        println!(
+            "Pixel format of the window's GL context: {:?}",
+            windowed_context.get_pixel_format()
+        );
+
+
         // Init SDL2
+        /*
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
 
@@ -280,10 +301,30 @@ impl Engine {
         .index(find_sdl_gl_driver().unwrap())
         .build()
         .unwrap();
+        */
 
-        sdl2::log::log("Loading GL extensions");
-        gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const _);
-        sdl2::log::log("Setting current GL context");
+        println!("Loading GL extensions");
+        gl::load_with(|s| windowed_context.context().get_proc_address(s) as *const _);
+
+        let version = unsafe {
+        let data = CStr::from_ptr(gl::GetString(gl::VERSION) as *const _)
+            .to_bytes()
+            .to_vec();
+            String::from_utf8(data).unwrap()
+        };
+
+        println!("OpenGL version {}", version);
+
+        let glsl_version = unsafe {
+        let data = CStr::from_ptr(gl::GetString(gl::SHADING_LANGUAGE_VERSION) as *const _)
+            .to_bytes()
+            .to_vec();
+            String::from_utf8(data).unwrap()
+        };
+
+        println!("GLSL version {}", glsl_version);
+        /*
+        println!("Setting current GL context");
         let gl_set_context_res = canvas.window().gl_set_context_to_current();
         match gl_set_context_res {
             Ok(_context) => {
@@ -294,6 +335,7 @@ impl Engine {
         }
         Log::info("Enabling VSYNC");
         video_subsystem.gl_set_swap_interval(1);
+        */
 
         // Create GLSL shaders
         /*
@@ -328,7 +370,7 @@ impl Engine {
         }
         */
 
-        let mut event_pump = sdl_context.event_pump().unwrap();
+        //let mut event_pump = sdl_context.event_pump().unwrap();
 
         /*
         // test_shared is generated in build.rs
@@ -344,8 +386,8 @@ impl Engine {
         let mut shader = Shader::new();
         shader.load_default();
 
-        let tc = canvas.texture_creator();
-        let mut tm = TextureManager::new(&tc);
+        //let tc = canvas.texture_creator();
+        let mut tm = TextureManager::new();
         let wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
         tm.load(String::from("wabbit"), Path::new(&String::from(wabbit_path)));
         let wabbit = tm.get(&String::from("wabbit"));
@@ -358,8 +400,8 @@ impl Engine {
 
         let mut scene = Scene::new(32);
         let entity_id = scene.create_entity();
-        sdl2::log::log("Entity id follows");
-        sdl2::log::log(&entity_id.to_string());
+        println!("Entity id follows");
+        println!("{}", &entity_id.to_string());
         let debug_name_instance = debug_name_manager.create(entity_id);
         Log::debug("Debug name instance");
         Log::debug(&debug_name_instance.i.to_string());
@@ -375,7 +417,7 @@ impl Engine {
                     entity.add(Rc::new(ic));
                 },
                 None => {
-                    sdl2::log::log("Something went wrong with the entity")
+                    println!("Something went wrong with the entity")
                 },
             }
         }
@@ -419,10 +461,14 @@ impl Engine {
         // Last time (in nanoseconds)
         let mut last_time = timer::precise_time_ns();
 
+
+        let mut window_size = glutin::dpi::LogicalSize::new(0.0, 0.0);
+
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
         // build the project with cargo build and notice that this code will now return the new value
         //
+        let mut running = true;
         'running: loop {
             plugin_update(&mut plugs, &mut reload_handler);
 
@@ -439,6 +485,48 @@ impl Engine {
             }
             */
 
+            el.poll_events(|event| {
+                println!("{:?}", event);
+                match event {
+                    glutin::Event::WindowEvent { event, .. } => match event {
+                        glutin::WindowEvent::CloseRequested => running = false,
+                        glutin::WindowEvent::Resized(logical_size) => {
+                            window_size.width = logical_size.width;
+                            window_size.height = logical_size.height;
+                            let dpi_factor = windowed_context.get_hidpi_factor();
+                            windowed_context
+                                .resize(logical_size.to_physical(dpi_factor));
+                        },
+                        glutin::WindowEvent::HiDpiFactorChanged(dpi) => {
+                            println!("DPI: {}", dpi.to_string());
+                        },
+                        _ => (),
+                    },
+                    glutin::Event::DeviceEvent { event, .. } => match event {
+                        glutin::DeviceEvent::Key(keyboard_input) => {
+                            match keyboard_input.virtual_keycode {
+                                Some(code) => {
+                                    match code {
+                                        glutin::VirtualKeyCode::Escape => {
+                                            running = false;
+                                        },
+                                        _ => {},
+                                    }
+                                },
+                                None => {},
+                            }
+                        },
+                        _ => (),
+                    }
+                    _ => (),
+                }
+            });
+
+            if !running {
+                break 'running;
+            }
+
+            /*
             for event in event_pump.poll_iter() {
                 match event {
                     Event::Quit { .. } |
@@ -446,9 +534,14 @@ impl Engine {
                     _ => {}
                 }
             }
+            */
 
-            canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
-            canvas.clear();
+            unsafe {
+                gl::ClearColor(0.7, 1.0, 1.0, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+            }
+            //canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
+            //canvas.clear();
 
             /*
             sdl2::log::log("Drawing triangle");
@@ -479,18 +572,19 @@ impl Engine {
                 //sdl2::log::log(&wabbit.get_height().to_string());
                 //sdl2::log::log(&wabbit.get_width().to_string());
 
-                sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
+                sb.begin(cgmath::Vector4::new(0, 0, window_size.width as i32, window_size.height as i32), SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
                     bunny.update(delta_time);
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                 }
-                sb.end(&mut canvas);
+                sb.end(cgmath::Vector4::new(0, 0, window_size.width as i32, window_size.height as i32));
             }
 
             debug_name_manager.update(0.0);
             scene.render_entities();
 
-            canvas.present();
+            windowed_context.swap_buffers().unwrap();
+            //canvas.present();
 
             //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
             // The rest of the game loop goes here...

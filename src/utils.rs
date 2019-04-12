@@ -4,8 +4,8 @@ use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 
 use std::path::Path;
+use std::fs::File;
 use std::io::Read;
-use sdl2::rwops::RWops;
 use log::Log;
 
 pub trait Clamp {
@@ -72,14 +72,16 @@ impl Mul for Vector2<f32> {
 */
 
 pub fn load_string_from_file(path: &Path) -> Option<String> {
-    let fs = RWops::from_file(path, "rb");
+    let fs = File::open(path);
     match fs {
-        Ok(mut r) => {
-            match r.len() {
-                Some(size) => {
-                    let mut data = vec![0; size];
-                    let read_res = r.read(&mut data);
-                    match read_res {
+        Ok(mut fs) => {
+            let mut data : Vec<u8>;
+            let metadata = fs.metadata();
+            match metadata {
+                Ok(metadata) => {
+                    let file_size = metadata.len();
+                    data = vec![0; file_size as usize];
+                    match fs.read(&mut data) {
                         Ok(_read_size) => {
                             let src = String::from_utf8(data).unwrap();
                             return Some(src);
@@ -90,14 +92,14 @@ pub fn load_string_from_file(path: &Path) -> Option<String> {
                         }
                     }
                 },
-                None => {
-                    Log::error("Cannot read size of stream");
+                Err(e) => {
+                    Log::error(&e.to_string());
                     return None;
                 }
             }
         },
-        Err(s) => {
-            Log::error(&s);
+        Err(e) => {
+            Log::error(&e.to_string());
             return None;
         }
     }
