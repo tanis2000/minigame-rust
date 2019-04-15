@@ -5,12 +5,10 @@ authors = [ "Valerio Santinelli <santinelli@gmail.com>" ]
 build = "build.rs"
 
 [dependencies]
-dynamic_reload = {version = "0.2.1", optional=true}
-sdl2 = { default-features = false, features = ["unsafe_textures"], git = "https://github.com/Rust-SDL2/rust-sdl2.git", branch = "unsafe-textures-feature" }
+sdl2 = { version = "0.32", default-features = false, features = ["unsafe_textures"] }
 cgmath = "0.14.1"
 rusttype = "0.2.1"
 png = "0.7.0"
-rand = "*"
 log = "0.3.8"
 #imgui = "0.0.20"
 stb_image = "0.2.2"
@@ -18,7 +16,7 @@ stb_image = "0.2.2"
 
 [build-dependencies]
 cmake = "0.1.17"
-curl = "0.4.2"
+curl = "0.4.20"
 gl_generator = "0.5.3"
 
 [features]
@@ -27,6 +25,14 @@ default = ["hotload"]
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = { version = "0.4", default-features = false }
+
+[target.'cfg(target_os="wasm32")'.dependencies]
+#rand = { version = "0.6", features = ["stdweb" , "wasm-bindgen"] }
+rand = { version = "0.6", features = ["stdweb"] }
+
+[target.'cfg(not(target_os="wasm32"))'.dependencies]
+rand = "0.6"
+dynamic_reload = {version = "0.2.1", optional=true}
 
 [lib]
 name = "minigame"
