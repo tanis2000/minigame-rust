@@ -38,26 +38,26 @@ impl TextureManager {
                                         tex.from_image_u8(img);
                                         self.items.insert(id, Rc::new(tex));
                                     },
-                                    Err(err) => {
-                                        Log::error(err.description());
+                                    Err(e) => {
+                                        Log::error(&e.to_string());
                                         return;
                                     }
                                 }
                             },
-                            Err(err) => {
-                                Log::error(err.description());
+                            Err(e) => {
+                                Log::error(&e.to_string());
                                 return;
                             }
                         }
                     },
-                    Err(err) => {
-                        Log::error(err.description());
+                    Err(e) => {
+                        Log::error(&e.to_string());
                         return;
                     }
                 }
             },
-            Err(err) => {
-                Log::error(err.description());
+            Err(e) => {
+                Log::error(&e.to_string());
                 return;
             }
         }

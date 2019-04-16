@@ -16,7 +16,6 @@
 		024D145D1EE70C5100D211B4 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145C1EE70C5100D211B4 /* AVFoundation.framework */; };
 		024D145F1EE70C5A00D211B4 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145E1EE70C5A00D211B4 /* AudioToolbox.framework */; };
 		028ECE561EE68FEF0008EC84 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE551EE68FEF0008EC84 /* main.m */; };
-		028ECE591EE68FEF0008EC84 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE581EE68FEF0008EC84 /* AppDelegate.m */; };
 		028ECE5C1EE68FEF0008EC84 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE5B1EE68FEF0008EC84 /* ViewController.m */; };
 		028ECE5F1EE68FEF0008EC84 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 028ECE5D1EE68FEF0008EC84 /* Main.storyboard */; };
 		028ECE611EE68FEF0008EC84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 028ECE601EE68FEF0008EC84 /* Assets.xcassets */; };
@@ -167,6 +166,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -200,7 +200,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				028ECE5C1EE68FEF0008EC84 /* ViewController.m in Sources */,
-				028ECE591EE68FEF0008EC84 /* AppDelegate.m in Sources */,
 				028ECE561EE68FEF0008EC84 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

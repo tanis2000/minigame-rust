@@ -15,7 +15,7 @@ enum Type {
 
 #[cfg(any(target_os="android", target_os="ios"))]
 fn precision() -> String {
-    String::from("#version 120\nprecision mediump float;\n")
+    String::from("precision mediump float;\n")
 }
 
 #[cfg(not(any(target_os="android", target_os="ios")))]

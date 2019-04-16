@@ -18,3 +18,9 @@ int main(int argc, char * argv[]) {
   }
 }
  */
+
+extern void SDL_main();
+
+int main(int argc, char * argv[]) {
+    SDL_main();
+}

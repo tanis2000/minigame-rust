@@ -1,6 +1,9 @@
 #[cfg(feature = "hotload")]
 extern crate dynamic_reload;
 
+#[cfg(any(target_os="ios"))]
+extern crate objc;
+
 extern crate cgmath;
 extern crate rand;
 extern crate glutin;
@@ -19,12 +22,18 @@ use std::ffi::{CStr, CString};
 use std::ptr;
 use std::path::Path;
 use rand::Rng;
+use std::os::raw::{c_char};
 //use imgui::*;
 //use time;
 use glutin::{ContextTrait, WindowedContext};
 
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
+
+#[cfg(any(target_os="ios"))]
+use self::objc::*;
+#[cfg(any(target_os="ios"))]
+use self::objc::runtime::*;
 
 use spritebatch::SpriteBatch;
 use spritebatch::SpriteSortMode;
@@ -247,8 +256,32 @@ impl Engine {
         }
     }
 
-    #[cfg(any(target_os="android", target_os="ios"))]
+    #[cfg(any(target_os="android"))]
     fn assets_path(&self) -> String {
+        String::from("assets/")
+    }
+
+    #[cfg(any(target_os="ios"))]
+    fn assets_path(&self) -> String {
+        unsafe {
+            let cls = class!(NSBundle);
+            let bundle: *mut Object = msg_send![cls, mainBundle];
+            let path: *mut Object = msg_send![bundle, resourcePath];
+            let path_utf8: *const c_char = msg_send![path, UTF8String];
+            let cstring = CStr::from_ptr(path_utf8);
+            let str_slice = cstring.to_str();
+            match str_slice {
+                Ok(str_slice) => {
+                    let str_buf: String = str_slice.to_owned();
+                    println!("{}", str_buf);
+                    let asset = format!("{}{}", str_buf, String::from("/assets/"));
+                    return asset;
+                },
+                Err(e) => {
+                    println!("{}", &e.to_string());
+                }
+            }
+        }
         String::from("assets/")
     }
 
@@ -389,6 +422,7 @@ impl Engine {
         //let tc = canvas.texture_creator();
         let mut tm = TextureManager::new();
         let wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
+        println!("{}", wabbit_path);
         tm.load(String::from("wabbit"), Path::new(&String::from(wabbit_path)));
         let wabbit = tm.get(&String::from("wabbit"));
 
