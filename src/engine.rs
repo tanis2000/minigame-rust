@@ -6,7 +6,10 @@ extern crate objc;
 
 extern crate cgmath;
 extern crate rand;
+#[cfg(not(target_arch="wasm32"))]
 extern crate glutin;
+#[cfg(target_arch="wasm32")]
+extern crate stdweb;
 //extern crate imgui;
 
 //#[cfg(not(feature = "hotload"))]
@@ -15,6 +18,7 @@ extern crate glutin;
 #[cfg(feature = "hotload")]
 use dynamic_reload::{DynamicReload, Lib, Symbol, Search, PlatformName, UpdateState};
 use std::rc::Rc;
+use std::sync::Arc;
 use std::time::Duration;
 use std::thread;
 use std::str;
@@ -25,7 +29,12 @@ use rand::Rng;
 use std::os::raw::{c_char};
 //use imgui::*;
 //use time;
+#[cfg(not(target_arch="wasm32"))]
 use glutin::{ContextTrait, WindowedContext};
+#[cfg(target_arch="wasm32")]
+use stdweb::web;
+
+use backend::Backend;
 
 #[cfg(not(feature = "hotload"))]
 use test_shared::shared_fun;
@@ -54,23 +63,33 @@ use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
 
+#[cfg(not(target_arch="wasm32"))]
 pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
+#[cfg(not(target_arch="wasm32"))]
 use self::gl::types::*;
+
+#[cfg(target_arch="wasm32")]
+pub mod gl {
+    #![allow(unused_parens, non_camel_case_types)]
+    include!(concat!(env!("OUT_DIR"), "/webgl_bindings.rs"));
+}
+#[cfg(target_arch="wasm32")]
+use engine::gl::*;
 
 #[cfg(feature = "hotload")]
 struct Plugins {
-    plugins: Vec<Rc<Lib>>,
+    plugins: Vec<Arc<Lib>>,
 }
 
 #[cfg(feature = "hotload")]
 impl Plugins {
-    fn add_plugin(&mut self, plugin: &Rc<Lib>) {
+    fn add_plugin(&mut self, plugin: &Arc<Lib>) {
         self.plugins.push(plugin.clone());
     }
 
-    fn unload_plugins(&mut self, lib: &Rc<Lib>) {
+    fn unload_plugins(&mut self, lib: &Arc<Lib>) {
         for i in (0..self.plugins.len()).rev() {
             if &self.plugins[i] == lib {
                 self.plugins.swap_remove(i);
@@ -78,12 +97,12 @@ impl Plugins {
         }
     }
 
-    fn reload_plugin(&mut self, lib: &Rc<Lib>) {
+    fn reload_plugin(&mut self, lib: &Arc<Lib>) {
         Self::add_plugin(self, lib);
     }
 
     // called when a lib needs to be reloaded.
-    fn reload_callback(&mut self, state: UpdateState, lib: Option<&Rc<Lib>>) {
+    fn reload_callback(&mut self, state: UpdateState, lib: Option<&Arc<Lib>>) {
         match state {
             UpdateState::Before => Self::unload_plugins(self, lib.unwrap()),
             UpdateState::After => Self::reload_plugin(self, lib.unwrap()),
@@ -295,6 +314,24 @@ impl Engine {
     pub fn run_loop(&mut self) {
         let (mut plugs, mut reload_handler) = plugin_load();
 
+        let mut be = Backend::build();
+
+        /*
+        #[cfg(target_arch="wasm32")]
+        {
+            // Init WebGL
+            stdweb::initialize();
+            let canvas: CanvasElement = web::document()
+                .query_selector("#canvas")
+                .expect("No canvas found.")
+                .unwrap()
+                .try_into()
+                .unwrap();
+            let web_ctxt: WebGLRenderingContext = canvas.get_context().unwrap();
+        }
+        */
+
+        /*
         // Init glutin
         let mut el = glutin::EventsLoop::new();
         let wb = glutin::WindowBuilder::new()
@@ -308,12 +345,15 @@ impl Engine {
             .build_windowed(wb, &el)
             .unwrap();
 
-        /*let windowed_context =*/ unsafe { windowed_context.make_current().unwrap() };
+        unsafe { windowed_context.make_current().unwrap() };
+        */
 
+        /*
         println!(
             "Pixel format of the window's GL context: {:?}",
             windowed_context.get_pixel_format()
         );
+        */
 
 
         // Init SDL2
@@ -336,9 +376,10 @@ impl Engine {
         .unwrap();
         */
 
+        /*
         println!("Loading GL extensions");
         gl::load_with(|s| windowed_context.context().get_proc_address(s) as *const _);
-
+        
         let version = unsafe {
         let data = CStr::from_ptr(gl::GetString(gl::VERSION) as *const _)
             .to_bytes()
@@ -356,6 +397,8 @@ impl Engine {
         };
 
         println!("GLSL version {}", glsl_version);
+        */
+
         /*
         println!("Setting current GL context");
         let gl_set_context_res = canvas.window().gl_set_context_to_current();
@@ -496,7 +539,7 @@ impl Engine {
         let mut last_time = timer::precise_time_ns();
 
 
-        let mut window_size = glutin::dpi::LogicalSize::new(0.0, 0.0);
+        let mut window_size = (0.0, 0.0);
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -519,6 +562,16 @@ impl Engine {
             }
             */
 
+            be.poll_events();
+
+            // TODO: consume events. See below
+            /*
+                window_size.width = logical_size.width;
+                window_size.height = logical_size.height;
+                running = false;
+            */
+
+            /*
             el.poll_events(|event| {
                 println!("{:?}", event);
                 match event {
@@ -555,6 +608,7 @@ impl Engine {
                     _ => (),
                 }
             });
+            */
 
             if !running {
                 break 'running;
@@ -606,18 +660,19 @@ impl Engine {
                 //sdl2::log::log(&wabbit.get_height().to_string());
                 //sdl2::log::log(&wabbit.get_width().to_string());
 
-                sb.begin(cgmath::Vector4::new(0, 0, window_size.width as i32, window_size.height as i32), SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
+                sb.begin(cgmath::Vector4::new(0, 0, window_size.0 as i32, window_size.1 as i32), SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
                 for bunny in bunnies.iter_mut() {
                     bunny.update(delta_time);
                     sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                 }
-                sb.end(cgmath::Vector4::new(0, 0, window_size.width as i32, window_size.height as i32));
+                sb.end(cgmath::Vector4::new(0, 0, window_size.0 as i32, window_size.1 as i32));
             }
 
             debug_name_manager.update(0.0);
             scene.render_entities();
 
-            windowed_context.swap_buffers().unwrap();
+            be.swap_buffers();
+            //windowed_context.swap_buffers().unwrap();
             //canvas.present();
 
             //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));

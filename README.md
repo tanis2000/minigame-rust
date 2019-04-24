@@ -120,3 +120,9 @@ cp target/x86_64-linux-android/debug/libminigame.so android/Minigame/app/src/mai
 cd android/Minigame/app
 ../gradlew assemble
 ```
+
+## Building the wasm32 target
+
+```sh
+cargo web build --no-default-features
+```

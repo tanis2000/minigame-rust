@@ -1,8 +1,10 @@
 extern crate curl;
 extern crate gl_generator;
+extern crate webgl_generator;
 
 use curl::easy::Easy;
 use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};
+use webgl_generator::*;
 use std::env;
 use std::path::Path;
 use std::process::Command;
@@ -29,11 +31,19 @@ fn main() {
     }
 
     let dest = env::var("OUT_DIR").unwrap();
-    let mut file = File::create(&Path::new(&dest).join("bindings.rs")).unwrap();
+    if target_os.contains("wasm32") {
+        let mut file = File::create(&Path::new(&dest).join("webgl_bindings.rs")).unwrap();
 
-    Registry::new(Api::Gles2, (2, 0), Profile::Core, Fallbacks::All, [])
-        .write_bindings(GlobalGenerator, &mut file)
-        .unwrap();
+        webgl_generator::Registry::new(webgl_generator::Api::WebGl2, webgl_generator::Exts::ALL)
+            .write_bindings(StdwebGenerator, &mut file)
+            .unwrap();
+    } else {
+        let mut file = File::create(&Path::new(&dest).join("bindings.rs")).unwrap();
+
+        Registry::new(Api::Gles2, (2, 0), Profile::Core, Fallbacks::All, [])
+            .write_bindings(GlobalGenerator, &mut file)
+            .unwrap();
+    }
 
     Command::new("rustc")
         .arg("src/test_shared.rs")

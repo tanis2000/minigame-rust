@@ -5,9 +5,9 @@ authors = [ "Valerio Santinelli <santinelli@gmail.com>" ]
 build = "build.rs"
 
 [dependencies]
-dynamic_reload = {version = "0.2.1", optional=true}
+#dynamic_reload = {version = "0.3.0", optional=true}
 #sdl2 = { version = "0.32", default-features = false, features = ["unsafe_textures"] }
-cgmath = "0.14.1"
+cgmath = "0.17"
 rusttype = "0.2.1"
 png = "0.7.0"
 log = "0.3.8"
@@ -15,12 +15,12 @@ log = "0.3.8"
 #stb_image = "0.2.2"
 #time = "0.1"
 image = "0.21"
-glutin = "0.20"
 
 [build-dependencies]
 #cmake = "0.1.17"
 curl = "0.4.20"
-gl_generator = "0.5.3"
+gl_generator = "0.11"
+webgl_generator = "0.2"
 
 [features]
 hotload = ["dynamic_reload"]
@@ -32,13 +32,18 @@ jni = { version = "0.4", default-features = false }
 [target.'cfg(target_os="ios")'.dependencies]
 objc = "0.2.6"
 
-[target.'cfg(target_os="wasm32")'.dependencies]
+[target.'cfg(target_arch="wasm32")'.dependencies]
 #rand = { version = "0.6", features = ["stdweb" , "wasm-bindgen"] }
 rand = { version = "0.6", features = ["stdweb"] }
+stdweb = "0.4"
+stdweb-derive = "0.5"
+serde = "1.0.0"
+serde_derive = "1.0.0"
 
-[target.'cfg(not(target_os="wasm32"))'.dependencies]
+[target.'cfg(not(target_arch="wasm32"))'.dependencies]
 rand = "0.6"
-dynamic_reload = {version = "0.2.1", optional=true}
+dynamic_reload = {version = "0.3.0", optional=true}
+glutin = "0.20"
 
 [lib]
 name = "minigame"

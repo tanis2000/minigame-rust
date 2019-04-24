@@ -1,6 +1,16 @@
 #![allow(dead_code)]
 extern crate rand;
+#[cfg(not(target_arch="wasm32"))]
 extern crate glutin;
+#[cfg(target_arch="wasm32")]
+#[macro_use]
+extern crate stdweb;
+#[cfg(target_arch="wasm32")]
+#[macro_use]
+extern crate stdweb_derive;
+#[cfg(target_arch="wasm32")]
+#[macro_use]
+extern crate serde_derive;
 extern crate image;
 //extern crate imgui;
 //extern crate time;
@@ -54,6 +64,7 @@ pub mod renderer;
 pub mod everythingrenderer;
 pub mod debugnamecomponentmanager;
 pub mod timer;
+pub mod backend;
 
 #[no_mangle]
 #[allow(non_snake_case)]
