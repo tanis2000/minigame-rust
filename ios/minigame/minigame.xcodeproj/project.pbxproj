@@ -10,6 +10,21 @@
 		0239B20B1F06A9F900AD3242 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B20A1F06A9F900AD3242 /* ImageIO.framework */; };
 		0239B20F1F06AA1900AD3242 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B20E1F06AA1900AD3242 /* MobileCoreServices.framework */; };
 		0239B2111F06AAD400AD3242 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 0239B2101F06AAD400AD3242 /* assets */; };
+		024051D2229844EC00C84664 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE5B1EE68FEF0008EC84 /* ViewController.m */; };
+		024051D3229844EC00C84664 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE581EE68FEF0008EC84 /* AppDelegate.m */; };
+		024051D4229844EC00C84664 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 028ECE551EE68FEF0008EC84 /* main.m */; };
+		024051D6229844EC00C84664 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B20E1F06AA1900AD3242 /* MobileCoreServices.framework */; };
+		024051D7229844EC00C84664 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0239B20A1F06A9F900AD3242 /* ImageIO.framework */; };
+		024051D8229844EC00C84664 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145E1EE70C5A00D211B4 /* AudioToolbox.framework */; };
+		024051D9229844EC00C84664 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145C1EE70C5100D211B4 /* AVFoundation.framework */; };
+		024051DA229844EC00C84664 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145A1EE70C3D00D211B4 /* GameController.framework */; };
+		024051DB229844EC00C84664 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D14581EE70C2F00D211B4 /* CoreMotion.framework */; };
+		024051DF229844EC00C84664 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 028ECE621EE68FEF0008EC84 /* LaunchScreen.storyboard */; };
+		024051E0229844EC00C84664 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 0239B2101F06AAD400AD3242 /* assets */; };
+		024051E1229844EC00C84664 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 028ECE601EE68FEF0008EC84 /* Assets.xcassets */; };
+		024051E2229844EC00C84664 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 028ECE5D1EE68FEF0008EC84 /* Main.storyboard */; };
+		024051E92298452400C84664 /* libminigame.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 024051E82298452400C84664 /* libminigame.a */; };
+		024051EB229845C700C84664 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 024051EA229845C700C84664 /* libSDL2.a */; };
 		024D14561EE70C1100D211B4 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D14551EE70C1100D211B4 /* libSDL2.a */; };
 		024D14591EE70C2F00D211B4 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D14581EE70C2F00D211B4 /* CoreMotion.framework */; };
 		024D145B1EE70C3D00D211B4 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 024D145A1EE70C3D00D211B4 /* GameController.framework */; };
@@ -30,12 +45,16 @@
 		0239B20C1F06AA0200AD3242 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		0239B20E1F06AA1900AD3242 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		0239B2101F06AAD400AD3242 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../assets; sourceTree = "<group>"; };
+		024051E6229844EC00C84664 /* minigame-device.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "minigame-device.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		024051E82298452400C84664 /* libminigame.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libminigame.a; path = "../../target/aarch64-apple-ios/debug/libminigame.a"; sourceTree = "<group>"; };
+		024051EA229845C700C84664 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../target/aarch64-apple-ios/debug/libSDL2.a"; sourceTree = "<group>"; };
+		024051EC2298474C00C84664 /* Info-device.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-device.plist"; sourceTree = "<group>"; };
 		024D14551EE70C1100D211B4 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../../target/x86_64-apple-ios/debug/libSDL2.a"; sourceTree = "<group>"; };
 		024D14581EE70C2F00D211B4 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		024D145A1EE70C3D00D211B4 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		024D145C1EE70C5100D211B4 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		024D145E1EE70C5A00D211B4 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
-		028ECE511EE68FEF0008EC84 /* minigame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = minigame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		028ECE511EE68FEF0008EC84 /* minigame-simulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "minigame-simulator.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		028ECE551EE68FEF0008EC84 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		028ECE571EE68FEF0008EC84 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		028ECE581EE68FEF0008EC84 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -49,6 +68,21 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		024051D5229844EC00C84664 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				024051EB229845C700C84664 /* libSDL2.a in Frameworks */,
+				024051E92298452400C84664 /* libminigame.a in Frameworks */,
+				024051D6229844EC00C84664 /* MobileCoreServices.framework in Frameworks */,
+				024051D7229844EC00C84664 /* ImageIO.framework in Frameworks */,
+				024051D8229844EC00C84664 /* AudioToolbox.framework in Frameworks */,
+				024051D9229844EC00C84664 /* AVFoundation.framework in Frameworks */,
+				024051DA229844EC00C84664 /* GameController.framework in Frameworks */,
+				024051DB229844EC00C84664 /* CoreMotion.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		028ECE4E1EE68FEF0008EC84 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -70,6 +104,8 @@
 		024D14571EE70C2F00D211B4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				024051EA229845C700C84664 /* libSDL2.a */,
+				024051E82298452400C84664 /* libminigame.a */,
 				0239B20E1F06AA1900AD3242 /* MobileCoreServices.framework */,
 				0239B20C1F06AA0200AD3242 /* CoreImage.framework */,
 				0239B20A1F06A9F900AD3242 /* ImageIO.framework */,
@@ -94,7 +130,8 @@
 		028ECE521EE68FEF0008EC84 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				028ECE511EE68FEF0008EC84 /* minigame.app */,
+				028ECE511EE68FEF0008EC84 /* minigame-simulator.app */,
+				024051E6229844EC00C84664 /* minigame-device.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -113,6 +150,7 @@
 				028ECE601EE68FEF0008EC84 /* Assets.xcassets */,
 				028ECE621EE68FEF0008EC84 /* LaunchScreen.storyboard */,
 				028ECE651EE68FEF0008EC84 /* Info.plist */,
+				024051EC2298474C00C84664 /* Info-device.plist */,
 				028ECE541EE68FEF0008EC84 /* Supporting Files */,
 			);
 			path = minigame;
@@ -129,9 +167,26 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		028ECE501EE68FEF0008EC84 /* minigame */ = {
+		024051D0229844EC00C84664 /* minigame-device */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 028ECE681EE68FEF0008EC84 /* Build configuration list for PBXNativeTarget "minigame" */;
+			buildConfigurationList = 024051E3229844EC00C84664 /* Build configuration list for PBXNativeTarget "minigame-device" */;
+			buildPhases = (
+				024051D1229844EC00C84664 /* Sources */,
+				024051D5229844EC00C84664 /* Frameworks */,
+				024051DE229844EC00C84664 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "minigame-device";
+			productName = minigame;
+			productReference = 024051E6229844EC00C84664 /* minigame-device.app */;
+			productType = "com.apple.product-type.application";
+		};
+		028ECE501EE68FEF0008EC84 /* minigame-simulator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 028ECE681EE68FEF0008EC84 /* Build configuration list for PBXNativeTarget "minigame-simulator" */;
 			buildPhases = (
 				028ECE4D1EE68FEF0008EC84 /* Sources */,
 				028ECE4E1EE68FEF0008EC84 /* Frameworks */,
@@ -141,9 +196,9 @@
 			);
 			dependencies = (
 			);
-			name = minigame;
+			name = "minigame-simulator";
 			productName = minigame;
-			productReference = 028ECE511EE68FEF0008EC84 /* minigame.app */;
+			productReference = 028ECE511EE68FEF0008EC84 /* minigame-simulator.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -155,6 +210,9 @@
 				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = "Valerio Santinelli";
 				TargetAttributes = {
+					024051D0229844EC00C84664 = {
+						DevelopmentTeam = 6N59NGK9J6;
+					};
 					028ECE501EE68FEF0008EC84 = {
 						CreatedOnToolsVersion = 8.3.2;
 						DevelopmentTeam = 6N59NGK9J6;
@@ -167,6 +225,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -175,12 +234,24 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				028ECE501EE68FEF0008EC84 /* minigame */,
+				028ECE501EE68FEF0008EC84 /* minigame-simulator */,
+				024051D0229844EC00C84664 /* minigame-device */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		024051DE229844EC00C84664 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				024051DF229844EC00C84664 /* LaunchScreen.storyboard in Resources */,
+				024051E0229844EC00C84664 /* assets in Resources */,
+				024051E1229844EC00C84664 /* Assets.xcassets in Resources */,
+				024051E2229844EC00C84664 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		028ECE4F1EE68FEF0008EC84 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -195,6 +266,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		024051D1229844EC00C84664 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				024051D2229844EC00C84664 /* ViewController.m in Sources */,
+				024051D3229844EC00C84664 /* AppDelegate.m in Sources */,
+				024051D4229844EC00C84664 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		028ECE4D1EE68FEF0008EC84 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -227,6 +308,34 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		024051E4229844EC00C84664 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 6N59NGK9J6;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "minigame/Info-device.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = "../../target/aarch64-apple-ios/debug";
+				PRODUCT_BUNDLE_IDENTIFIER = com.valeriosantinelli.minigame;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		024051E5229844EC00C84664 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 6N59NGK9J6;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "minigame/Info-device.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = "../../target/aarch64-apple-ios/debug";
+				PRODUCT_BUNDLE_IDENTIFIER = com.valeriosantinelli.minigame;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		028ECE661EE68FEF0008EC84 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -348,6 +457,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		024051E3229844EC00C84664 /* Build configuration list for PBXNativeTarget "minigame-device" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				024051E4229844EC00C84664 /* Debug */,
+				024051E5229844EC00C84664 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		028ECE4C1EE68FEF0008EC84 /* Build configuration list for PBXProject "minigame" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -357,7 +475,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		028ECE681EE68FEF0008EC84 /* Build configuration list for PBXNativeTarget "minigame" */ = {
+		028ECE681EE68FEF0008EC84 /* Build configuration list for PBXNativeTarget "minigame-simulator" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				028ECE691EE68FEF0008EC84 /* Debug */,

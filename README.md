@@ -33,12 +33,26 @@ rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-andro
 cargo build --no-default-features --lib
 ```
 
-## Building the Rust library for the iOS simulator
+## Building the Rust library for iOS
+
+minigame supports building for both the iOS simulator and real devices.
+
+### Building for the iOS simulator
 
 To build for iOS simulator:
 
 ```sh
 cargo build --no-default-features --target x86_64-apple-ios --lib
+```
+
+This command will also download SDL2 and compile it for both the simulator and iOS device
+
+### Building for an iOS device
+
+To build for iOS simulator:
+
+```sh
+cargo build --no-default-features --target aarch64-apple-ios --lib
 ```
 
 This command will also download SDL2 and compile it for both the simulator and iOS device

@@ -58,14 +58,14 @@ fn main() {
     if target_os.contains("ios") {
         if !Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphoneos").join("libSDL2.a").exists() {
             Command::new("xcodebuild")
-            .args(&["-project", "SDL2-2.0.9/Xcode-iOS/SDL/SDL.xcodeproj", "-target", "libSDL-iOS", "-sdk", "iphoneos12.1"])
+            .args(&["-project", "SDL2-2.0.9/Xcode-iOS/SDL/SDL.xcodeproj", "-target", "libSDL-iOS", "-sdk", "iphoneos12.2"])
             .status()
             .expect("Error building iOS project");
         }
 
         if !Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphonesimulator").join("libSDL2.a").exists() {
             Command::new("xcodebuild")
-            .args(&["-project", "SDL2-2.0.9/Xcode-iOS/SDL/SDL.xcodeproj", "-target", "libSDL-iOS", "-sdk", "iphonesimulator12.1"])
+            .args(&["-project", "SDL2-2.0.9/Xcode-iOS/SDL/SDL.xcodeproj", "-target", "libSDL-iOS", "-sdk", "iphonesimulator12.2"])
             .status()
             .expect("Error building iOS Simulator project");
         }
@@ -74,6 +74,7 @@ fn main() {
         //fs::copy(Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphoneos").join("libSDL2.a"), Path::new(&current_dir).join("target").join(target_os).join("debug").join("libSDL2.a"));
         println!("{:?}", Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphonesimulator").join("libSDL2.a"));
         println!("{:?}", Path::new(&current_dir).join("target").join("x86_64-apple-ios").join("debug").join("libSDL2.a"));
+        fs::copy(Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphoneos").join("libSDL2.a"), Path::new(&current_dir).join("target").join("aarch64-apple-ios").join("debug").join("libSDL2.a")).expect("Cannot copy libSDL2 for iPhone OS");
         fs::copy(Path::new(&current_dir).join(SDL2_PATH).join("Xcode-iOS").join("SDL").join("build").join("Release-iphonesimulator").join("libSDL2.a"), Path::new(&current_dir).join("target").join("x86_64-apple-ios").join("debug").join("libSDL2.a")).expect("Cannot copy libSDL2 for iPhone Simulator");
     }
 
