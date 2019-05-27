@@ -134,3 +134,20 @@ cp target/x86_64-linux-android/debug/libminigame.so android/Minigame/app/src/mai
 cd android/Minigame/app
 ../gradlew assemble
 ```
+
+## Building for the web
+
+### Using Emscripten
+
+Edit `.cargo/config` and add the following:
+
+```toml
+[target.wasm32-unknown-emscripten]
+linker = "/Users/tanis/Documents/minigame-rust/emcc_sdl.sh"
+```
+
+Run the following command:
+
+```sh
+cargo web build --no-default-features --target wasm32-unknown-emscripten
+```

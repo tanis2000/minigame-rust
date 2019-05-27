@@ -11,13 +11,16 @@ extern crate rand;
 
 #[cfg(feature = "hotload")]
 use dynamic_reload::{DynamicReload, Lib, Symbol, Search, PlatformName, UpdateState};
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
 use std::thread;
 use std::str;
 use std::ffi::CString;
 use std::ptr;
+use std::ptr::null_mut;
 use std::path::Path;
+use std::os::raw::{c_int, c_void, c_uchar};
 //use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
@@ -44,6 +47,7 @@ use everythingrenderer::EverythingRenderer;
 use debugnamecomponentmanager::DebugNameComponentManager;
 use timer;
 use timer::Timer;
+use texture::Texture;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -239,12 +243,73 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
     //println!("Value {}", shared_fun());
 }
 
+#[cfg(target_arch = "wasm32")]
+type em_callback_func = unsafe extern "C" fn();
+
+#[cfg(target_arch = "wasm32")]
+extern "C" {
+    // This extern is built in by Emscripten.
+    pub fn emscripten_run_script_int(x: *const c_uchar) -> c_int;
+    pub fn emscripten_cancel_main_loop();
+    pub fn emscripten_set_main_loop(func: em_callback_func,
+                                    fps: c_int,
+                                    simulate_infinite_loop: c_int);
+}
+
+#[cfg(target_arch = "wasm32")]
+thread_local!(static MAIN_LOOP_CALLBACK: RefCell<*mut c_void> = RefCell::new(null_mut()));
+
+#[cfg(target_arch = "wasm32")]
+pub fn set_main_loop_callback<F>(callback : F) where F : FnMut() {
+    MAIN_LOOP_CALLBACK.with(|log| {
+            *log.borrow_mut() = &callback as *const _ as *mut c_void;
+            });
+
+    unsafe { emscripten_set_main_loop(wrapper::<F>, 0, 1); }
+
+    unsafe extern "C" fn wrapper<F>() where F : FnMut() {
+        MAIN_LOOP_CALLBACK.with(|z| {
+            let closure = *z.borrow_mut() as *mut F;
+            (*closure)();
+        });
+    }
+}
+
+pub struct MainLoopContext {
+    running: bool,
+    current_frame_delta: u64,
+    frame_delay: u64,
+    canvas: sdl2::render::Canvas<sdl2::video::Window>,
+    framerate_timer: Timer,
+    event_pump: sdl2::EventPump,
+    last_time: u64,
+    sb: SpriteBatch,
+    debug_name_manager: DebugNameComponentManager,
+    framerate: u64,
+    shader: Shader,
+    bunnies: Vec<Bunny>,
+    wabbit: std::rc::Rc<Texture>,
+    scene: Scene,
+}
+
+impl MainLoopContext {
+    pub fn event_pump(&mut self) -> &mut sdl2::EventPump {
+        &mut self.event_pump
+    }
+
+    pub fn set_running(&mut self, value: bool) {
+        self.running = value;
+    }
+}
+
 pub struct Engine {
+    main_loop_context: Option<MainLoopContext>,
 }
 
 impl Engine {
     pub fn new() -> Self {
         Engine {
+            main_loop_context: None,
         }
     }
 
@@ -258,6 +323,154 @@ impl Engine {
         String::from("assets/")
     }
 
+    pub fn set_running(&mut self, value: bool) {
+        match &mut self.main_loop_context {
+            Some(main_loop_context) => {
+                main_loop_context.set_running(value);
+            }, 
+            None => {}
+        }
+    }
+
+    pub fn main_loop(&mut self) {
+        // Uncomment the following line to re-enable dynamic loading of code. You will have to set up lifetimes correctly, though
+        //plugin_update(&mut plugs, &mut reload_handler);
+
+        /*
+        reload_handler.update(Plugins::reload_callback, &mut plugs);
+
+        if plugs.plugins.len() > 0 {
+            // In a real program you want to cache the symbol and not do it every time if your
+            // application is performance critical
+            let fun: Symbol<extern "C" fn() -> i32> =
+                unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
+
+            Log::info("Value {}", fun());
+        }
+        */
+        let main_loop_context = &mut self.main_loop_context;
+        match main_loop_context {
+            Some(main_loop_context) => {
+                let mut running = true;
+                for event in main_loop_context.event_pump.poll_iter() {
+                    match event {
+                        Event::Quit { .. } |
+                        Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                            running = false;
+                            println!("Quit requested");
+                        },
+                        _ => {}
+                    }
+                }
+                main_loop_context.set_running(running);
+                main_loop_context.canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
+                main_loop_context.canvas.clear();
+
+                /*
+                sdl2::log::log("Drawing triangle");
+                unsafe {
+                    gl::DrawArrays(gl::TRIANGLES, 0, 3);
+                }
+                */
+
+                /*
+                ui.window(im_str!("Hello world"))
+                    .size((300.0, 100.0), ImGuiSetCond_FirstUseEver)
+                    .build(|| {
+                        ui.text(im_str!("Hello world!"));
+                        ui.text(im_str!("This...is...imgui-rs!"));
+                        ui.separator();
+                        let mouse_pos = ui.imgui().mouse_pos();
+                        ui.text(im_str!("Mouse Position: ({:.1},{:.1})", mouse_pos.0, mouse_pos.1));
+                    });
+                */
+                
+                let current_time = timer::precise_time_ns();
+                let delta_time = ((current_time - main_loop_context.last_time) as f64) / 1_000_000_000.0;
+                main_loop_context.last_time = current_time;
+                {
+                    let position = Vector2::new(0.0, 0.0);
+                    let matrix: Matrix4<f32> = Matrix4::one();
+                    //sdl2::log::log("wabbit width and height follows");
+                    //sdl2::log::log(&wabbit.get_height().to_string());
+                    //sdl2::log::log(&wabbit.get_width().to_string());
+
+                    main_loop_context.sb.begin(&mut main_loop_context.canvas, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(matrix));
+                    for bunny in main_loop_context.bunnies.iter_mut() {
+                        bunny.update(delta_time);
+                        main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
+                    }
+                    main_loop_context.sb.end(&mut main_loop_context.canvas);
+                }
+
+                main_loop_context.debug_name_manager.update(0.0);
+                main_loop_context.scene.render_entities();
+
+                main_loop_context.canvas.present();
+
+                //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+                // The rest of the game loop goes here...
+
+
+                // Wait for 0.5 sec
+                //thread::sleep(Duration::from_millis(500));
+                // Replace with the following once we're done with testing
+                //thread::sleep(Duration::from_millis(0))
+
+
+                // How many nanoseconds the last frame took
+                main_loop_context.current_frame_delta = main_loop_context.framerate_timer.delta();
+
+                main_loop_context.frame_delay = 1_000_000_000 / main_loop_context.framerate;
+                if main_loop_context.frame_delay < main_loop_context.current_frame_delta {
+                    main_loop_context.frame_delay = 0;
+                } else {
+                    main_loop_context.frame_delay = main_loop_context.frame_delay - main_loop_context.current_frame_delta;
+                }
+
+                thread::sleep(Duration::from_millis((main_loop_context.frame_delay / 1_000_000) as u64));
+
+
+                if main_loop_context.current_frame_delta < main_loop_context.frame_delay {
+                    /*
+                    unsafe {
+                        sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
+                        thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
+                    }
+                    */
+                }
+
+                /*
+                let f = (1_000_000_000.0 / framerate_timer.delta() as f64); // frames per second
+                println!("FPS: {}",  &f.to_string());
+                */
+
+                //thread::yield_now();
+                main_loop_context.framerate_timer.restart();
+            },
+            None => {
+                println!("main_loop(): Context shouldn't be None");
+            }
+        }
+
+    }
+
+    pub fn get_is_running(context: &Option<MainLoopContext>) -> bool {
+        match context {
+            Some(context) => {
+                return context.running;
+            },
+            None => {
+                return false
+            }
+        }
+    }
+
+    pub fn run_main_loop(&mut self) {
+        while Self::get_is_running(&self.main_loop_context) {
+            self.main_loop();
+        }
+    }
 
     //#[cfg(feature = "hotload")]
     pub fn run_loop(&mut self) {
@@ -292,8 +505,12 @@ impl Engine {
                 panic!("Cannot set current GL context");
             }
         }
-        Log::info("Enabling VSYNC");
-        video_subsystem.gl_set_swap_interval(1);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            Log::info("Enabling VSYNC");
+            video_subsystem.gl_set_swap_interval(1);
+        }
+
 
         // Create GLSL shaders
         /*
@@ -347,7 +564,15 @@ impl Engine {
         let tc = canvas.texture_creator();
         let mut tm = TextureManager::new(&tc);
         let wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
-        tm.load(String::from("wabbit"), Path::new(&String::from(wabbit_path)));
+        #[cfg(target_arch = "wasm32")]
+        {
+            let img_data = include_bytes!("../assets/wabbit_alpha.png");
+            tm.load_from_memory(String::from("wabbit"), &img_data[..]);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            tm.load(String::from("wabbit"), Path::new(&String::from(wabbit_path)));
+        }
         let wabbit = tm.get(&String::from("wabbit"));
 
         let player_va = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
@@ -386,7 +611,7 @@ impl Engine {
         let mut rng = rand::thread_rng();
 
 
-        let mut bunnies = [Bunny::new(); 10];
+        let mut bunnies = vec![Bunny::new(); 10];
         for bunny in bunnies.iter_mut() {
             bunny.speed.x = rng.gen::<f64>() * 500.0;
             bunny.speed.x = (rng.gen::<f64>() * 500.0) - 250.0;
@@ -409,128 +634,51 @@ impl Engine {
         // we'll wait.
         // If the delay is greater, we'll skip right away.
         //
-        let mut frame_delay: u64;
+        let mut frame_delay: u64 = 0;
 
         // How much time have passed since
         // last frame (in nanoseconds).
         //
-        let mut current_frame_delta: u64;
+        let mut current_frame_delta: u64 = 0;
 
         // Last time (in nanoseconds)
         let mut last_time = timer::precise_time_ns();
+
+        let mut running = true;
+
+        let mut main_loop_context = MainLoopContext {
+            running: running,
+            current_frame_delta: current_frame_delta,
+            frame_delay: frame_delay,
+            canvas: canvas,
+            framerate_timer: framerate_timer,
+            event_pump: event_pump,
+            last_time: last_time,
+            sb: sb,
+            debug_name_manager: debug_name_manager,
+            framerate: framerate,
+            shader: shader,
+            bunnies: bunnies,
+            wabbit: wabbit,
+            scene: scene,
+        };
+
+        self.main_loop_context = Some(main_loop_context);
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            set_main_loop_callback(|| {
+                self.main_loop();
+            });
+        }
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
         // build the project with cargo build and notice that this code will now return the new value
         //
-        'running: loop {
-            plugin_update(&mut plugs, &mut reload_handler);
-
-            /*
-            reload_handler.update(Plugins::reload_callback, &mut plugs);
-
-            if plugs.plugins.len() > 0 {
-                // In a real program you want to cache the symbol and not do it every time if your
-                // application is performance critical
-                let fun: Symbol<extern "C" fn() -> i32> =
-                    unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
-
-                Log::info("Value {}", fun());
-            }
-            */
-
-            for event in event_pump.poll_iter() {
-                match event {
-                    Event::Quit { .. } |
-                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'running,
-                    _ => {}
-                }
-            }
-
-            canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
-            canvas.clear();
-
-            /*
-            sdl2::log::log("Drawing triangle");
-            unsafe {
-                gl::DrawArrays(gl::TRIANGLES, 0, 3);
-            }
-            */
-
-            /*
-            ui.window(im_str!("Hello world"))
-                .size((300.0, 100.0), ImGuiSetCond_FirstUseEver)
-                .build(|| {
-                    ui.text(im_str!("Hello world!"));
-                    ui.text(im_str!("This...is...imgui-rs!"));
-                    ui.separator();
-                    let mouse_pos = ui.imgui().mouse_pos();
-                    ui.text(im_str!("Mouse Position: ({:.1},{:.1})", mouse_pos.0, mouse_pos.1));
-                });
-            */
-            
-            let current_time = timer::precise_time_ns();
-            let delta_time = ((current_time - last_time) as f64) / 1_000_000_000.0;
-            last_time = current_time;
-            {
-                let position = Vector2::new(0.0, 0.0);
-                let matrix: Matrix4<f32> = Matrix4::one();
-                //sdl2::log::log("wabbit width and height follows");
-                //sdl2::log::log(&wabbit.get_height().to_string());
-                //sdl2::log::log(&wabbit.get_width().to_string());
-
-                sb.begin(&mut canvas, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(matrix));
-                for bunny in bunnies.iter_mut() {
-                    bunny.update(delta_time);
-                    sb.draw(wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
-                }
-                sb.end(&mut canvas);
-            }
-
-            debug_name_manager.update(0.0);
-            scene.render_entities();
-
-            canvas.present();
-
-            //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-            // The rest of the game loop goes here...
-
-
-            // Wait for 0.5 sec
-            //thread::sleep(Duration::from_millis(500));
-            // Replace with the following once we're done with testing
-            //thread::sleep(Duration::from_millis(0))
-
-
-            // How many nanoseconds the last frame took
-            current_frame_delta = framerate_timer.delta();
-
-            frame_delay = 1_000_000_000 / framerate;
-            if frame_delay < current_frame_delta {
-                frame_delay = 0;
-            } else {
-                frame_delay = frame_delay - current_frame_delta;
-            }
-
-            thread::sleep(Duration::from_millis((frame_delay / 1_000_000) as u64));
-
-
-            if current_frame_delta < frame_delay {
-                /*
-                unsafe {
-                    sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
-                    thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
-                }
-                */
-            }
-
-            /*
-            let f = (1_000_000_000.0 / framerate_timer.delta() as f64); // frames per second
-            println!("FPS: {}",  &f.to_string());
-            */
-
-            //thread::yield_now();
-            framerate_timer.restart();
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.run_main_loop();
         }
 
         // Cleanup

@@ -1,7 +1,10 @@
+#[cfg(target_arch = "wasm32")]
+extern crate stdweb;
+
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
 #[cfg(target_arch = "wasm32")]
-use stdweb::web::Date;
+use self::stdweb::web::Date;
 
 pub struct Timer {
     start_mark: u64,
@@ -139,5 +142,5 @@ pub fn precise_time_ns() -> u64 {
 #[cfg(target_arch = "wasm32")]
 pub fn precise_time_ns() -> u64 {
     // Date::now() is in milliseconds so we convert it to nanoseconds
-    return (Date::now() * 1000) as u64
+    return (Date::now() as u64 * 1000) as u64
 }

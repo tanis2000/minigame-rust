@@ -76,6 +76,28 @@ impl <'tm>TextureManager<'tm> {
         //let sdltex = self.texture_creator.load_texture(path).unwrap();
     }
 
+    pub fn load_from_memory(&mut self, id: String, data: &[u8]) {
+        let stbimg = image::load_from_memory(data);
+        match stbimg {
+            ImageU8(img) => {
+                let sdltex = img;
+                let mut tex = Texture::new();
+                tex.from_image_u8(sdltex);
+                self.items.insert(id, Rc::new(tex));
+            },
+            ImageF32(img) => {
+                let sdltex = img;
+                let mut tex = Texture::new();
+                tex.from_image_f32(sdltex);
+                self.items.insert(id, Rc::new(tex));
+            },
+            Error => {
+                Log::error("Error loading texture");
+                return;
+            },
+        }
+    }
+
     pub fn get(&self, id: &String) -> Rc<Texture> {
         let entry = self.items.get(id).unwrap();
         entry.clone()

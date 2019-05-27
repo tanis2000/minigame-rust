@@ -13,12 +13,12 @@ enum Type {
     Fragment,
 }
 
-#[cfg(any(target_os="android", target_os="ios"))]
+#[cfg(any(target_os="android", target_os="ios", target_os="emscripten"))]
 fn precision() -> String {
     String::from("precision mediump float;\n")
 }
 
-#[cfg(not(any(target_os="android", target_os="ios")))]
+#[cfg(not(any(target_os="android", target_os="ios", target_os="emscripten")))]
 fn precision() -> String {
     String::from("")
 }
