@@ -3,24 +3,19 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::string::String;
 use std::io::Read;
-use sdl2::render::TextureCreator;
-use sdl2::video::WindowContext;
 use sdl2::rwops::RWops;
 use stb_image::image;
-use stb_image::image::LoadResult::ImageU8;
-use stb_image::image::LoadResult::ImageF32;
+use stb_image::image::LoadResult::{ImageU8, ImageF32, Error};
 use texture::Texture;
 use log::Log;
 
-pub struct TextureManager<'tm> {
-    texture_creator: &'tm TextureCreator<WindowContext>,
+pub struct TextureManager {
     items: HashMap<String, Rc<Texture>>,
 }
 
-impl <'tm>TextureManager<'tm> {
-    pub fn new(texture_creator: &'tm TextureCreator<WindowContext>) -> TextureManager<'tm> {
+impl TextureManager {
+    pub fn new() -> TextureManager {
         TextureManager {
-            texture_creator: texture_creator,
             items: HashMap::new(),
         }
     }
@@ -50,8 +45,10 @@ impl <'tm>TextureManager<'tm> {
                                         tex.from_image_f32(sdltex);
                                         self.items.insert(id, Rc::new(tex));
                                     },
-                                    Error => {
-                                        Log::error("Error loading texture");
+                                    Error(error) => {
+                                        let e: &str = &error[..];
+                                        let er: &str = &format!("Error loading texture: {}", e)[..];
+                                        Log::error(er);
                                         return;
                                     },
                                 }
@@ -73,7 +70,6 @@ impl <'tm>TextureManager<'tm> {
                 return;
             }
         }
-        //let sdltex = self.texture_creator.load_texture(path).unwrap();
     }
 
     pub fn load_from_memory(&mut self, id: String, data: &[u8]) {
@@ -91,8 +87,10 @@ impl <'tm>TextureManager<'tm> {
                 tex.from_image_f32(sdltex);
                 self.items.insert(id, Rc::new(tex));
             },
-            Error => {
-                Log::error("Error loading texture");
+            Error(error) => {
+                let e: &str = &error[..];
+                let er: &str = &format!("Error loading texture: {}", e)[..];
+                Log::error(er);
                 return;
             },
         }

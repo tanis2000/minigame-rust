@@ -176,6 +176,8 @@ impl GraphicsDevice {
     }
 
     pub fn apply_shader(&mut self, shader: &Shader) {
+        let info: &str = &format!("apply_shader(): Shader program: {}, v: {}, f:{}", shader.program, shader.vert_shader, shader.frag_shader)[..];
+        Log::info(info);
         unsafe {
             {
                 let c_str = CString::new("vertexPosition".as_bytes()).unwrap();

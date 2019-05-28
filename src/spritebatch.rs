@@ -113,8 +113,8 @@ impl SpriteBatch {
         }
     }
 
-    pub fn compute_cull_rectangle<'c>(&mut self, renderer: &'c Canvas<Window>) {
-        let vp = renderer.viewport();
+    pub fn compute_cull_rectangle<'c>(&mut self, viewport: Rectangle) {
+        let vp = viewport;
         
         self.cull_rect.x = vp.x as f32;
         self.cull_rect.y = vp.y as f32;
@@ -122,7 +122,10 @@ impl SpriteBatch {
         self.cull_rect.h = vp.h;
     }
 
-    pub fn begin<'c>(&mut self, renderer: &'c Canvas<Window>, sort_mode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transform_matrix: Option<Matrix4<f32>>) {
+    pub fn begin<'c>(&mut self, viewport: Rectangle, sort_mode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transform_matrix: Option<Matrix4<f32>>) {
+        let s = shader.unwrap();
+        let info: &str = &format!("begin(): Shader program: {}, v: {}, f:{}", s.program, s.vert_shader, s.frag_shader)[..];
+        Log::info(info);
         self.render_state.shader = shader;
         if transform_matrix.is_some() {
             self.matrix = transform_matrix.unwrap();
@@ -131,11 +134,11 @@ impl SpriteBatch {
         }
         self.render_state.transform = self.matrix;
         self.sort_mode = sort_mode;
-        self.compute_cull_rectangle(renderer);
+        self.compute_cull_rectangle(viewport);
         match self.sort_mode
         {
             SpriteSortMode::SpriteSortModeImmediate => {
-                self.setup(renderer);
+                self.setup(viewport);
             },
             _ => {},
         }
@@ -143,19 +146,19 @@ impl SpriteBatch {
         self.begin_called = true;
     }
 
-    pub fn end<'c>(&mut self, renderer: &'c Canvas<Window>) {
+    pub fn end<'c>(&mut self, viewport: Rectangle) {
         self.begin_called = false;
         match self.sort_mode {
             SpriteSortMode::SpriteSortModeImmediate => {},
             _ => {
-                self.setup(renderer);
+                self.setup(viewport);
             },
         }
         self.batcher.draw_batch(self.sort_mode, &mut self.render_state, &mut self.graphics_device);
     }
 
-    pub fn setup<'c>(&mut self, renderer: &'c Canvas<Window>) {
-        let vp = renderer.viewport();
+    pub fn setup<'c>(&mut self, viewport: Rectangle) {
+        let vp = viewport;
 
         //In OpenGL the viewport is bottom left origin, so we flip the y
         //when submitting our top left based coordinates.
@@ -163,7 +166,8 @@ impl SpriteBatch {
         //when rendering to the screen matches the window and when
         //rendering to a texture/render target, matches the target.
         let mut _y: f32 = 0.0;
-        let (_renderer_width, renderer_height) = renderer.output_size().unwrap();
+        //let (_renderer_width, renderer_height) = renderer.output_size().unwrap();
+        let (_renderer_width, renderer_height) = (viewport.w as u32, viewport.h as u32);
         _y = (renderer_height - (vp.y as u32 + vp.h as u32)) as f32;
 
         self.render_state.viewport = Rectangle::new(vp.x as f32, _y, vp.w as i32, vp.h as i32);

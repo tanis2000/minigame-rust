@@ -3,6 +3,7 @@ use scene::Scene;
 use spritebatch::SpriteBatch;
 use sdl2::video::Window;
 use sdl2::render::Canvas;
+use rectangle::Rectangle;
 
 pub struct EverythingRenderer {
 
@@ -15,8 +16,8 @@ impl EverythingRenderer {
 }
 
 impl Renderer for EverythingRenderer {
-    fn render_end <'sb>(&self, scene: &Scene, renderer: &'sb mut Canvas<Window>, spritebatch: &'sb mut SpriteBatch) {
+    fn render_end <'sb>(&self, scene: &Scene, viewport: Rectangle, spritebatch: &'sb mut SpriteBatch) {
         scene.render_entities();
-        spritebatch.end(renderer);
+        spritebatch.end(viewport);
     }
 }

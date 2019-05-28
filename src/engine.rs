@@ -25,6 +25,7 @@ use std::os::raw::{c_int, c_void, c_uchar};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::sys;
 use rand::Rng;
 //use imgui::*;
 //use time;
@@ -48,6 +49,7 @@ use debugnamecomponentmanager::DebugNameComponentManager;
 use timer;
 use timer::Timer;
 use texture::Texture;
+use rectangle::Rectangle;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -93,6 +95,8 @@ impl Plugins {
 fn find_sdl_gl_driver() -> Option<u32> {
     for (index, item) in sdl2::render::drivers().enumerate() {
         sdl2::log::log(item.name);
+    }
+    for (index, item) in sdl2::render::drivers().enumerate() {
         if item.name.contains("opengl") {
             sdl2::log::log("Driver chosen follows");
             sdl2::log::log(item.name);
@@ -279,7 +283,7 @@ pub struct MainLoopContext {
     running: bool,
     current_frame_delta: u64,
     frame_delay: u64,
-    canvas: sdl2::render::Canvas<sdl2::video::Window>,
+    //canvas: sdl2::render::Canvas<sdl2::video::Window>,
     framerate_timer: Timer,
     event_pump: sdl2::EventPump,
     last_time: u64,
@@ -290,6 +294,7 @@ pub struct MainLoopContext {
     bunnies: Vec<Bunny>,
     wabbit: std::rc::Rc<Texture>,
     scene: Scene,
+    window: sdl2::video::Window,
 }
 
 impl MainLoopContext {
@@ -348,23 +353,42 @@ impl Engine {
             Log::info("Value {}", fun());
         }
         */
+        Log::info("main loop");
         let main_loop_context = &mut self.main_loop_context;
         match main_loop_context {
             Some(main_loop_context) => {
+                let info: &str = &format!("{}", main_loop_context.framerate)[..];
+                Log::info(info);
+
+                let info2: &str = &format!("main_loop(): Shader program: {}, v: {}, f:{}", main_loop_context.shader.program, main_loop_context.shader.vert_shader, main_loop_context.shader.frag_shader)[..];
+                Log::info(info2);
+
+                let sh = main_loop_context.shader.clone();
+                let info3: &str = &format!("main_loop(): sh program: {}, v: {}, f:{}", sh.program, sh.vert_shader, sh.frag_shader)[..];
+                Log::info(info3);
+
+                if main_loop_context.framerate == 0 {
+                    Log::error("framerate zero");
+                    return;
+                }
                 let mut running = true;
                 for event in main_loop_context.event_pump.poll_iter() {
                     match event {
                         Event::Quit { .. } |
                         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                             running = false;
-                            println!("Quit requested");
+                            Log::info("Quit requested");
                         },
                         _ => {}
                     }
                 }
                 main_loop_context.set_running(running);
-                main_loop_context.canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
-                main_loop_context.canvas.clear();
+                //main_loop_context.canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
+                //main_loop_context.canvas.clear();
+                unsafe {
+                    gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
+                    gl::Clear(gl::COLOR_BUFFER_BIT);
+                }
 
                 /*
                 sdl2::log::log("Drawing triangle");
@@ -395,18 +419,20 @@ impl Engine {
                     //sdl2::log::log(&wabbit.get_height().to_string());
                     //sdl2::log::log(&wabbit.get_width().to_string());
 
-                    main_loop_context.sb.begin(&mut main_loop_context.canvas, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(matrix));
+                    let viewport = Rectangle::new(0.0, 0.0, 800, 600);
+                    main_loop_context.sb.begin(viewport, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(matrix));
                     for bunny in main_loop_context.bunnies.iter_mut() {
                         bunny.update(delta_time);
                         main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                     }
-                    main_loop_context.sb.end(&mut main_loop_context.canvas);
+                    main_loop_context.sb.end(viewport);
                 }
 
                 main_loop_context.debug_name_manager.update(0.0);
                 main_loop_context.scene.render_entities();
 
-                main_loop_context.canvas.present();
+                //main_loop_context.canvas.present();
+                main_loop_context.window.gl_swap_window();
 
                 //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
                 // The rest of the game loop goes here...
@@ -428,8 +454,9 @@ impl Engine {
                     main_loop_context.frame_delay = main_loop_context.frame_delay - main_loop_context.current_frame_delta;
                 }
 
+                Log::info("before sleep");
                 thread::sleep(Duration::from_millis((main_loop_context.frame_delay / 1_000_000) as u64));
-
+                Log::info("after sleep");
 
                 if main_loop_context.current_frame_delta < main_loop_context.frame_delay {
                     /*
@@ -449,7 +476,7 @@ impl Engine {
                 main_loop_context.framerate_timer.restart();
             },
             None => {
-                println!("main_loop(): Context shouldn't be None");
+                Log::error("main_loop(): Context shouldn't be None");
             }
         }
 
@@ -480,6 +507,18 @@ impl Engine {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
 
+        #[cfg(any(target_os="ios", target_os="android", target_arch="wasm32"))]
+        {
+            video_subsystem.gl_attr().set_context_profile(sdl2::video::GLProfile::GLES);
+            video_subsystem.gl_attr().set_context_major_version(2);
+            video_subsystem.gl_attr().set_context_minor_version(0);
+        }
+
+        #[cfg(not(any(target_os="android", target_os="ios", target_arch="wasm32")))]
+        {
+            video_subsystem.gl_attr().set_context_profile(sdl2::video::GLProfile::Compatibility);
+        }
+
         let window = video_subsystem
             .window("minigame-rust", 800, 600)
             .position_centered()
@@ -488,14 +527,18 @@ impl Engine {
             .unwrap();
 
         sdl2::log::log("Looking for OpenGL drivers");
-        let mut canvas = window
+        /*let mut canvas = window
         .into_canvas()
         .index(find_sdl_gl_driver().unwrap())
         .build()
-        .unwrap();
+        .unwrap();*/
+
+        let gl_context = window.gl_create_context().unwrap();
+        window.gl_make_current(&gl_context).unwrap();
 
         sdl2::log::log("Loading GL extensions");
         gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const _);
+        /*
         sdl2::log::log("Setting current GL context");
         let gl_set_context_res = canvas.window().gl_set_context_to_current();
         match gl_set_context_res {
@@ -505,6 +548,8 @@ impl Engine {
                 panic!("Cannot set current GL context");
             }
         }
+        */
+        
         #[cfg(not(target_arch = "wasm32"))]
         {
             Log::info("Enabling VSYNC");
@@ -561,8 +606,7 @@ impl Engine {
         let mut shader = Shader::new();
         shader.load_default();
 
-        let tc = canvas.texture_creator();
-        let mut tm = TextureManager::new(&tc);
+        let mut tm = TextureManager::new();
         let wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
         #[cfg(target_arch = "wasm32")]
         {
@@ -650,7 +694,7 @@ impl Engine {
             running: running,
             current_frame_delta: current_frame_delta,
             frame_delay: frame_delay,
-            canvas: canvas,
+            //canvas: canvas,
             framerate_timer: framerate_timer,
             event_pump: event_pump,
             last_time: last_time,
@@ -661,6 +705,7 @@ impl Engine {
             bunnies: bunnies,
             wabbit: wabbit,
             scene: scene,
+            window: window,
         };
 
         self.main_loop_context = Some(main_loop_context);
@@ -669,6 +714,17 @@ impl Engine {
         {
             set_main_loop_callback(|| {
                 self.main_loop();
+                /*
+                match &self.main_loop_context {
+                    Some(main_loop_context) => {
+                        let info: &str = &format!("{}", main_loop_context.framerate)[..];
+                        Log::info(info);
+                    },
+                    None => {
+                        Log::error("Missing context");
+                    }
+                }
+                */
             });
         }
 

@@ -110,16 +110,39 @@ impl Shader {
                                      len,
                                      ptr::null_mut(),
                                      buf.as_mut_ptr() as *mut GLchar);
+                let error = str::from_utf8(&buf);
+                match error {
+                    Ok(error) => {
+                        Log::error(error);
+                        return 0;
+                    },
+                    Err(_error) => {
+                        Log::error("ShaderInfoLog not valid utf8");
+                        return 0;
+                    }
+                }     
+                /*                
                 panic!("{}",
                        str::from_utf8(&buf)
                            .ok()
                            .expect("ShaderInfoLog not valid utf8"));
+                */
             }
         }
-        shader
+        let info: &str = &format!("shader: {}", shader)[..];
+        Log::info(info);
+        return shader;
     }
 
     pub fn link_program(&self, vs: GLuint, fs: GLuint) -> GLuint {
+        if vs == 0 {
+            Log::error("Bad vertex shader");
+            return 0;
+        }
+        if fs == 0 {
+            Log::error("Bad fragment shader");
+            return 0;
+        }
         unsafe {
             let program = gl::CreateProgram();
             gl::AttachShader(program, vs);
@@ -139,12 +162,27 @@ impl Shader {
                                       len,
                                       ptr::null_mut(),
                                       buf.as_mut_ptr() as *mut GLchar);
+                let error = str::from_utf8(&buf);
+                match error {
+                    Ok(error) => {
+                        Log::error(error);
+                        return 0;
+                    },
+                    Err(_error) => {
+                        Log::error("ProgramInfoLog not valid utf8");
+                        return 0;
+                    }
+                }
+                /*     
                 panic!("{}",
                        str::from_utf8(&buf)
                            .ok()
                            .expect("ProgramInfoLog not valid utf8"));
+                */
             }
-            program
+            let info: &str = &format!("program: {}", program)[..];
+            Log::info(info);
+            return program;
         }
     }
 

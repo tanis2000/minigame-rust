@@ -56,11 +56,13 @@ impl SpriteBatcher {
 
     pub fn ensure_array_capacity(&mut self, num_batch_items: i32) {
         let needed_capacity = 6 * num_batch_items;
-        if needed_capacity <= self.index.len() as i32 {
+        if needed_capacity <= self.index.capacity() as i32 {
             // Short circuit out of here because we have enough capacity.
             return;
         }
 
+        let info: &str = &format!("ensure_array_capacity(): requested capacity: {} current index len: {}", needed_capacity, self.index.len())[..];
+        Log::info(info);
         let mut new_index: Vec<i32> = Vec::with_capacity(needed_capacity as usize);
 
         for i in 0..self.index.len() as usize {
@@ -91,6 +93,8 @@ impl SpriteBatcher {
         }
         self.index = new_index;
 
+        let va_info: &str = &format!("ensure_array_capacity(): vertex_array len: {}", self.vertex_array.len())[..];
+        Log::info(va_info);
         self.vertex_array.resize(needed_capacity as usize, VertexPositionColorTexture::new());
     }
 
