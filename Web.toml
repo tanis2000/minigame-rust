@@ -3,4 +3,4 @@
 default-target = "wasm32-unknown-unknown"
 
 [target.emscripten]
-link-args = ["-s", "USE_SDL=2", "-s", "TOTAL_MEMORY=1GB", "-s", "NO_EXIT_RUNTIME=1", "-s", "ASSERTIONS=2", "-s", "SAFE_HEAP=1", "-s", "BINARYEN_TRAP_MODE='clamp'", "-s", "DISABLE_EXCEPTION_CATCHING=0"]
+link-args = ["-s", "USE_SDL=2", "-s", "TOTAL_MEMORY=1GB", "-s", "NO_EXIT_RUNTIME=1", "-s", "ASSERTIONS=2", "-s", "SAFE_HEAP=1", "-s", "BINARYEN_TRAP_MODE='clamp'", "-s", "DISABLE_EXCEPTION_CATCHING=0", "-s", "WASM=1"]

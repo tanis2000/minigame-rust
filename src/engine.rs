@@ -60,7 +60,7 @@ pub mod gl {
 use self::gl::types::*;
 
 #[cfg(feature = "hotload")]
-struct Plugins {
+pub struct Plugins {
     plugins: Vec<Rc<Lib>>,
 }
 
@@ -248,6 +248,7 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[allow(non_camel_case_types)]
 type em_callback_func = unsafe extern "C" fn();
 
 #[cfg(target_arch = "wasm32")]
@@ -338,21 +339,6 @@ impl Engine {
     }
 
     pub fn main_loop(&mut self) {
-        // Uncomment the following line to re-enable dynamic loading of code. You will have to set up lifetimes correctly, though
-        //plugin_update(&mut plugs, &mut reload_handler);
-
-        /*
-        reload_handler.update(Plugins::reload_callback, &mut plugs);
-
-        if plugs.plugins.len() > 0 {
-            // In a real program you want to cache the symbol and not do it every time if your
-            // application is performance critical
-            let fun: Symbol<extern "C" fn() -> i32> =
-                unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
-
-            Log::info("Value {}", fun());
-        }
-        */
         Log::info("main loop");
         let main_loop_context = &mut self.main_loop_context;
         match main_loop_context {
@@ -371,6 +357,24 @@ impl Engine {
                     Log::error("framerate zero");
                     return;
                 }
+
+                //#[cfg(not(target_arch = "wasm32"))]
+                // Uncomment the following line to re-enable dynamic loading of code. You will have to set up lifetimes correctly, though
+                //plugin_update(&mut plugs, &mut reload_handler);
+
+                /*
+                reload_handler.update(Plugins::reload_callback, &mut plugs);
+
+                if plugs.plugins.len() > 0 {
+                    // In a real program you want to cache the symbol and not do it every time if your
+                    // application is performance critical
+                    let fun: Symbol<extern "C" fn() -> i32> =
+                        unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
+
+                    Log::info("Value {}", fun());
+                }
+                */
+
                 let mut running = true;
                 for event in main_loop_context.event_pump.poll_iter() {
                     match event {
@@ -493,8 +497,10 @@ impl Engine {
         }
     }
 
-    pub fn run_main_loop(&mut self) {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn run_main_loop<'a>(&mut self, mut plugs: &mut Plugins, mut reload_handler: &mut DynamicReload<'a>) {
         while Self::get_is_running(&self.main_loop_context) {
+            plugin_update(&mut plugs, &mut reload_handler);
             self.main_loop();
         }
     }
@@ -726,6 +732,7 @@ impl Engine {
                 }
                 */
             });
+            stdweb::event_loop();
         }
 
         //
@@ -734,7 +741,7 @@ impl Engine {
         //
         #[cfg(not(target_arch = "wasm32"))]
         {
-            self.run_main_loop();
+            self.run_main_loop(&mut plugs, &mut reload_handler);
         }
 
         // Cleanup
