@@ -124,8 +124,6 @@ impl SpriteBatch {
 
     pub fn begin<'c>(&mut self, viewport: Rectangle, sort_mode: SpriteSortMode/*, BlendState *blendState = NULL, SamplerState *samplerState = NULL, DepthStencilState *depthStencilState = NULL, RasterizerState *rasterizerState = NULL, Effect *effect = NULL*/, shader: Option<Shader>, transform_matrix: Option<Matrix4<f32>>) {
         let s = shader.unwrap();
-        let info: &str = &format!("begin(): Shader program: {}, v: {}, f:{}", s.program, s.vert_shader, s.frag_shader)[..];
-        Log::info(info);
         self.render_state.shader = shader;
         if transform_matrix.is_some() {
             self.matrix = transform_matrix.unwrap();

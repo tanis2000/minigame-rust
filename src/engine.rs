@@ -11,16 +11,13 @@ extern crate rand;
 
 #[cfg(feature = "hotload")]
 use dynamic_reload::{DynamicReload, Lib, Symbol, Search, PlatformName, UpdateState};
-use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
 use std::thread;
 use std::str;
 use std::ffi::CString;
 use std::ptr;
-use std::ptr::null_mut;
 use std::path::Path;
-use std::os::raw::{c_int, c_void, c_uchar};
 //use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
@@ -247,39 +244,6 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
     //println!("Value {}", shared_fun());
 }
 
-#[cfg(target_arch = "wasm32")]
-#[allow(non_camel_case_types)]
-type em_callback_func = unsafe extern "C" fn();
-
-#[cfg(target_arch = "wasm32")]
-extern "C" {
-    // This extern is built in by Emscripten.
-    pub fn emscripten_run_script_int(x: *const c_uchar) -> c_int;
-    pub fn emscripten_cancel_main_loop();
-    pub fn emscripten_set_main_loop(func: em_callback_func,
-                                    fps: c_int,
-                                    simulate_infinite_loop: c_int);
-}
-
-#[cfg(target_arch = "wasm32")]
-thread_local!(static MAIN_LOOP_CALLBACK: RefCell<*mut c_void> = RefCell::new(null_mut()));
-
-#[cfg(target_arch = "wasm32")]
-pub fn set_main_loop_callback<F>(callback : F) where F : FnMut() {
-    MAIN_LOOP_CALLBACK.with(|log| {
-            *log.borrow_mut() = &callback as *const _ as *mut c_void;
-            });
-
-    unsafe { emscripten_set_main_loop(wrapper::<F>, 0, 1); }
-
-    unsafe extern "C" fn wrapper<F>() where F : FnMut() {
-        MAIN_LOOP_CALLBACK.with(|z| {
-            let closure = *z.borrow_mut() as *mut F;
-            (*closure)();
-        });
-    }
-}
-
 pub struct MainLoopContext {
     running: bool,
     current_frame_delta: u64,
@@ -296,6 +260,7 @@ pub struct MainLoopContext {
     wabbit: std::rc::Rc<Texture>,
     scene: Scene,
     window: sdl2::video::Window,
+    gl_context: sdl2::video::GLContext,
 }
 
 impl MainLoopContext {
@@ -339,19 +304,10 @@ impl Engine {
     }
 
     pub fn main_loop(&mut self) {
-        Log::info("main loop");
         let main_loop_context = &mut self.main_loop_context;
         match main_loop_context {
             Some(main_loop_context) => {
-                let info: &str = &format!("{}", main_loop_context.framerate)[..];
-                Log::info(info);
-
-                let info2: &str = &format!("main_loop(): Shader program: {}, v: {}, f:{}", main_loop_context.shader.program, main_loop_context.shader.vert_shader, main_loop_context.shader.frag_shader)[..];
-                Log::info(info2);
-
                 let sh = main_loop_context.shader.clone();
-                let info3: &str = &format!("main_loop(): sh program: {}, v: {}, f:{}", sh.program, sh.vert_shader, sh.frag_shader)[..];
-                Log::info(info3);
 
                 if main_loop_context.framerate == 0 {
                     Log::error("framerate zero");
@@ -696,7 +652,7 @@ impl Engine {
 
         let mut running = true;
 
-        let mut main_loop_context = MainLoopContext {
+        self.main_loop_context = Some(MainLoopContext {
             running: running,
             current_frame_delta: current_frame_delta,
             frame_delay: frame_delay,
@@ -712,28 +668,8 @@ impl Engine {
             wabbit: wabbit,
             scene: scene,
             window: window,
-        };
-
-        self.main_loop_context = Some(main_loop_context);
-
-        #[cfg(target_arch = "wasm32")]
-        {
-            set_main_loop_callback(|| {
-                self.main_loop();
-                /*
-                match &self.main_loop_context {
-                    Some(main_loop_context) => {
-                        let info: &str = &format!("{}", main_loop_context.framerate)[..];
-                        Log::info(info);
-                    },
-                    None => {
-                        Log::error("Missing context");
-                    }
-                }
-                */
-            });
-            stdweb::event_loop();
-        }
+            gl_context: gl_context,
+        });
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs

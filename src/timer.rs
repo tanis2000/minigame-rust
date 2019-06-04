@@ -142,5 +142,5 @@ pub fn precise_time_ns() -> u64 {
 #[cfg(target_arch = "wasm32")]
 pub fn precise_time_ns() -> u64 {
     // Date::now() is in milliseconds so we convert it to nanoseconds
-    return (Date::now() as u64 * 1000) as u64
+    return (Date::now() as u64 * 1_000_000) as u64
 }

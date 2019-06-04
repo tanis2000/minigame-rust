@@ -129,8 +129,6 @@ impl Shader {
                 */
             }
         }
-        let info: &str = &format!("shader: {}", shader)[..];
-        Log::info(info);
         return shader;
     }
 
@@ -180,8 +178,6 @@ impl Shader {
                            .expect("ProgramInfoLog not valid utf8"));
                 */
             }
-            let info: &str = &format!("program: {}", program)[..];
-            Log::info(info);
             return program;
         }
     }
