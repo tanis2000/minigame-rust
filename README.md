@@ -1,8 +1,18 @@
 # minigame
 
 This is a basic sample game made with Rust that runs on both desktop and mobile platforms.
-Right now it's been tested on macOS, iOS and Android and it works as long as you do some steps by hand.
-The idea is to have the whole show running on its own without the need of any manual step.
+
+Supported platforms:
+
+- Windows
+- macOS
+- Linux
+- iOS
+- Android
+- Browser
+
+Right now it's been tested on macOS, iOS, Android and the browser and it works as long as you do some steps by hand.
+The idea is to have the whole show running on its own without the need of any manual steps.
 
 ## Screenshot
 
@@ -10,7 +20,7 @@ The idea is to have the whole show running on its own without the need of any ma
 
 ## Hot code reloading
 
-This is a feature that is only available on desktop but it's very handy when working with gameplay code.
+This is a feature that is only available on the desktop but it's very handy when working with gameplay code.
 
 Edit `src/test_shared.rs` and run `cargo build` to see hot reloading in action.
 
@@ -59,7 +69,7 @@ This command will also download SDL2 and compile it for both the simulator and i
 
 ## Compiling the iOS project
 
-Just open the `ios/minigame/minigame.xcodeproj` Xcode project and run it and you should be done. 
+Just open the `ios/minigame/minigame.xcodeproj` Xcode project and run it and you should be done.
 
 ## Building the Android standalone toolchain
 
