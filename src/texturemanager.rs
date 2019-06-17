@@ -4,8 +4,7 @@ use std::path::Path;
 use std::string::String;
 use std::io::Read;
 use sdl2::rwops::RWops;
-use stb_image::image;
-use stb_image::image::LoadResult::{ImageU8, ImageF32, Error};
+use image::{GenericImage, ImageBuffer, RgbaImage, ImageResult};
 use texture::Texture;
 use log::Log;
 
@@ -30,24 +29,18 @@ impl TextureManager {
                         data = vec![0; size];
                         match r.read(&mut data) {
                             Ok(_read_size) => {
-                                //let stbimg = image::load(path);
                                 let stbimg = image::load_from_memory(&data);
                                 match stbimg {
-                                    ImageU8(img) => {
+                                    Ok(img) => {
                                         let sdltex = img;
                                         let mut tex = Texture::new();
                                         tex.from_image_u8(sdltex);
                                         self.items.insert(id, Rc::new(tex));
                                     },
-                                    ImageF32(img) => {
-                                        let sdltex = img;
-                                        let mut tex = Texture::new();
-                                        tex.from_image_f32(sdltex);
-                                        self.items.insert(id, Rc::new(tex));
-                                    },
-                                    Error(error) => {
-                                        let e: &str = &error[..];
-                                        let er: &str = &format!("Error loading texture: {}", e)[..];
+                                    Err(error) => {
+                                        //error.to
+                                        //let e: &str = &error[..];
+                                        let er: &str = &format!("Error loading texture: {}", error)[..];
                                         Log::error(er);
                                         return;
                                     },
@@ -75,21 +68,15 @@ impl TextureManager {
     pub fn load_from_memory(&mut self, id: String, data: &[u8]) {
         let stbimg = image::load_from_memory(data);
         match stbimg {
-            ImageU8(img) => {
+            Ok(img) => {
                 let sdltex = img;
                 let mut tex = Texture::new();
                 tex.from_image_u8(sdltex);
                 self.items.insert(id, Rc::new(tex));
             },
-            ImageF32(img) => {
-                let sdltex = img;
-                let mut tex = Texture::new();
-                tex.from_image_f32(sdltex);
-                self.items.insert(id, Rc::new(tex));
-            },
-            Error(error) => {
-                let e: &str = &error[..];
-                let er: &str = &format!("Error loading texture: {}", e)[..];
+            Err(error) => {
+                //let e: &str = &error[..];
+                let er: &str = &format!("Error loading texture: {}", error)[..];
                 Log::error(er);
                 return;
             },

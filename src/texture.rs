@@ -1,6 +1,6 @@
 use engine::gl::types::*;
 use engine::gl as gl;
-use stb_image::image;
+use image::{GenericImage, ImageBuffer, RgbaImage, GenericImageView};
 use std::mem;
 
 pub struct Texture {
@@ -25,9 +25,9 @@ impl Texture {
         self.height
     }
 
-    pub fn from_image_u8(&mut self, image: image::Image<u8>) {
-        self.width = image.width as u32;
-        self.height = image.height as u32;
+    pub fn from_image_u8(&mut self, image: image::DynamicImage) {
+        self.width = image.width();
+        self.height = image.height();
         unsafe {
             let mut tex_id: u32 = 0;
             gl::GenTextures(1, &mut tex_id);
@@ -35,13 +35,8 @@ impl Texture {
             gl::BindTexture(gl::TEXTURE_2D, self.tex_id);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.width as i32, self.height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, mem::transmute(&image.data[0]));
+            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.width as i32, self.height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, mem::transmute(&image.to_rgba().into_raw()[0]));
         }
-    }
-
-    pub fn from_image_f32(&mut self, image: image::Image<f32>) {
-        self.width = image.width as u32;
-        self.height = image.height as u32;
     }
 
 }
