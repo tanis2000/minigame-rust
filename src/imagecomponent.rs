@@ -1,6 +1,7 @@
 extern crate cgmath;
 
 use color::Color;
+use component::{Component};
 use rectangle::Rectangle;
 use texture::Texture;
 use spritebatch::SpriteBatch;
@@ -20,6 +21,10 @@ pub struct ImageComponent {
     color: Color,
     pub texture: Option<Rc<Texture>>,
     clip_rect: Rectangle,
+}
+
+impl Component for ImageComponent {
+    type Storage = Vec<Self>;
 }
 
 impl ImageComponent {
@@ -87,10 +92,23 @@ impl ImageComponent {
     pub fn render_position(&self, entity: Option<&Entity>) -> Vector2<f32> {
         match entity {
             Some(_) => {
-                return entity.unwrap().position + self.position;
+                //return entity.unwrap().position + self.position;
+                // TODO: grab the position from the TransformComponent?
+                return Vector2::new(0.0, 0.0);
             },
             None => {
                 return Vector2::new(0.0, 0.0);
+            }
+        }
+    }
+
+    pub fn get_texture(&self) -> Option<Rc<Texture>> {
+        match self.texture {
+            Some(ref texture) => {
+                return Some(texture.clone());
+            },
+            None => {
+                return None;
             }
         }
     }

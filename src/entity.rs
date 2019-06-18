@@ -1,39 +1,59 @@
 extern crate cgmath;
 
 use component::Component;
-use componentlist::ComponentList;
 use colliderlist::ColliderList;
 use std::vec::Vec;
 use std::rc::Rc;
+use std::any::TypeId;
 use self::cgmath::Vector2;
 
-pub type IdNumber = u32;
+pub type Entity = usize;
 
-pub trait EntityTrait {
-    /*
-    fn added(scene: &Scene);
-    fn removed(scene: &Scene);
-    fn awake(scene: &Scene);
-    fn scene_begin();
-    fn scene_end();
-    fn update();
-    fn render();
-    fn debug_render();
-    fn add(&mut self, component: Component);
-    fn remove(&mut self, component: &Component);
-    fn get() -> Rc<Component>;
-    fn add_collider(collider: &Collider);
-    fn remove_collider(collider: &Collider);
-    fn tag(tag: u32);
-    fn untag(tag: u32);
-    fn collide_check(other: &Entity);
-    fn set_depth(depth: i32);
-    fn get_depth() -> i32;
-    */
+pub struct EntityComponent {
+    component_type: TypeId,
+    component_index: usize,
 }
 
+impl EntityComponent {
+    pub fn new<C: Component>(index: usize) -> Self {
+        EntityComponent {
+            component_type: TypeId::of::<C>(),
+            component_index: index,
+        }
+    }
+    
+    pub fn get_component_type(&self) -> &TypeId {
+        return &self.component_type;
+    }
+
+    pub fn get_component_index(&self) -> &usize {
+        return &self.component_index;
+    }
+}
+
+pub struct EntityData {
+    components: Vec<EntityComponent>,
+}
+
+impl EntityData {
+    pub fn new() -> Self {
+        EntityData {
+            components: Vec::new(),
+        }
+    }
+
+    pub fn get_components(&self) -> &Vec<EntityComponent> {
+        return &self.components;
+    }
+
+    pub fn get_components_mut(&mut self) -> &mut Vec<EntityComponent> {
+        return &mut self.components;
+    }
+
+}
+/*
 pub struct Entity {
-    id: u32,
+    id: u32,    
     pub position: Vector2<f32>,
     active: bool,
     visibile: bool,
@@ -131,3 +151,4 @@ impl PartialEq for Entity {
     }
 }
 
+*/

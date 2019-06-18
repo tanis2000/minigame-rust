@@ -1,8 +1,9 @@
 extern crate cgmath;
 
 use entity::Entity;
-use entitylist::EntityList;
+use world::World;
 use collider::Collider;
+use component::{Component, ComponentId};
 use rectangle::Rectangle;
 use renderer::Renderer;
 use std::vec::Vec;
@@ -36,7 +37,7 @@ pub trait SceneTrait {
 pub struct Scene {
     time_active: f32,
     focused: bool,
-    entities: EntityList,
+    world: World,
     //tag_lists: TagLists,
     //helper_entity: Entity,
     //spatial_hash: SpatialHash,
@@ -51,7 +52,7 @@ impl Scene {
         let s = Scene {
             time_active: 0.0,
             focused: false,
-            entities: EntityList::new(),
+            world: World::new(),
             actual_depth_lookup: HashMap::new(),
             tmp_rect: Rectangle::new(0.0, 0.0, 0, 0),
             colliding_bodies: Vec::new(),
@@ -60,49 +61,41 @@ impl Scene {
         s
     }
 
-    pub fn create_entity(&mut self) -> u32 {
-        self.entities.create_entity()
-    }
-
-    pub fn add(&mut self, entity: Entity) {
-        self.entities.add(entity)
+    pub fn create_entity(&mut self) -> Entity {
+        self.world.create_entity()
     }
 
     pub fn render_entities(&self) {
-        self.entities.render_entities();
+        //self.world.render_entities();
     }
 
     pub fn add_renderer(&mut self, renderer: Rc<Renderer>) {
         self.renderers.push(renderer);
     }
 
-    pub fn get_entity_mut(&mut self, entity_id: u32) -> Option<&mut Entity> {
-        self.entities.get_entity_mut(entity_id)
-    }
-
     pub fn begin(&mut self) {
         self.focused = true;
-        for entity in self.entities.get_entities() {
-            entity.scene_begin();
-        }
+        //for entity in self.world.get_entities() {
+            //entity.scene_begin();
+        //}
     }
 
     pub fn end(&mut self) {
         self.focused = false;
-        for entity in self.entities.get_entities() {
-            entity.scene_end();
-        }
+        //for entity in self.world.get_entities() {
+            //entity.scene_end();
+        //}
     }
 
     pub fn before_update(&mut self) {
         //timeActive += Game::deltaTime;
 
-        self.entities.update_lists();
+        //self.world.update_lists();
         //tagLists.UpdateLists();
     }
 
     pub fn update(&self) {
-        self.entities.update();
+        //self.world.update();
     }
 
     pub fn after_update(&self) {
@@ -117,7 +110,7 @@ impl Scene {
 
     pub fn render(&self) {
         for renderer in &self.renderers {
-            renderer.render(self);
+            //renderer.render(self);
         }
     }
 
@@ -125,5 +118,17 @@ impl Scene {
         for renderer in &self.renderers {
             renderer.after_render(self);
         }
+    }
+
+    pub fn register_component<C: Component>(&mut self) {
+        self.world.register_component_with_storage::<C>();
+    }
+
+    pub fn add_component_to_entity<C: Component>(&mut self, entity: Entity, component: C) {
+        self.world.add_component_to_entity(entity, component);
+    }
+
+    pub fn get_component<C: Component>(&self, entity: Entity) -> Option<&C> {
+        return self.world.get_component_for_entity::<C>(entity);
     }
 }

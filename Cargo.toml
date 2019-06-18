@@ -6,6 +6,7 @@ build = "build.rs"
 
 [dependencies]
 #sdl2 = { version = "0.32", default-features = false, features = ["unsafe_textures"] }
+bit-set = "0.5.1"
 sdl2 = { path="../tanis2000-rust-sdl2", default-features = false, features = ["unsafe_textures"] }
 cgmath = "0.14.1"
 rusttype = "0.2.1"

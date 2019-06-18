@@ -1,14 +1,48 @@
-use std::any::Any;
+    use std::any::Any;
 
-pub trait Component: Any {
+pub type ComponentId = u32;
+
+pub trait GenericStorage<T> {
+    fn new() -> Self
+    where
+        Self: Sized;
+    fn push(&mut self, value: T) -> usize;
+    fn get(&self, index: usize) -> &T;
+    fn len(&self) -> usize;
+}
+
+pub trait Component: Any + Sized {
+    type Storage: GenericStorage<Self>;
+    /*
     fn added(&self) {}
     fn removed(&self) {}
     fn render(&self) {}
+    */
 }
 
-impl<T: Any> Component for T {
+impl<T> GenericStorage<T> for Vec<T> {
+    fn new() -> Self {
+        return Vec::new();
+    }
 
+    fn push(&mut self, value: T) -> usize {
+        Vec::push(self, value);
+        self.len() - 1
+    }
+
+    fn get(&self, index: usize) -> &T {
+        &self[index]
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
 }
+
+
+/*impl<T: Any> Component for T {
+
+}*/
 
 /*
 type IdNumber = u32;

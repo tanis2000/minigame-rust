@@ -1,7 +1,71 @@
-use entity::Entity;
-use entity::IdNumber;
+use component::{Component, ComponentId, GenericStorage};
+use entity::{Entity, EntityComponent, EntityData};
+use std::boxed::Box;
+use std::rc::Rc;
 use std::vec::Vec;
+use std::collections::HashMap;
+use std::any::{Any, TypeId};
 
+pub struct World {
+    next_entity_id: Entity,
+    entities: Vec<EntityData>,
+    components: HashMap<TypeId, Box<dyn Any>>,
+}
+
+impl World {
+    pub fn new() -> Self {
+        World {
+            next_entity_id: 0,
+            entities: Vec::new(),
+            components: HashMap::new(),
+        }
+    }
+
+    pub fn create_entity(&mut self) -> Entity {
+        let e = self.next_entity_id;
+        self.entities.push(EntityData::new());
+        self.next_entity_id += 1;
+        return e;
+    }
+
+    pub fn register_component_with_storage<C: Component>(&mut self) {
+        self.components.insert(TypeId::of::<C>(), Box::new(C::Storage::new()));
+    }
+    
+    pub fn add_component_to_storage<C: Component>(&mut self, component: C) -> usize {
+        let storage = self.components.get_mut(&TypeId::of::<C>()).unwrap().downcast_mut::<C::Storage>().unwrap();
+        storage.push(component);
+        return storage.len() - 1;
+    }
+    
+    fn get_component<C: Component>(&self, index: usize) -> &C {
+        let storage = self.components[&TypeId::of::<C>()]
+            .downcast_ref::<C::Storage>()
+            .unwrap();
+        storage.get(index)
+    }
+
+    pub fn add_component_to_entity<C: Component>(&mut self, entity: Entity, component: C) {
+        let index = self.add_component_to_storage(component);
+        let entity_data = self.entities.get_mut(entity).unwrap();
+        let ec = EntityComponent::new::<C>(index);
+        entity_data.get_components_mut().push(ec);
+    }
+    
+    pub fn get_component_for_entity<C: Component>(&self, entity: Entity) -> Option<&C> {
+        let entity_data = &self.entities.get(entity);
+        for entity_component in entity_data.get_components() {
+            if entity_component.get_component_type() == &TypeId::of::<C>() {
+                let index = entity_component.get_component_index();
+                return Some(self.get_component::<C>(*index));
+            }
+        }
+        return None;
+    }
+
+}
+
+/*
 pub struct EntityList {
     next_id: IdNumber,
     entities: Vec<Entity>,
@@ -105,3 +169,4 @@ impl EntityList {
         }
     }
 }
+*/

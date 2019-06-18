@@ -43,10 +43,11 @@ use imagecomponent::ImageComponent;
 use log::Log;
 use everythingrenderer::EverythingRenderer;
 use debugnamecomponentmanager::DebugNameComponentManager;
+use rectangle::Rectangle;
 use timer;
 use timer::Timer;
 use texture::Texture;
-use rectangle::Rectangle;
+use transformcomponent::TransformComponent;
 use self::cgmath::Vector2;
 use self::cgmath::Matrix4;
 use self::cgmath::One;
@@ -385,6 +386,13 @@ impl Engine {
                         bunny.update(delta_time);
                         main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                     }
+                    let e = 0;
+                    let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
+                    let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                    let ic = ic_compo.unwrap();
+                    let tc = tc_compo.unwrap();
+                    let tex = ic.get_texture().unwrap();
+                    main_loop_context.sb.draw(tex, Some(tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
                     main_loop_context.sb.end(viewport);
                 }
 
@@ -588,6 +596,8 @@ impl Engine {
         let mut debug_name_manager = DebugNameComponentManager::new();
 
         let mut scene = Scene::new(32);
+        scene.register_component::<ImageComponent>();
+        scene.register_component::<TransformComponent>();
         let entity_id = scene.create_entity();
         sdl2::log::log("Entity id follows");
         sdl2::log::log(&entity_id.to_string());
@@ -596,19 +606,13 @@ impl Engine {
         Log::debug(&debug_name_instance.i.to_string());
         debug_name_manager.set_name(debug_name_instance, String::from("entity1"));
         {
-            let mut e = scene.get_entity_mut(entity_id);
-            //assert!(Rc::make_mut(&mut e).is_some());
-            //let tm = self.texture_manager.as_ref().unwrap();
             let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
             ic.texture = Some(tm.get(&String::from("wabbit")));
-            match e {
-                Some(entity) => {
-                    entity.add(Rc::new(ic));
-                },
-                None => {
-                    sdl2::log::log("Something went wrong with the entity")
-                },
-            }
+            scene.add_component_to_entity(entity_id, ic);
+
+            let mut tc = TransformComponent::new();
+            tc.set_position(50.0, 50.0);
+            scene.add_component_to_entity(entity_id, tc);
         }
 
         let er = EverythingRenderer::new();

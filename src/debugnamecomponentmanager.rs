@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use std::string::String;
 use std::collections::HashMap;
-use entity::IdNumber;
+use entity::Entity;
 use log::Log;
 
 pub struct InstanceData {
@@ -30,7 +30,7 @@ impl Instance {
 
 pub struct DebugNameComponentManager {
     data: InstanceData,
-    map: HashMap<IdNumber, usize>, 
+    map: HashMap<Entity, usize>, 
 }
 
 impl DebugNameComponentManager {
@@ -47,9 +47,9 @@ impl DebugNameComponentManager {
         inst
     }
 
-    pub fn lookup(&self, entity_id: IdNumber) -> Instance {
+    pub fn lookup(&self, entity: Entity) -> Instance {
         let i: usize;
-        match self.map.get(&entity_id) {
+        match self.map.get(&entity) {
             Some(idx) => {
                 i = *idx;
             },
@@ -60,9 +60,9 @@ impl DebugNameComponentManager {
         self.make_instance(i)
     }
 
-    pub fn create(&mut self, entity_id: IdNumber) -> Instance {
+    pub fn create(&mut self, entity: Entity) -> Instance {
         self.data.names.push(String::from("empty"));
-        self.map.entry(entity_id).or_insert(self.data.names.len()-1);
+        self.map.entry(entity).or_insert(self.data.names.len()-1);
         self.make_instance(self.data.names.len()-1)
     }
 
