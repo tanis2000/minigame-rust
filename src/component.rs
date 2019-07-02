@@ -1,6 +1,6 @@
-    use std::any::Any;
+use std::any::Any;
 
-pub type ComponentId = u32;
+pub type ComponentId = usize;
 
 pub trait GenericStorage<T> {
     fn new() -> Self
@@ -9,6 +9,8 @@ pub trait GenericStorage<T> {
     fn push(&mut self, value: T) -> usize;
     fn get(&self, index: usize) -> &T;
     fn len(&self) -> usize;
+    fn all(&self) -> &Vec<T>;
+    fn remove(&mut self, index: usize) -> T;
 }
 
 pub trait Component: Any + Sized {
@@ -36,6 +38,14 @@ impl<T> GenericStorage<T> for Vec<T> {
 
     fn len(&self) -> usize {
         self.len()
+    }
+
+    fn all(&self) -> &Vec<T> {
+        self
+    }
+
+    fn remove(&mut self, index: usize) -> T {
+        self.remove(index)
     }
 }
 

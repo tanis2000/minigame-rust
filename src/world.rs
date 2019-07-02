@@ -1,5 +1,6 @@
 use component::{Component, ComponentId, GenericStorage};
 use entity::{Entity, EntityComponent, EntityData};
+use bit_set::BitSet;
 use std::boxed::Box;
 use std::rc::Rc;
 use std::vec::Vec;
@@ -9,6 +10,7 @@ use std::any::{Any, TypeId};
 pub struct World {
     next_entity_id: Entity,
     entities: Vec<EntityData>,
+    active_entities: BitSet,
     components: HashMap<TypeId, Box<dyn Any>>,
 }
 
@@ -17,6 +19,7 @@ impl World {
         World {
             next_entity_id: 0,
             entities: Vec::new(),
+            active_entities: BitSet::new(),
             components: HashMap::new(),
         }
     }
@@ -24,6 +27,7 @@ impl World {
     pub fn create_entity(&mut self) -> Entity {
         let e = self.next_entity_id;
         self.entities.push(EntityData::new());
+        self.active_entities.insert(e);
         self.next_entity_id += 1;
         return e;
     }
@@ -63,6 +67,59 @@ impl World {
         return None;
     }
 
+    pub fn get_component_index_for_entity<C: Component>(&self, entity: Entity) -> Option<usize> {
+        let entity_data = &self.entities.get(entity);
+        for entity_component in entity_data.get_components() {
+            if entity_component.get_component_type() == &TypeId::of::<C>() {
+                return Some(*entity_component.get_component_index());
+            }
+        }
+        return None;
+    }
+
+    pub fn get_components_of_type<C: Component>(&self) -> &Vec<C> {
+        let storage = self.components[&TypeId::of::<C>()]
+            .downcast_ref::<C::Storage>()
+            .unwrap();
+        return storage.all();
+    }
+
+    pub fn remove_component_from_storage<C: Component>(&mut self, component_index: usize) -> C {
+        let storage = self.components.get_mut(&TypeId::of::<C>()).unwrap().downcast_mut::<C::Storage>().unwrap();
+        return storage.remove(component_index);
+    }
+
+    pub fn remove_component_from_entity<C: Component>(&mut self, entity: Entity) {
+        let index = self.get_component_index_for_entity::<C>(entity);
+        match index {
+            Some(index) => {
+                self.remove_component_from_storage::<C>(index);
+                self.entities.remove(entity);
+            },
+            None => {}
+        }
+    }
+
+    pub fn destroy_entity(&mut self, entity: Entity) {
+        for storage in &self.components {
+        }
+    }
+}
+
+pub struct System {
+    watch: BitSet,
+}
+
+impl System {
+    pub fn new() -> Self {
+        System {
+            watch: BitSet::new(),
+        }
+    }
+
+    pub fn watch_component(&mut self, component_id: usize) {
+        self.watch.insert(component_id);
+    }
 }
 
 /*

@@ -21,7 +21,7 @@ impl EntityComponent {
             component_index: index,
         }
     }
-    
+
     pub fn get_component_type(&self) -> &TypeId {
         return &self.component_type;
     }

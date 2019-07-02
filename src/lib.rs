@@ -2,6 +2,7 @@
 extern crate sdl2;
 extern crate rand;
 extern crate image;
+extern crate bit_set;
 //extern crate imgui;
 //extern crate stb_image;
 //extern crate time;

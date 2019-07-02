@@ -340,6 +340,10 @@ impl Engine {
                             running = false;
                             Log::info("Quit requested");
                         },
+                        Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
+                            Log::info("Space pressed");
+                            main_loop_context.scene.destroy_entity(1);
+                        }
                         _ => {}
                     }
                 }
@@ -386,13 +390,24 @@ impl Engine {
                         bunny.update(delta_time);
                         main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                     }
-                    let e = 0;
-                    let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
-                    let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                    let ic = ic_compo.unwrap();
-                    let tc = tc_compo.unwrap();
-                    let tex = ic.get_texture().unwrap();
-                    main_loop_context.sb.draw(tex, Some(tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                    {
+                        let e = 0;
+                        let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
+                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                        let ic = ic_compo.unwrap();
+                        let tc = tc_compo.unwrap();
+                        let tex = ic.get_texture().unwrap();
+                        main_loop_context.sb.draw(tex, Some(tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                    }
+                    {
+                        let e = 1;
+                        let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
+                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                        let ic = ic_compo.unwrap();
+                        let tc = tc_compo.unwrap();
+                        let tex = ic.get_texture().unwrap();
+                        main_loop_context.sb.draw(tex, Some(tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                    }
                     main_loop_context.sb.end(viewport);
                 }
 
@@ -422,9 +437,9 @@ impl Engine {
                     main_loop_context.frame_delay = main_loop_context.frame_delay - main_loop_context.current_frame_delta;
                 }
 
-                Log::info("before sleep");
+                //Log::info("before sleep");
                 thread::sleep(Duration::from_millis((main_loop_context.frame_delay / 1_000_000) as u64));
-                Log::info("after sleep");
+                //Log::info("after sleep");
 
                 if main_loop_context.current_frame_delta < main_loop_context.frame_delay {
                     /*
@@ -598,20 +613,38 @@ impl Engine {
         let mut scene = Scene::new(32);
         scene.register_component::<ImageComponent>();
         scene.register_component::<TransformComponent>();
-        let entity_id = scene.create_entity();
-        sdl2::log::log("Entity id follows");
-        sdl2::log::log(&entity_id.to_string());
-        let debug_name_instance = debug_name_manager.create(entity_id);
-        Log::debug("Debug name instance");
-        Log::debug(&debug_name_instance.i.to_string());
-        debug_name_manager.set_name(debug_name_instance, String::from("entity1"));
         {
+            let entity_id = scene.create_entity();
+            sdl2::log::log("Entity id follows");
+            sdl2::log::log(&entity_id.to_string());
+            let debug_name_instance = debug_name_manager.create(entity_id);
+            Log::debug("Debug name instance");
+            Log::debug(&debug_name_instance.i.to_string());
+            debug_name_manager.set_name(debug_name_instance, String::from("entity1"));
+
             let mut ic = ImageComponent::new();//with_texture(tm.get(&String::from("wabbit")));
             ic.texture = Some(tm.get(&String::from("wabbit")));
             scene.add_component_to_entity(entity_id, ic);
 
             let mut tc = TransformComponent::new();
             tc.set_position(50.0, 50.0);
+            scene.add_component_to_entity(entity_id, tc);
+        }
+        {
+            let entity_id = scene.create_entity();
+            sdl2::log::log("Entity id follows");
+            sdl2::log::log(&entity_id.to_string());
+            let debug_name_instance = debug_name_manager.create(entity_id);
+            Log::debug("Debug name instance");
+            Log::debug(&debug_name_instance.i.to_string());
+            debug_name_manager.set_name(debug_name_instance, String::from("entity2"));
+
+            let mut ic = ImageComponent::new();
+            ic.texture = Some(tm.get(&String::from("wabbit")));
+            scene.add_component_to_entity(entity_id, ic);
+
+            let mut tc = TransformComponent::new();
+            tc.set_position(100.0, 50.0);
             scene.add_component_to_entity(entity_id, tc);
         }
 

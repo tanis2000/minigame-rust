@@ -131,4 +131,8 @@ impl Scene {
     pub fn get_component<C: Component>(&self, entity: Entity) -> Option<&C> {
         return self.world.get_component_for_entity::<C>(entity);
     }
+
+    pub fn destroy_entity(&mut self, entity: Entity) {
+        self.world.destroy_entity(entity);
+    }
 }
