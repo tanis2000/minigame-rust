@@ -36,9 +36,9 @@ impl World {
         self.components.insert(TypeId::of::<C>(), Box::new(C::Storage::new()));
     }
     
-    pub fn add_component_to_storage<C: Component>(&mut self, component: C) -> usize {
+    pub fn add_component_to_storage<C: Component>(&mut self, entity: Entity, component: C) -> usize {
         let storage = self.components.get_mut(&TypeId::of::<C>()).unwrap().downcast_mut::<C::Storage>().unwrap();
-        storage.push(component);
+        storage.insert(entity, component);
         return storage.len() - 1;
     }
     
@@ -46,11 +46,11 @@ impl World {
         let storage = self.components[&TypeId::of::<C>()]
             .downcast_ref::<C::Storage>()
             .unwrap();
-        storage.get(index)
+        storage.get(index).unwrap()
     }
 
     pub fn add_component_to_entity<C: Component>(&mut self, entity: Entity, component: C) {
-        let index = self.add_component_to_storage(component);
+        let index = self.add_component_to_storage(entity, component);
         let entity_data = self.entities.get_mut(entity).unwrap();
         let ec = EntityComponent::new::<C>(index);
         entity_data.get_components_mut().push(ec);
@@ -58,7 +58,7 @@ impl World {
     
     pub fn get_component_for_entity<C: Component>(&self, entity: Entity) -> Option<&C> {
         let entity_data = &self.entities.get(entity);
-        for entity_component in entity_data.get_components() {
+        for entity_component in entity_data.unwrap().get_components() {
             if entity_component.get_component_type() == &TypeId::of::<C>() {
                 let index = entity_component.get_component_index();
                 return Some(self.get_component::<C>(*index));
@@ -69,7 +69,7 @@ impl World {
 
     pub fn get_component_index_for_entity<C: Component>(&self, entity: Entity) -> Option<usize> {
         let entity_data = &self.entities.get(entity);
-        for entity_component in entity_data.get_components() {
+        for entity_component in entity_data.unwrap().get_components() {
             if entity_component.get_component_type() == &TypeId::of::<C>() {
                 return Some(*entity_component.get_component_index());
             }
@@ -77,7 +77,7 @@ impl World {
         return None;
     }
 
-    pub fn get_components_of_type<C: Component>(&self) -> &Vec<C> {
+    pub fn get_components_of_type<C: Component>(&self) -> &HashMap<usize, C> {
         let storage = self.components[&TypeId::of::<C>()]
             .downcast_ref::<C::Storage>()
             .unwrap();
@@ -86,7 +86,7 @@ impl World {
 
     pub fn remove_component_from_storage<C: Component>(&mut self, component_index: usize) -> C {
         let storage = self.components.get_mut(&TypeId::of::<C>()).unwrap().downcast_mut::<C::Storage>().unwrap();
-        return storage.remove(component_index);
+        return storage.remove(component_index).unwrap();
     }
 
     pub fn remove_component_from_entity<C: Component>(&mut self, entity: Entity) {

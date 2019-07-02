@@ -2,13 +2,14 @@ extern crate cgmath;
 
 use component::Component;
 use self::cgmath::Vector2;
+use std::collections::HashMap;
 
 pub struct TransformComponent {
     position: Vector2<f32>,
 }
 
 impl Component for TransformComponent {
-    type Storage = Vec<Self>;
+    type Storage = HashMap<usize, Self>;
 }
 
 

@@ -8,6 +8,7 @@ use spritebatch::SpriteBatch;
 use subtexture::Subtexture;
 use entity::Entity;
 use self::cgmath::Vector2;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::option::Option;
 use log::Log;
@@ -24,7 +25,7 @@ pub struct ImageComponent {
 }
 
 impl Component for ImageComponent {
-    type Storage = Vec<Self>;
+    type Storage = HashMap<usize, Self>;
 }
 
 impl ImageComponent {

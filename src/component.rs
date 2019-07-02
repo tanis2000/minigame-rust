@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::collections::HashMap;
 
 pub type ComponentId = usize;
 
@@ -6,11 +7,11 @@ pub trait GenericStorage<T> {
     fn new() -> Self
     where
         Self: Sized;
-    fn push(&mut self, value: T) -> usize;
-    fn get(&self, index: usize) -> &T;
+    fn insert(&mut self, index: usize, value: T) -> usize;
+    fn get(&self, index: usize) -> Option<&T>;
     fn len(&self) -> usize;
-    fn all(&self) -> &Vec<T>;
-    fn remove(&mut self, index: usize) -> T;
+    fn all(&self) -> &HashMap<usize, T>;
+    fn remove(&mut self, index: usize) -> Option<T>;
 }
 
 pub trait Component: Any + Sized {
@@ -22,30 +23,30 @@ pub trait Component: Any + Sized {
     */
 }
 
-impl<T> GenericStorage<T> for Vec<T> {
+impl<T> GenericStorage<T> for HashMap<usize, T> {
     fn new() -> Self {
-        return Vec::new();
+        return HashMap::new();
     }
 
-    fn push(&mut self, value: T) -> usize {
-        Vec::push(self, value);
+    fn insert(&mut self, index: usize, value: T) -> usize {
+        self.insert(index, value);
         self.len() - 1
     }
 
-    fn get(&self, index: usize) -> &T {
-        &self[index]
+    fn get(&self, index: usize) -> Option<&T> {
+        self.get(&index)
     }
 
     fn len(&self) -> usize {
         self.len()
     }
 
-    fn all(&self) -> &Vec<T> {
+    fn all(&self) -> &HashMap<usize, T> {
         self
     }
 
-    fn remove(&mut self, index: usize) -> T {
-        self.remove(index)
+    fn remove(&mut self, index: usize) -> Option<T> {
+        self.remove(&index)
     }
 }
 
