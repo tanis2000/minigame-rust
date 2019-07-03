@@ -15,4 +15,21 @@ impl Rectangle {
             h: h,
         }
     }
+
+    pub fn get_left(&self) -> f32 {
+        self.x
+    }
+
+    pub fn get_right(&self) -> f32 {
+        self.x + self.w as f32
+    }
+
+    pub fn get_top(&self) -> f32 {
+        self.y
+    }
+
+    pub fn get_bottom(&self) -> f32 {
+        self.y + self.w as f32
+    }
+
 }
