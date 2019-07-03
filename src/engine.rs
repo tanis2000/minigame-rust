@@ -18,6 +18,7 @@ use std::str;
 use std::ffi::CString;
 use std::ptr;
 use std::path::Path;
+use std::ops::Mul;
 //use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
@@ -48,9 +49,14 @@ use timer;
 use timer::Timer;
 use texture::Texture;
 use transformcomponent::TransformComponent;
-use self::cgmath::Vector2;
-use self::cgmath::Matrix4;
-use self::cgmath::One;
+use crate::atlas::texturepacker;
+use spritecomponent::{SpriteComponent, SpriteFrame};
+use subtexture::Subtexture;
+use tile::layercomponent::LayerComponent;
+use render_target::RenderTarget;
+use utils;
+use graphicsdevice::GraphicsDevice;
+use self::cgmath::{Vector2, Vector3, Matrix, Matrix4, One};
 
 pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -245,6 +251,56 @@ fn plugin_update(mut plugs: &mut i32, mut reload_handler: &mut i32) {
     //println!("Value {}", shared_fun());
 }
 
+fn build_scaling_viewport(window_width: u32, window_height: u32,
+                            design_width: u32, design_height: u32,
+                            viewport: &mut Rectangle, inverse_multiplier: &mut f32, scale_matrix: &mut Matrix4<f32>) {
+  let mut multiplier: u32 = 1;
+  let scale_x: f32 = window_width as f32 / design_width as f32;
+  let scale_y: f32 = window_height as f32 / design_height as f32;
+
+  // find the multiplier that fits both the new width and height
+  let mut max_scale: u32 = 0;
+  if (scale_x as u32) < (scale_y as u32) {
+      max_scale = scale_x as u32;
+  } else {
+      max_scale = scale_y as u32;
+  }
+  if max_scale > multiplier {
+    multiplier = max_scale;
+  }
+
+  // viewport origin translation
+  let diff_x: f32 =
+    (window_width as f32 / 2.0) - (design_width as f32 * multiplier as f32 / 2.0);
+  let diff_y: f32 =
+    (window_height as f32 / 2.0) - (design_height as f32 * multiplier as f32 / 2.0);
+
+  // build the new viewport
+  viewport.x = diff_x;
+  viewport.y = diff_y;
+  viewport.w = (design_width * multiplier) as i32;
+  viewport.h = (design_height * multiplier) as i32;
+  *inverse_multiplier = 1.0 / multiplier as f32;
+
+  // compute the scaling matrix
+  let mat_mul_x: f32 = (viewport.w as f32 - viewport.x)/design_width as f32;
+  let mat_mul_y: f32 = (viewport.h as f32 - viewport.y)/design_height as f32;
+
+  let identity = Matrix4::one();
+  scale_matrix.x = identity.x;
+  scale_matrix.y = identity.y;
+  scale_matrix.z = identity.z;
+  scale_matrix.w = identity.w;
+  let trans_vector: Vector3<f32> = Vector3::new(diff_x, diff_y, 0.0);
+  let trans_matrix = Matrix4::from_translation(trans_vector);
+  let sc_matrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(mat_mul_x, mat_mul_y, 1.0);
+  let out_matrix = Matrix4::mul(trans_matrix, sc_matrix);
+  scale_matrix.x = out_matrix.x;
+  scale_matrix.y = out_matrix.y;
+  scale_matrix.z = out_matrix.z;
+  scale_matrix.w = out_matrix.w;
+}
+
 pub struct MainLoopContext {
     running: bool,
     current_frame_delta: u64,
@@ -262,6 +318,9 @@ pub struct MainLoopContext {
     scene: Scene,
     window: sdl2::video::Window,
     gl_context: sdl2::video::GLContext,
+    camera: Camera<ScalingViewportAdapter>,
+    screen_render_target: RenderTarget,
+    quad_shader: Shader,
 }
 
 impl MainLoopContext {
@@ -350,10 +409,22 @@ impl Engine {
                 main_loop_context.set_running(running);
                 //main_loop_context.canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
                 //main_loop_context.canvas.clear();
+
+                // Set the main render target
+                GraphicsDevice::set_render_target(&main_loop_context.screen_render_target);
+                let design_viewport = Rectangle::new(0.0, 0.0, 320, 240);
+                GraphicsDevice::apply_viewport(&design_viewport);
+
+                // clear the screen
                 unsafe {
                     gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
+
+                // apply the default shader
+                main_loop_context.sb.get_graphics_device_mut().apply_shader(&main_loop_context.shader);
+
+
 
                 /*
                 sdl2::log::log("Drawing triangle");
@@ -384,12 +455,30 @@ impl Engine {
                     //sdl2::log::log(&wabbit.get_height().to_string());
                     //sdl2::log::log(&wabbit.get_width().to_string());
 
-                    let viewport = Rectangle::new(0.0, 0.0, 800, 600);
-                    main_loop_context.sb.begin(viewport, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(matrix));
+                    let viewport = Rectangle::new(0.0, 0.0, 320, 240);
+                    //let viewport = Rectangle::new(0.0, 0.0, 800, 600);
+                    // TODO: fix the scaling viewport
+                    //let viewport = main_loop_context.camera.get_viewport_adapter().unwrap().get_viewport();
+                    //println!("{:?}", viewport);
+                    let camera_matrix = main_loop_context.camera.get_transform_matrix();
+                    println!("{:?}", camera_matrix);
+                    main_loop_context.sb.begin(viewport, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(camera_matrix));
+                    {
+                        let e = 4;
+                        let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
+                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                        let ic = ic_compo.unwrap();
+                        let tc = tc_compo.unwrap();
+                        let tex = ic.get_texture().unwrap();
+                        let mut scale = Vector2::new(3.0, 3.0);
+                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, Some(scale), Color::white(), 0.0);
+                    }
+
                     for bunny in main_loop_context.bunnies.iter_mut() {
                         bunny.update(delta_time);
                         main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
                     }
+
                     {
                         let e = 0;
                         let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
@@ -397,7 +486,7 @@ impl Engine {
                         let ic = ic_compo.unwrap();
                         let tc = tc_compo.unwrap();
                         let tex = ic.get_texture().unwrap();
-                        main_loop_context.sb.draw(tex, Some(tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
                     }
                     {
                         let e = 1;
@@ -406,13 +495,81 @@ impl Engine {
                         let ic = ic_compo.unwrap();
                         let tc = tc_compo.unwrap();
                         let tex = ic.get_texture().unwrap();
-                        main_loop_context.sb.draw(tex, Some(tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                    }
+                    {
+                        let e = 2;
+                        let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
+                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                        let sc = sc_compo.unwrap();
+                        let tc = tc_compo.unwrap();
+                        let current_frame = sc.get_current_frame();
+                        let frame = sc.get_frame(current_frame).unwrap();
+                        let tex = frame.get_texture().unwrap();
+                        let clip_rect = sc.get_source_rect();
+                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+                    }
+                    {
+                        let e = 3;
+                        let lc_compo = main_loop_context.scene.get_component::<LayerComponent>(e);
+                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                        let lc = lc_compo.unwrap();
+                        let tc = tc_compo.unwrap();
+                        let tex = lc.get_texture().unwrap();
+                        let layer = lc.get_layer().clone().unwrap();
+                        match layer.layer_type {
+                            tiled_json_rs::LayerType::TileLayer(tiles) => {
+                                let mut count = 0;
+                                for tile in tiles.data {
+                                    if tile != 0 && tile != 2684354639 {
+                                        let gid = tile-1;
+                                        let clip_rect = Rectangle::new((gid % 25 * 16) as f32, (gid / 25 * 16) as f32, 16, 16);
+                                        //let clip_rect = Rectangle::new(16.0, 16.0, 16, 16);
+                                        let mut pos = (*tc.get_position()).clone();
+                                        pos.x = pos.x + (count % 58 * 16) as f32;
+                                        pos.y = pos.y + (count / 58 * 16) as f32;
+                                        //println!("{}", tile);
+                                        main_loop_context.sb.draw(tex.clone(), Some(pos), None, Some(clip_rect), None, 0.0, None, Color::white(), 0.0);
+                                    }
+                                    count += 1;
+                                }
+                                //let clip_rect = sc.get_source_rect();
+                                //main_loop_context.sb.draw(tex, Some(tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+                            }
+                            _ => {}
+                        }
+                    }
+                    {
+                        let e = 5;
+                        let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
+                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                        let sc = sc_compo.unwrap();
+                        let tc = tc_compo.unwrap();
+                        let current_frame = sc.get_current_frame();
+                        let frame = sc.get_frame(current_frame).unwrap();
+                        let tex = frame.get_texture().unwrap();
+                        let clip_rect = sc.get_source_rect();
+                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
                     }
                     main_loop_context.sb.end(viewport);
                 }
 
                 main_loop_context.debug_name_manager.update(0.0);
                 main_loop_context.scene.render_entities();
+
+                main_loop_context.sb.get_graphics_device_mut().apply_shader(&main_loop_context.quad_shader);
+                let mut vp = Rectangle::new(0.0, 0.0, 0, 0);
+                let mut multiplier: f32 = 1.0;
+                let mut camera_transform_mat: Matrix4<f32> = Matrix4::one();
+                build_scaling_viewport(800, 600, 320, 240, &mut vp, &mut multiplier, &mut camera_transform_mat);
+                camera_transform_mat = Matrix4::one();
+                GraphicsDevice::apply_viewport(&vp);
+                GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "resolution", 320 as f32, 240 as f32);
+                GraphicsDevice::set_uniform_mat4(&main_loop_context.quad_shader, "transform", camera_transform_mat);
+                GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "scale", multiplier, multiplier);
+                GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "viewport", vp.x, vp.y);
+                GraphicsDevice::draw_quad_to_screen(&main_loop_context.quad_shader, &main_loop_context.screen_render_target);
+
 
                 //main_loop_context.canvas.present();
                 main_loop_context.window.gl_swap_window();
@@ -538,7 +695,14 @@ impl Engine {
         #[cfg(not(target_arch = "wasm32"))]
         {
             Log::info("Enabling VSYNC");
-            video_subsystem.gl_set_swap_interval(1);
+            match video_subsystem.gl_set_swap_interval(1) {
+                Ok(_res) => {
+                    Log::info("VSYNC enabled");
+                },
+                Err(_error) => {
+                    Log::error("Cannot enable VSYNC");
+                }
+            }
         }
 
 
@@ -591,6 +755,13 @@ impl Engine {
         let mut shader = Shader::new();
         shader.load_default();
 
+        let mut quad_shader = Shader::new();
+        let quad_shader_vert_path = [self.assets_path(), String::from("shaders/screen_vert.glsl")].concat();
+        let quad_shader_vert_src = utils::load_string_from_file(Path::new(&String::from(quad_shader_vert_path))).unwrap();
+        let quad_shader_frag_path = [self.assets_path(), String::from("shaders/screen_frag.glsl")].concat();
+        let quad_shader_frag_src = utils::load_string_from_file(Path::new(&String::from(quad_shader_frag_path))).unwrap();
+        quad_shader.compile(quad_shader_vert_src.as_str(), quad_shader_frag_src.as_str());
+
         let mut tm = TextureManager::new();
         let wabbit_path = [self.assets_path(), String::from("wabbit_alpha.png")].concat();
         #[cfg(target_arch = "wasm32")]
@@ -604,6 +775,26 @@ impl Engine {
         }
         let wabbit = tm.get(&String::from("wabbit"));
 
+        let props_atlas_path = [self.assets_path(), String::from("atlas/atlas-props.json")].concat();
+        let props_atlas = crate::atlas::texturepacker::load_atlas_from_file(props_atlas_path).unwrap();
+        let props_atlas_texture_path = [self.assets_path(), String::from("atlas/atlas-props.png")].concat();
+        tm.load(String::from("props"), Path::new(&String::from(props_atlas_texture_path)));
+
+        let atlas_path = [self.assets_path(), String::from("atlas/atlas.json")].concat();
+        let atlas = crate::atlas::texturepacker::load_atlas_from_file(atlas_path).unwrap();
+        let atlas_texture_path = [self.assets_path(), String::from("atlas/atlas.png")].concat();
+        tm.load(String::from("atlas"), Path::new(&String::from(atlas_texture_path)));
+
+        let map_path = [self.assets_path(), String::from("maps/map.json")].concat();
+        let map = crate::tile::tiled::load_map_from_file(map_path).unwrap();
+        let map_texture_path = [self.assets_path(), String::from("environment/tileset.png")].concat();
+        tm.load(String::from("tileset"), Path::new(&String::from(map_texture_path)));
+
+        let back_texture_path = [self.assets_path(), String::from("environment/back.png")].concat();
+        tm.load(String::from("back"), Path::new(&String::from(back_texture_path)));
+
+        let screen_render_target = RenderTarget::new(320, 240, false, gl::RGBA);
+
         let player_va = ScalingViewportAdapter::with_size_and_virtual(800, 600, 320, 240);
         let mut player_camera = Camera::new();
         player_camera.set_viewport_adapter(Some(player_va));
@@ -613,6 +804,8 @@ impl Engine {
         let mut scene = Scene::new(32);
         scene.register_component::<ImageComponent>();
         scene.register_component::<TransformComponent>();
+        scene.register_component::<SpriteComponent>();
+        scene.register_component::<LayerComponent>();
         {
             let entity_id = scene.create_entity();
             sdl2::log::log("Entity id follows");
@@ -647,7 +840,125 @@ impl Engine {
             tc.set_position(100.0, 50.0);
             scene.add_component_to_entity(entity_id, tc);
         }
+        {
+            let mut tx = 0.0;
+            let mut ty = 0.0;
+            let mut tx2 = 1.0;
+            let mut ty2 = 1.0;
+            let region = props_atlas
+                .frames
+                .iter()
+                .filter(|frame| frame.filename == "block")
+                .collect::<Vec<&crate::atlas::texturepacker::Frame>>()[0];
+            let sw = props_atlas.meta.size.w as f32;
+            let sh = props_atlas.meta.size.h as f32;
+            /*
+            tx = region.frame.x as f32 / sw;
+            ty = region.frame.y as f32 / sh;
+            tx2 = (region.frame.x as f32 + region.frame.w as f32) / sw;
+            ty2 = (region.frame.y as f32 + region.frame.h as f32) / sh;
+            */
+            tx = region.frame.x as f32;
+            ty = region.frame.y as f32;
+            tx2 = region.frame.w as f32;
+            ty2 = region.frame.h as f32;
 
+            let entity_id = scene.create_entity();
+            sdl2::log::log("Entity id follows");
+            sdl2::log::log(&entity_id.to_string());
+            let debug_name_instance = debug_name_manager.create(entity_id);
+            Log::debug("Debug name instance");
+            Log::debug(&debug_name_instance.i.to_string());
+            debug_name_manager.set_name(debug_name_instance, String::from("entity3"));
+
+            let mut sc = SpriteComponent::new();
+            let sub = Subtexture::with_texture(Some(tm.get(&String::from("props"))), tx as i32, ty as i32, tx2 as i32, ty2 as i32);
+            sc.add_frame_with_subtexture(sub);
+            scene.add_component_to_entity(entity_id, sc);
+
+            let mut tc = TransformComponent::new();
+            tc.set_position(150.0, 50.0);
+            scene.add_component_to_entity(entity_id, tc);
+
+        }
+        {
+            let entity_id = scene.create_entity();
+            sdl2::log::log("Entity id follows");
+            sdl2::log::log(&entity_id.to_string());
+            let debug_name_instance = debug_name_manager.create(entity_id);
+            Log::debug("Debug name instance");
+            Log::debug(&debug_name_instance.i.to_string());
+            debug_name_manager.set_name(debug_name_instance, String::from("entity3"));
+
+            let mut lc = LayerComponent::new();
+            lc.set_texture(Some(tm.get(&String::from("tileset"))));
+            lc.set_layer(Some(map.layers[0].clone()));
+            scene.add_component_to_entity(entity_id, lc);
+
+            let mut tc = TransformComponent::new();
+            tc.set_position(0.0, 0.0);
+            scene.add_component_to_entity(entity_id, tc);
+        }
+        {
+            let entity_id = scene.create_entity();
+            sdl2::log::log("Entity id follows");
+            sdl2::log::log(&entity_id.to_string());
+            let debug_name_instance = debug_name_manager.create(entity_id);
+            Log::debug("Debug name instance");
+            Log::debug(&debug_name_instance.i.to_string());
+            debug_name_manager.set_name(debug_name_instance, String::from("entity4"));
+
+            let mut ic = ImageComponent::new();
+            ic.texture = Some(tm.get(&String::from("back")));
+            scene.add_component_to_entity(entity_id, ic);
+
+            let mut tc = TransformComponent::new();
+            tc.set_position(0.0, 0.0);
+            scene.add_component_to_entity(entity_id, tc);
+        }
+        {
+            let mut tx = 0.0;
+            let mut ty = 0.0;
+            let mut tx2 = 1.0;
+            let mut ty2 = 1.0;
+            let region = atlas
+                .frames
+                .iter()
+                .filter(|frame| frame.filename == "player/idle/player-idle-1")
+                .collect::<Vec<&crate::atlas::texturepacker::Frame>>()[0];
+            let sw = atlas.meta.size.w as f32;
+            let sh = atlas.meta.size.h as f32;
+            /*
+            tx = region.frame.x as f32 / sw;
+            ty = region.frame.y as f32 / sh;
+            tx2 = (region.frame.x as f32 + region.frame.w as f32) / sw;
+            ty2 = (region.frame.y as f32 + region.frame.h as f32) / sh;
+            */
+            tx = region.frame.x as f32;
+            ty = region.frame.y as f32;
+            tx2 = region.frame.w as f32;
+            ty2 = region.frame.h as f32;
+
+            let entity_id = scene.create_entity();
+            sdl2::log::log("Entity id follows");
+            sdl2::log::log(&entity_id.to_string());
+            let debug_name_instance = debug_name_manager.create(entity_id);
+            Log::debug("Debug name instance");
+            Log::debug(&debug_name_instance.i.to_string());
+            debug_name_manager.set_name(debug_name_instance, String::from("entity5"));
+
+            let mut sc = SpriteComponent::new();
+            let sub = Subtexture::with_texture(Some(tm.get(&String::from("atlas"))), tx as i32, ty as i32, tx2 as i32, ty2 as i32);
+            sc.add_frame_with_subtexture(sub);
+            scene.add_component_to_entity(entity_id, sc);
+
+            let mut tc = TransformComponent::new();
+            let x = 54.0 * 16.0;
+            let y = 9.0 * 16.0;
+            tc.set_position(x, y);
+            scene.add_component_to_entity(entity_id, tc);
+            player_camera.set_position(x - 320.0/2.0, y - 240.0/2.0);
+        }
         let er = EverythingRenderer::new();
         scene.add_renderer(Rc::new(er));
 
@@ -706,6 +1017,9 @@ impl Engine {
             scene: scene,
             window: window,
             gl_context: gl_context,
+            camera: player_camera,
+            screen_render_target: screen_render_target,
+            quad_shader: quad_shader,
         });
 
         //

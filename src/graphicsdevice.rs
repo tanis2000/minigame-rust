@@ -2,9 +2,7 @@ extern crate cgmath;
 
 use engine::gl::types::*;
 use engine::gl as gl;
-use self::cgmath::Matrix4;
-use self::cgmath::Vector4;
-use self::cgmath::Matrix;
+use self::cgmath::{Matrix, Matrix4, One, Vector4};
 use std::mem;
 use std::ptr;
 use std::f32;
@@ -20,6 +18,7 @@ use texture::Texture;
 use log::Log;
 use rectangle::Rectangle;
 use shader::Shader;
+use render_target::RenderTarget;
 
 pub struct GraphicsDevice {
     vertex_attribute: GLint,
@@ -27,7 +26,9 @@ pub struct GraphicsDevice {
     color_attribute: GLint,
     normal_attribute: GLint,
     projection_matrix_uniform: GLint,
-    model_view_matrix_uniform: GLint,
+    //model_view_matrix_uniform: GLint,
+    view_matrix_uniform: GLint,
+    model_matrix_uniform: GLint,
     image_uniform: GLint,
     vbo: GLuint,
 }
@@ -40,7 +41,9 @@ impl GraphicsDevice {
             color_attribute: 0,
             normal_attribute: 0,
             projection_matrix_uniform: 0,
-            model_view_matrix_uniform: 0,
+            //model_view_matrix_uniform: 0,
+            view_matrix_uniform: 0,
+            model_matrix_uniform: 0,
             image_uniform: 0,
             vbo: 0,
         }
@@ -81,8 +84,9 @@ impl GraphicsDevice {
         GraphicsDevice::apply_texture(&state.texture);
 
         let projection_matrix: Matrix4<f32> = GraphicsDevice::create_orthographic_matrix_off_center(0.0, state.viewport.w as f32, state.viewport.h as f32, 0.0, -1000.0, 1000.0);
-        let model_view_matrix: Matrix4<f32> = GraphicsDevice::create_model_view_matrix(0.0, 0.0, 1.0, 0.0);
-        
+        //let model_view_matrix: Matrix4<f32> = GraphicsDevice::create_model_view_matrix(0.0, 0.0, 1.0, 0.0);
+        let view_matrix: Matrix4<f32> = state.transform;//Matrix4::one();
+        let model_matrix: Matrix4<f32> = Matrix4::one();
         unsafe {
             gl::EnableVertexAttribArray (self.vertex_attribute as GLuint);
             gl::EnableVertexAttribArray (self.color_attribute as GLuint);
@@ -98,11 +102,15 @@ impl GraphicsDevice {
             gl::VertexAttribPointer(self.color_attribute as GLuint, 4, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (2 * mem::size_of::<GLfloat>()) as *const _);
             gl::VertexAttribPointer(self.tex_coord_attribute as GLuint, 2, gl::FLOAT, gl::FALSE, mem::size_of::<VertexPositionColorTexture>() as i32, (4 * mem::size_of::<GLfloat>() + 2 * mem::size_of::<GLfloat>()) as *const _);
             
-            let final_matrix = Matrix4::mul(state.transform,projection_matrix);
-            let inverse_matrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
+            //let final_matrix = Matrix4::mul(state.transform,projection_matrix);
+            //let inverse_matrix: Matrix4<f32> = Matrix4::from_nonuniform_scale(1.0, 1.0, 1.0);
 
-            gl::UniformMatrix4fv( self.projection_matrix_uniform, 1, gl::FALSE, final_matrix.as_ptr() );
-            gl::UniformMatrix4fv( self.model_view_matrix_uniform, 1, gl::FALSE, inverse_matrix.as_ptr() );
+            //gl::UniformMatrix4fv( self.projection_matrix_uniform, 1, gl::FALSE, final_matrix.as_ptr() );
+            //gl::UniformMatrix4fv( self.model_view_matrix_uniform, 1, gl::FALSE, inverse_matrix.as_ptr() );
+
+            gl::UniformMatrix4fv( self.projection_matrix_uniform, 1, gl::FALSE, projection_matrix.as_ptr() );
+            gl::UniformMatrix4fv( self.view_matrix_uniform, 1, gl::FALSE, view_matrix.as_ptr() );
+            gl::UniformMatrix4fv( self.model_matrix_uniform, 1, gl::FALSE, model_matrix.as_ptr() );
 
             gl::Uniform1i( self.image_uniform, 0 );
 
@@ -189,8 +197,12 @@ impl GraphicsDevice {
             self.normal_attribute = gl::GetAttribLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("projectionMatrix".as_bytes()).unwrap();
             self.projection_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
-            {let c_str = CString::new("modelViewMatrix".as_bytes()).unwrap();
-            self.model_view_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
+            //{let c_str = CString::new("modelViewMatrix".as_bytes()).unwrap();
+            //self.model_view_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
+            {let c_str = CString::new("viewMatrix".as_bytes()).unwrap();
+            self.view_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
+            {let c_str = CString::new("modelMatrix".as_bytes()).unwrap();
+            self.model_matrix_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
             {let c_str = CString::new("tex0".as_bytes()).unwrap();
             self.image_uniform = gl::GetUniformLocation (shader.program, c_str.as_ptr());}
             gl::UseProgram(shader.program);
@@ -217,6 +229,88 @@ impl GraphicsDevice {
         match blend_equation {
             Equation::Add => gl::FUNC_ADD,
             Equation::Subtract => gl::FUNC_SUBTRACT,
+        }
+    }
+
+    pub fn set_render_target(render_target: &RenderTarget) {
+        unsafe {
+            gl::BindFramebuffer(gl::FRAMEBUFFER, render_target.get_frame_buffer());
+            gl::BindRenderbuffer(gl::RENDERBUFFER, render_target.get_render_buffer());
+        }
+    }
+
+    pub fn apply_viewport(viewport: &Rectangle) {
+        unsafe {
+            gl::Viewport(viewport.x as i32, viewport.y as i32, viewport.w, viewport.h);
+        }
+    }
+
+    pub fn set_uniform_float2(shader: &Shader, name: &str, value1: f32, value2: f32) {
+        unsafe {
+            let c_str = CString::new(name.as_bytes()).unwrap();
+            let mut id: GLint = 0;
+            id = gl::GetUniformLocation(shader.program, c_str.as_ptr());
+            if id == -1 {
+                Log::error(format!("Cannot find uniform called {}", name).as_str());
+                return;
+            }
+            gl::Uniform2f(id, value1, value2);
+        }
+    }
+
+    pub fn set_uniform_mat4(shader: &Shader, name: &str, mat: Matrix4<f32>) {
+        unsafe {
+            let c_str = CString::new(name.as_bytes()).unwrap();
+            let mut id: GLint = 0;
+            id = gl::GetUniformLocation(shader.program, c_str.as_ptr());
+            if id == -1 {
+                Log::error(format!("Cannot find uniform called {}", name).as_str());
+                return;
+            }
+            gl::UniformMatrix4fv(id, 1, gl::FALSE, mat.as_ptr());
+        }
+    }
+
+    pub fn draw_quad_to_screen(shader: &Shader, render_target: &RenderTarget) {
+        unsafe {
+            let g_quad_vertex_buffer_data: Vec<GLfloat> = vec!(
+                -1.0, -1.0,
+                1.0, -1.0,
+                -1.0, 1.0,
+                -1.0, 1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+            );
+
+            let mut quad_vertexbuffer: GLuint = 0;
+            gl::GenBuffers(1, &mut quad_vertexbuffer);
+            gl::BindBuffer(gl::ARRAY_BUFFER, quad_vertexbuffer);
+            gl::BufferData(gl::ARRAY_BUFFER, (mem::size_of::<GLfloat>() as i32 * 12) as GLsizeiptr, mem::transmute(&g_quad_vertex_buffer_data[0]), gl::STATIC_DRAW);
+            let mut c_str = CString::new("position".as_bytes()).unwrap();
+            let pos_id: GLint = gl::GetAttribLocation(shader.program, c_str.as_ptr());
+            gl::VertexAttribPointer(pos_id as u32, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+            gl::EnableVertexAttribArray(pos_id as u32);
+            c_str = CString::new("texture".as_bytes()).unwrap();
+            let tex_id: GLint = gl::GetUniformLocation(shader.program, c_str.as_ptr());
+            gl::Uniform1i(tex_id, 0);
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, render_target.get_texture());
+            // Sets the frame buffer to use as the screen
+            //#if defined(__IPHONEOS__)
+            //SDL_SysWMinfo info;
+            //SDL_VERSION(&info.version);
+            //SDL_GetWindowWMInfo(SDL_GL_GetCurrentWindow(), &info);
+            //GLuint id = info.info.uikit.framebuffer;
+            //glCheck(glBindFramebuffer(GL_FRAMEBUFFER, id));
+            //#else
+            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            //#endif
+            gl::DrawArrays(gl::TRIANGLES, 0, 6);
+
+            gl::DisableVertexAttribArray(pos_id as u32);
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::DeleteBuffers(1, &quad_vertexbuffer);
+            gl::BindTexture(gl::TEXTURE_2D, 0);
         }
     }
 

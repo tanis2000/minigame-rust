@@ -39,14 +39,16 @@ impl World {
     pub fn add_component_to_storage<C: Component>(&mut self, entity: Entity, component: C) -> usize {
         let storage = self.components.get_mut(&TypeId::of::<C>()).unwrap().downcast_mut::<C::Storage>().unwrap();
         storage.insert(entity, component);
-        return storage.len() - 1;
+        //return storage.len() - 1;
+        return entity;
     }
     
     fn get_component<C: Component>(&self, index: usize) -> &C {
         let storage = self.components[&TypeId::of::<C>()]
             .downcast_ref::<C::Storage>()
             .unwrap();
-        storage.get(index).unwrap()
+        let component = storage.get(index);
+        component.unwrap()
     }
 
     pub fn add_component_to_entity<C: Component>(&mut self, entity: Entity, component: C) {

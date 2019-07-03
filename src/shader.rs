@@ -33,11 +33,12 @@ static VS_SRC: &'static str = "\n\
         varying vec4 color;\n\
         \n\
         uniform mat4 projectionMatrix;\n\
-        uniform mat4 modelViewMatrix;\n\
+        uniform mat4 viewMatrix;\n\
+        uniform mat4 modelMatrix;\n\
         \n\
         void main(void) {\n\
         \n\
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);\n\
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1.0);\n\
         tcoord = vertexTCoord;\n\
         color = vertexColor;\n\
         vec3 n = vertexNormal;\n\
@@ -81,7 +82,7 @@ impl Shader {
         }
     }
 
-    fn compile(&mut self, vertex_source: &str, fragment_source: &str) {
+    pub fn compile(&mut self, vertex_source: &str, fragment_source: &str) {
         self.vert_shader = self.compile_shader(vertex_source, gl::VERTEX_SHADER);
         self.frag_shader = self.compile_shader(fragment_source, gl::FRAGMENT_SHADER);
         self.program = self.link_program(self.vert_shader, self.frag_shader)

@@ -425,4 +425,12 @@ impl SpriteBatch {
     }
     */
 
+    pub fn get_graphics_device(&self) -> &GraphicsDevice {
+        &self.graphics_device
+    }
+
+    pub fn get_graphics_device_mut(&mut self) -> &mut GraphicsDevice {
+        &mut self.graphics_device
+    }
+
 }

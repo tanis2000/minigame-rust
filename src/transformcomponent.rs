@@ -20,8 +20,8 @@ impl TransformComponent {
         }
     }
 
-    pub fn get_position(&self) -> Vector2<f32> {
-        return self.position;
+    pub fn get_position(&self) -> &Vector2<f32> {
+        return &self.position;
     }
 
     pub fn set_position(&mut self, x: f32, y: f32) {

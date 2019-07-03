@@ -68,4 +68,8 @@ impl Subtexture {
         Rectangle::new(relative_clip_rect.x + self.rect.x, relative_clip_rect.y + self.rect.y,
         relative_clip_rect.w, relative_clip_rect.h)
     }
+
+    pub fn get_rect(&self) -> &Rectangle {
+        &self.rect
+    }
 }

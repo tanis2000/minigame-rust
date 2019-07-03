@@ -154,3 +154,8 @@ Run the following command:
 ```sh
 RUST_BACKTRACE=1 cargo web start --no-default-features --target wasm32-unknown-emscripten
 ```
+
+## Credits
+
+Game background art by [RottingPixels](https://opengameart.org/content/2d-nature-platformer-tileset-16x16)
+Game art by [ansumuz](https://opengameart.org/content/sunny-land-2d-pixel-art-pack)

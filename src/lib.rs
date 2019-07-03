@@ -12,6 +12,13 @@ extern crate dynamic_reload;
 #[cfg(target_os="android")]
 extern crate jni;
 
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+
+extern crate tiled_json_rs;
+
 
 #[cfg(target_os="android")]
 use jni::objects::JObject;
@@ -56,6 +63,10 @@ pub mod renderer;
 pub mod everythingrenderer;
 pub mod debugnamecomponentmanager;
 pub mod timer;
+pub mod atlas;
+pub mod spritecomponent;
+pub mod tile;
+pub mod render_target;
 
 #[no_mangle]
 #[allow(non_snake_case)]
