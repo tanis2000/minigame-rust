@@ -19,6 +19,7 @@ use std::ffi::CString;
 use std::ptr;
 use std::path::Path;
 use std::ops::Mul;
+use std::any::{Any, TypeId};
 //use sdl2::image::{LoadTexture, INIT_PNG, INIT_JPG};
 use sdl2::pixels::Color as SdlColor;
 use sdl2::event::Event;
@@ -56,6 +57,8 @@ use tile::layercomponent::LayerComponent;
 use render_target::RenderTarget;
 use utils;
 use graphicsdevice::GraphicsDevice;
+use world::{BaseSystem, System, SystemData};
+use entity::Entity;
 use self::cgmath::{Vector2, Vector3, Matrix, Matrix4, One};
 
 pub mod gl {
@@ -333,6 +336,12 @@ impl MainLoopContext {
     }
 }
 
+impl SystemData for MainLoopContext {
+    fn get_context(&self) -> Any {
+        return self;
+    }
+}
+
 pub struct Engine {
     main_loop_context: Option<MainLoopContext>,
 }
@@ -497,6 +506,7 @@ impl Engine {
                         let tex = ic.get_texture().unwrap();
                         main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
                     }
+                    /*
                     {
                         let e = 2;
                         let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
@@ -509,6 +519,7 @@ impl Engine {
                         let clip_rect = sc.get_source_rect();
                         main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
                     }
+                    */
                     {
                         let e = 3;
                         let lc_compo = main_loop_context.scene.get_component::<LayerComponent>(e);
@@ -539,6 +550,7 @@ impl Engine {
                             _ => {}
                         }
                     }
+                    /*
                     {
                         let e = 5;
                         let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
@@ -551,6 +563,8 @@ impl Engine {
                         let clip_rect = sc.get_source_rect();
                         main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
                     }
+                    */
+                    main_loop_context.scene.process(delta_time as f32, main_loop_context);
                     main_loop_context.sb.end(viewport);
                 }
 
@@ -806,6 +820,11 @@ impl Engine {
         scene.register_component::<TransformComponent>();
         scene.register_component::<SpriteComponent>();
         scene.register_component::<LayerComponent>();
+
+        let mut sprite_system = SpriteSystem::new();
+        sprite_system.base.watch_component::<SpriteComponent>();
+        scene.add_system(sprite_system);
+
         {
             let entity_id = scene.create_entity();
             sdl2::log::log("Entity id follows");
@@ -959,6 +978,7 @@ impl Engine {
             scene.add_component_to_entity(entity_id, tc);
             player_camera.set_position(x - 320.0/2.0, y - 240.0/2.0);
         }
+
         let er = EverythingRenderer::new();
         scene.add_renderer(Rc::new(er));
 
@@ -1040,6 +1060,46 @@ impl Engine {
             gl::DeleteBuffers(1, &vbo);
         }
         */
+    }
+}
+
+pub struct SpriteSystem {
+    base: BaseSystem,
+}
+
+impl System for SpriteSystem {
+    fn get_entities(&self) -> Vec<Entity> {
+        return self.base.get_entities();
+    }
+
+    fn process(&self, entity: Entity, dt: f32, user_data: &SystemData) {
+        //println!("SpriteSystem process()");
+        let main_loop_context = user_data;
+        let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(entity);
+        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(entity);
+        let sc = sc_compo.unwrap();
+        let tc = tc_compo.unwrap();
+        let current_frame = sc.get_current_frame();
+        let frame = sc.get_frame(current_frame).unwrap();
+        let tex = frame.get_texture().unwrap();
+        let clip_rect = sc.get_source_rect();
+        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+    }
+
+    fn get_components(&self) -> Vec<TypeId> {
+        return self.base.get_components();
+    }
+
+    fn add_entity(&mut self, entity: Entity) {
+        self.base.add_entity(entity);
+    }
+}
+
+impl SpriteSystem {
+    pub fn new() -> Self {
+        SpriteSystem {
+            base: BaseSystem::new()
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 extern crate cgmath;
 
 use entity::Entity;
-use world::World;
+use world::{System, SystemData, World};
 use collider::Collider;
 use component::{Component, ComponentId};
 use rectangle::Rectangle;
@@ -135,4 +135,12 @@ impl Scene {
     pub fn destroy_entity(&mut self, entity: Entity) {
         self.world.destroy_entity(entity);
     }
+
+    pub fn add_system<S: System>(&mut self, system: S) {
+        self.world.add_system(system);
+    }
+
+    pub fn process(&self, dt: f32, user_data: &SystemData) {
+        self.world.process(dt, user_data);
+    } 
 }

@@ -12,6 +12,7 @@ pub struct World {
     entities: Vec<EntityData>,
     active_entities: BitSet,
     components: HashMap<TypeId, Box<dyn Any>>,
+    systems: Vec<Box<dyn System>>,
 }
 
 impl World {
@@ -21,6 +22,7 @@ impl World {
             entities: Vec::new(),
             active_entities: BitSet::new(),
             components: HashMap::new(),
+            systems: Vec::new(),
         }
     }
 
@@ -56,6 +58,14 @@ impl World {
         let entity_data = self.entities.get_mut(entity).unwrap();
         let ec = EntityComponent::new::<C>(index);
         entity_data.get_components_mut().push(ec);
+        for system in &mut self.systems {
+            for component in system.get_components() {
+                if component == TypeId::of::<C>() {
+                    println!("calling add_entity for {}", entity);
+                    system.add_entity(entity);
+                }
+            }
+        }
     }
     
     pub fn get_component_for_entity<C: Component>(&self, entity: Entity) -> Option<&C> {
@@ -106,21 +116,72 @@ impl World {
         for storage in &self.components {
         }
     }
+
+    pub fn add_system<S: System>(&mut self, system: S) -> usize {
+        self.systems.push(Box::new(system));
+        return self.systems.len() - 1;
+    }
+
+    pub fn process(&self, dt: f32, user_data: &SystemData) {
+        for system in &self.systems {
+            for entity in system.get_entities() {
+                println!("calling process");
+                system.process(entity, dt, user_data);
+            }
+        }
+    }
 }
 
-pub struct System {
+pub trait SystemData {
+    fn get_context(&self) -> Any;
+}
+
+pub trait System: Any {
+    fn get_entities(&self) -> Vec<Entity>;
+    fn process(&self, entity: Entity, dt: f32, user_data: &SystemData);
+    fn get_components(&self) -> Vec<TypeId>;
+    fn add_entity(&mut self, entity: Entity);
+}
+
+pub struct BaseSystem {
     watch: BitSet,
+    entities: Vec<Entity>,
+    components: Vec<TypeId>,
 }
 
-impl System {
+impl BaseSystem {
     pub fn new() -> Self {
-        System {
+        BaseSystem {
             watch: BitSet::new(),
+            entities: Vec::new(),
+            components: Vec::new(),
         }
     }
 
+    /*
     pub fn watch_component(&mut self, component_id: usize) {
         self.watch.insert(component_id);
+    }
+    */
+
+    pub fn watch_component<C: Component>(&mut self) {
+        self.components.push(TypeId::of::<C>());
+    }
+
+    pub fn process(&self, entity: Entity, dt: f32) {
+        println!("BaseSystem process() called");
+    }
+
+    pub fn get_components(&self) -> Vec<TypeId> {
+        return self.components.clone(); // TODO: this is very bad for performance
+    }
+
+    pub fn get_entities(&self) -> Vec<Entity> {
+        return self.entities.clone(); // TODO: this is very bad for performance
+    }
+
+    pub fn add_entity(&mut self, entity: Entity) {
+        self.entities.push(entity);
     }
 }
 
