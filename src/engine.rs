@@ -100,7 +100,7 @@ impl Plugins {
 }
 
 fn find_sdl_gl_driver() -> Option<u32> {
-    for (index, item) in sdl2::render::drivers().enumerate() {
+    for (_index, item) in sdl2::render::drivers().enumerate() {
         sdl2::log::log(item.name);
     }
     for (index, item) in sdl2::render::drivers().enumerate() {
@@ -112,100 +112,6 @@ fn find_sdl_gl_driver() -> Option<u32> {
     }
     sdl2::log::log("No OpenGL driver chosen");
     None
-}
-
-// Vertex data
-static VERTEX_DATA: [GLfloat; 6] = [0.0, 0.5, 0.5, -0.5, -0.5, -0.5];
-
-// Shader sources
-#[cfg(any(target_os="android", target_os="ios"))]
-fn precision() -> String {
-    String::from("precision mediump float;\n")
-}
-
-#[cfg(not(any(target_os="android", target_os="ios")))]
-fn precision() -> String {
-    String::from("")
-}
-
-static VS_SRC: &'static str = "\n\
-    attribute vec2 position;\n\
-    varying vec4 color;\n\
-    void main() {\n\
-       gl_Position = vec4(position, 0.0, 1.0);\n\
-       color = vec4(1.0, 1.0, 1.0, 1.0);\n\
-       gl_PointSize = 1.0;\n\
-    }";
-
-static FS_SRC: &'static str = "\n\
-    varying vec4 color;\n\
-    void main() {\n\
-       gl_FragColor = color;\n\
-    }";
-
-pub fn foo() {
-    
-}
-
-fn compile_shader(src: &str, ty: GLenum) -> GLuint {
-    let shader;
-    unsafe {
-        shader = gl::CreateShader(ty);
-        // Attempt to compile the shader
-        let c_str = CString::new(src.as_bytes()).unwrap();
-        gl::ShaderSource(shader, 1, &c_str.as_ptr(), ptr::null());
-        gl::CompileShader(shader);
-
-        // Get the compile status
-        let mut status = gl::FALSE as GLint;
-        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
-
-        // Fail on error
-        if status != (gl::TRUE as GLint) {
-            let mut len = 0;
-            gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
-            let mut buf = Vec::with_capacity(len as usize);
-            buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
-            gl::GetShaderInfoLog(shader,
-                                 len,
-                                 ptr::null_mut(),
-                                 buf.as_mut_ptr() as *mut GLchar);
-            panic!("{}",
-                   str::from_utf8(&buf)
-                       .ok()
-                       .expect("ShaderInfoLog not valid utf8"));
-        }
-    }
-    shader
-}
-
-fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
-    unsafe {
-        let program = gl::CreateProgram();
-        gl::AttachShader(program, vs);
-        gl::AttachShader(program, fs);
-        gl::LinkProgram(program);
-        // Get the link status
-        let mut status = gl::FALSE as GLint;
-        gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
-
-        // Fail on error
-        if status != (gl::TRUE as GLint) {
-            let mut len: GLint = 0;
-            gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut len);
-            let mut buf = Vec::with_capacity(len as usize);
-            buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
-            gl::GetProgramInfoLog(program,
-                                  len,
-                                  ptr::null_mut(),
-                                  buf.as_mut_ptr() as *mut GLchar);
-            panic!("{}",
-                   str::from_utf8(&buf)
-                       .ok()
-                       .expect("ProgramInfoLog not valid utf8"));
-        }
-        program
-    }
 }
 
 #[cfg(feature = "hotload")]
@@ -262,7 +168,7 @@ fn build_scaling_viewport(window_width: u32, window_height: u32,
   let scale_y: f32 = window_height as f32 / design_height as f32;
 
   // find the multiplier that fits both the new width and height
-  let mut max_scale: u32 = 0;
+  let max_scale: u32;
   if (scale_x as u32) < (scale_y as u32) {
       max_scale = scale_x as u32;
   } else {
@@ -318,7 +224,6 @@ pub struct MainLoopContext {
     shader: Shader,
     bunnies: Vec<Bunny>,
     wabbit: std::rc::Rc<Texture>,
-    scene: Scene,
     window: sdl2::video::Window,
     gl_context: sdl2::video::GLContext,
     camera: Camera<ScalingViewportAdapter>,
@@ -334,22 +239,34 @@ impl MainLoopContext {
     pub fn set_running(&mut self, value: bool) {
         self.running = value;
     }
-}
 
-impl SystemData for MainLoopContext {
-    fn get_context(&self) -> Any {
-        return self;
+    pub fn get_sb(&self) -> &SpriteBatch {
+        &self.sb
+    }
+
+    pub fn get_sb_as_mut(&mut self) -> &mut SpriteBatch {
+        &mut self.sb
     }
 }
 
+/*
+impl SystemData for MainLoopContext {
+    fn get_context<T>(&self) -> T {
+        return self;
+    }
+}
+*/
+
 pub struct Engine {
     main_loop_context: Option<MainLoopContext>,
+    scene: Option<Scene<MainLoopContext>>,
 }
 
 impl Engine {
     pub fn new() -> Self {
         Engine {
             main_loop_context: None,
+            scene: None,
         }
     }
 
@@ -373,261 +290,267 @@ impl Engine {
     }
 
     pub fn main_loop(&mut self) {
-        let main_loop_context = &mut self.main_loop_context;
+        let ref mut main_loop_context = self.main_loop_context;
+        //let main_loop_context = &mut self.main_loop_context;
         match main_loop_context {
             Some(main_loop_context) => {
-                let sh = main_loop_context.shader.clone();
+                match &mut self.scene {
+                    Some(scene) => {
+                        let sh = main_loop_context.shader.clone();
 
-                if main_loop_context.framerate == 0 {
-                    Log::error("framerate zero");
-                    return;
-                }
-
-                //#[cfg(not(target_arch = "wasm32"))]
-                // Uncomment the following line to re-enable dynamic loading of code. You will have to set up lifetimes correctly, though
-                //plugin_update(&mut plugs, &mut reload_handler);
-
-                /*
-                reload_handler.update(Plugins::reload_callback, &mut plugs);
-
-                if plugs.plugins.len() > 0 {
-                    // In a real program you want to cache the symbol and not do it every time if your
-                    // application is performance critical
-                    let fun: Symbol<extern "C" fn() -> i32> =
-                        unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
-
-                    Log::info("Value {}", fun());
-                }
-                */
-
-                let mut running = true;
-                for event in main_loop_context.event_pump.poll_iter() {
-                    match event {
-                        Event::Quit { .. } |
-                        Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                            running = false;
-                            Log::info("Quit requested");
-                        },
-                        Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
-                            Log::info("Space pressed");
-                            main_loop_context.scene.destroy_entity(1);
+                        if main_loop_context.framerate == 0 {
+                            Log::error("framerate zero, is this the first frame?");
+                            return;
                         }
-                        _ => {}
-                    }
-                }
-                main_loop_context.set_running(running);
-                //main_loop_context.canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
-                //main_loop_context.canvas.clear();
-
-                // Set the main render target
-                GraphicsDevice::set_render_target(&main_loop_context.screen_render_target);
-                let design_viewport = Rectangle::new(0.0, 0.0, 320, 240);
-                GraphicsDevice::apply_viewport(&design_viewport);
-
-                // clear the screen
-                unsafe {
-                    gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
-                    gl::Clear(gl::COLOR_BUFFER_BIT);
-                }
-
-                // apply the default shader
-                main_loop_context.sb.get_graphics_device_mut().apply_shader(&main_loop_context.shader);
-
-
-
-                /*
-                sdl2::log::log("Drawing triangle");
-                unsafe {
-                    gl::DrawArrays(gl::TRIANGLES, 0, 3);
-                }
-                */
-
-                /*
-                ui.window(im_str!("Hello world"))
-                    .size((300.0, 100.0), ImGuiSetCond_FirstUseEver)
-                    .build(|| {
-                        ui.text(im_str!("Hello world!"));
-                        ui.text(im_str!("This...is...imgui-rs!"));
-                        ui.separator();
-                        let mouse_pos = ui.imgui().mouse_pos();
-                        ui.text(im_str!("Mouse Position: ({:.1},{:.1})", mouse_pos.0, mouse_pos.1));
-                    });
-                */
-                
-                let current_time = timer::precise_time_ns();
-                let delta_time = ((current_time - main_loop_context.last_time) as f64) / 1_000_000_000.0;
-                main_loop_context.last_time = current_time;
-                {
-                    let position = Vector2::new(0.0, 0.0);
-                    let matrix: Matrix4<f32> = Matrix4::one();
-                    //sdl2::log::log("wabbit width and height follows");
-                    //sdl2::log::log(&wabbit.get_height().to_string());
-                    //sdl2::log::log(&wabbit.get_width().to_string());
-
-                    let viewport = Rectangle::new(0.0, 0.0, 320, 240);
-                    //let viewport = Rectangle::new(0.0, 0.0, 800, 600);
-                    // TODO: fix the scaling viewport
-                    //let viewport = main_loop_context.camera.get_viewport_adapter().unwrap().get_viewport();
-                    //println!("{:?}", viewport);
-                    let camera_matrix = main_loop_context.camera.get_transform_matrix();
-                    println!("{:?}", camera_matrix);
-                    main_loop_context.sb.begin(viewport, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(camera_matrix));
-                    {
-                        let e = 4;
-                        let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
-                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                        let ic = ic_compo.unwrap();
-                        let tc = tc_compo.unwrap();
-                        let tex = ic.get_texture().unwrap();
-                        let mut scale = Vector2::new(3.0, 3.0);
-                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, Some(scale), Color::white(), 0.0);
-                    }
-
-                    for bunny in main_loop_context.bunnies.iter_mut() {
-                        bunny.update(delta_time);
-                        main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
-                    }
-
-                    {
-                        let e = 0;
-                        let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
-                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                        let ic = ic_compo.unwrap();
-                        let tc = tc_compo.unwrap();
-                        let tex = ic.get_texture().unwrap();
-                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
-                    }
-                    {
-                        let e = 1;
-                        let ic_compo = main_loop_context.scene.get_component::<ImageComponent>(e);
-                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                        let ic = ic_compo.unwrap();
-                        let tc = tc_compo.unwrap();
-                        let tex = ic.get_texture().unwrap();
-                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
-                    }
-                    /*
-                    {
-                        let e = 2;
-                        let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
-                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                        let sc = sc_compo.unwrap();
-                        let tc = tc_compo.unwrap();
-                        let current_frame = sc.get_current_frame();
-                        let frame = sc.get_frame(current_frame).unwrap();
-                        let tex = frame.get_texture().unwrap();
-                        let clip_rect = sc.get_source_rect();
-                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
-                    }
-                    */
-                    {
-                        let e = 3;
-                        let lc_compo = main_loop_context.scene.get_component::<LayerComponent>(e);
-                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                        let lc = lc_compo.unwrap();
-                        let tc = tc_compo.unwrap();
-                        let tex = lc.get_texture().unwrap();
-                        let layer = lc.get_layer().clone().unwrap();
-                        match layer.layer_type {
-                            tiled_json_rs::LayerType::TileLayer(tiles) => {
-                                let mut count = 0;
-                                for tile in tiles.data {
-                                    if tile != 0 && tile != 2684354639 {
-                                        let gid = tile-1;
-                                        let clip_rect = Rectangle::new((gid % 25 * 16) as f32, (gid / 25 * 16) as f32, 16, 16);
-                                        //let clip_rect = Rectangle::new(16.0, 16.0, 16, 16);
-                                        let mut pos = (*tc.get_position()).clone();
-                                        pos.x = pos.x + (count % 58 * 16) as f32;
-                                        pos.y = pos.y + (count / 58 * 16) as f32;
-                                        //println!("{}", tile);
-                                        main_loop_context.sb.draw(tex.clone(), Some(pos), None, Some(clip_rect), None, 0.0, None, Color::white(), 0.0);
-                                    }
-                                    count += 1;
+        
+                        //#[cfg(not(target_arch = "wasm32"))]
+                        // Uncomment the following line to re-enable dynamic loading of code. You will have to set up lifetimes correctly, though
+                        //plugin_update(&mut plugs, &mut reload_handler);
+        
+                        /*
+                        reload_handler.update(Plugins::reload_callback, &mut plugs);
+        
+                        if plugs.plugins.len() > 0 {
+                            // In a real program you want to cache the symbol and not do it every time if your
+                            // application is performance critical
+                            let fun: Symbol<extern "C" fn() -> i32> =
+                                unsafe { plugs.plugins[0].lib.get(b"shared_fun\0").unwrap() };
+        
+                            Log::info("Value {}", fun());
+                        }
+                        */
+        
+                        let mut running = true;
+                        for event in main_loop_context.event_pump.poll_iter() {
+                            match event {
+                                Event::Quit { .. } |
+                                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                                    running = false;
+                                    Log::info("Quit requested");
+                                },
+                                Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
+                                    Log::info("Space pressed");
+                                    scene.destroy_entity(1);
                                 }
-                                //let clip_rect = sc.get_source_rect();
-                                //main_loop_context.sb.draw(tex, Some(tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+                                _ => {}
                             }
-                            _ => {}
                         }
-                    }
-                    /*
-                    {
-                        let e = 5;
-                        let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
-                        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
-                        let sc = sc_compo.unwrap();
-                        let tc = tc_compo.unwrap();
-                        let current_frame = sc.get_current_frame();
-                        let frame = sc.get_frame(current_frame).unwrap();
-                        let tex = frame.get_texture().unwrap();
-                        let clip_rect = sc.get_source_rect();
-                        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
-                    }
-                    */
-                    main_loop_context.scene.process(delta_time as f32, main_loop_context);
-                    main_loop_context.sb.end(viewport);
+                        main_loop_context.set_running(running);
+                        //main_loop_context.canvas.set_draw_color(SdlColor::RGB(191, 255, 255));
+                        //main_loop_context.canvas.clear();
+        
+                        // Set the main render target
+                        GraphicsDevice::set_render_target(&main_loop_context.screen_render_target);
+                        let design_viewport = Rectangle::new(0.0, 0.0, 320, 240);
+                        GraphicsDevice::apply_viewport(&design_viewport);
+        
+                        // clear the screen
+                        unsafe {
+                            gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
+                            gl::Clear(gl::COLOR_BUFFER_BIT);
+                        }
+        
+                        // apply the default shader
+                        main_loop_context.sb.get_graphics_device_mut().apply_shader(&main_loop_context.shader);
+        
+        
+        
+                        /*
+                        sdl2::log::log("Drawing triangle");
+                        unsafe {
+                            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+                        }
+                        */
+        
+                        /*
+                        ui.window(im_str!("Hello world"))
+                            .size((300.0, 100.0), ImGuiSetCond_FirstUseEver)
+                            .build(|| {
+                                ui.text(im_str!("Hello world!"));
+                                ui.text(im_str!("This...is...imgui-rs!"));
+                                ui.separator();
+                                let mouse_pos = ui.imgui().mouse_pos();
+                                ui.text(im_str!("Mouse Position: ({:.1},{:.1})", mouse_pos.0, mouse_pos.1));
+                            });
+                        */
+                        
+                        let current_time = timer::precise_time_ns();
+                        let delta_time = ((current_time - main_loop_context.last_time) as f64) / 1_000_000_000.0;
+                        main_loop_context.last_time = current_time;
+                        {
+                            let position = Vector2::new(0.0, 0.0);
+                            let matrix: Matrix4<f32> = Matrix4::one();
+                            //sdl2::log::log("wabbit width and height follows");
+                            //sdl2::log::log(&wabbit.get_height().to_string());
+                            //sdl2::log::log(&wabbit.get_width().to_string());
+        
+                            let viewport = Rectangle::new(0.0, 0.0, 320, 240);
+                            //let viewport = Rectangle::new(0.0, 0.0, 800, 600);
+                            // TODO: fix the scaling viewport
+                            //let viewport = main_loop_context.camera.get_viewport_adapter().unwrap().get_viewport();
+                            //println!("{:?}", viewport);
+                            let camera_matrix = main_loop_context.camera.get_transform_matrix();
+                            println!("{:?}", camera_matrix);
+                            main_loop_context.sb.begin(viewport, SpriteSortMode::SpriteSortModeDeferred, Some(main_loop_context.shader), Some(camera_matrix));
+                            {
+                                let e = 4;
+                                let ic_compo = scene.get_component::<ImageComponent>(e);
+                                let tc_compo = scene.get_component::<TransformComponent>(e);
+                                let ic = ic_compo.unwrap();
+                                let tc = tc_compo.unwrap();
+                                let tex = ic.get_texture().unwrap();
+                                let mut scale = Vector2::new(3.0, 3.0);
+                                main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, Some(scale), Color::white(), 0.0);
+                            }
+        
+                            for bunny in main_loop_context.bunnies.iter_mut() {
+                                bunny.update(delta_time);
+                                main_loop_context.sb.draw(main_loop_context.wabbit.clone(), Some(bunny.position), None, None, None, 0.0, None, Color::white(), 0.0);
+                            }
+        
+                            {
+                                let e = 0;
+                                let ic_compo = scene.get_component::<ImageComponent>(e);
+                                let tc_compo = scene.get_component::<TransformComponent>(e);
+                                let ic = ic_compo.unwrap();
+                                let tc = tc_compo.unwrap();
+                                let tex = ic.get_texture().unwrap();
+                                main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                            }
+                            {
+                                let e = 1;
+                                let ic_compo = scene.get_component::<ImageComponent>(e);
+                                let tc_compo = scene.get_component::<TransformComponent>(e);
+                                let ic = ic_compo.unwrap();
+                                let tc = tc_compo.unwrap();
+                                let tex = ic.get_texture().unwrap();
+                                main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, None, None, 0.0, None, Color::white(), 0.0);
+                            }
+                            /*
+                            {
+                                let e = 2;
+                                let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
+                                let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                                let sc = sc_compo.unwrap();
+                                let tc = tc_compo.unwrap();
+                                let current_frame = sc.get_current_frame();
+                                let frame = sc.get_frame(current_frame).unwrap();
+                                let tex = frame.get_texture().unwrap();
+                                let clip_rect = sc.get_source_rect();
+                                main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+                            }
+                            */
+                            {
+                                let e = 3;
+                                let lc_compo = scene.get_component::<LayerComponent>(e);
+                                let tc_compo = scene.get_component::<TransformComponent>(e);
+                                let lc = lc_compo.unwrap();
+                                let tc = tc_compo.unwrap();
+                                let tex = lc.get_texture().unwrap();
+                                let layer = lc.get_layer().clone().unwrap();
+                                match layer.layer_type {
+                                    tiled_json_rs::LayerType::TileLayer(tiles) => {
+                                        let mut count = 0;
+                                        for tile in tiles.data {
+                                            if tile != 0 && tile != 2684354639 {
+                                                let gid = tile-1;
+                                                let clip_rect = Rectangle::new((gid % 25 * 16) as f32, (gid / 25 * 16) as f32, 16, 16);
+                                                //let clip_rect = Rectangle::new(16.0, 16.0, 16, 16);
+                                                let mut pos = (*tc.get_position()).clone();
+                                                pos.x = pos.x + (count % 58 * 16) as f32;
+                                                pos.y = pos.y + (count / 58 * 16) as f32;
+                                                //println!("{}", tile);
+                                                main_loop_context.sb.draw(tex.clone(), Some(pos), None, Some(clip_rect), None, 0.0, None, Color::white(), 0.0);
+                                            }
+                                            count += 1;
+                                        }
+                                        //let clip_rect = sc.get_source_rect();
+                                        //main_loop_context.sb.draw(tex, Some(tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            /*
+                            {
+                                let e = 5;
+                                let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(e);
+                                let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(e);
+                                let sc = sc_compo.unwrap();
+                                let tc = tc_compo.unwrap();
+                                let current_frame = sc.get_current_frame();
+                                let frame = sc.get_frame(current_frame).unwrap();
+                                let tex = frame.get_texture().unwrap();
+                                let clip_rect = sc.get_source_rect();
+                                main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+                            }
+                            */
+                            scene.process(delta_time as f32, main_loop_context);
+                            main_loop_context.sb.end(viewport);
+                        }
+        
+                        main_loop_context.debug_name_manager.update(0.0);
+                        scene.render_entities();
+        
+                        main_loop_context.sb.get_graphics_device_mut().apply_shader(&main_loop_context.quad_shader);
+                        let mut vp = Rectangle::new(0.0, 0.0, 0, 0);
+                        let mut multiplier: f32 = 1.0;
+                        let mut camera_transform_mat: Matrix4<f32> = Matrix4::one();
+                        build_scaling_viewport(800, 600, 320, 240, &mut vp, &mut multiplier, &mut camera_transform_mat);
+                        camera_transform_mat = Matrix4::one();
+                        GraphicsDevice::apply_viewport(&vp);
+                        GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "resolution", 320 as f32, 240 as f32);
+                        GraphicsDevice::set_uniform_mat4(&main_loop_context.quad_shader, "transform", camera_transform_mat);
+                        GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "scale", multiplier, multiplier);
+                        GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "viewport", vp.x, vp.y);
+                        GraphicsDevice::draw_quad_to_screen(&main_loop_context.quad_shader, &main_loop_context.screen_render_target);
+        
+        
+                        //main_loop_context.canvas.present();
+                        main_loop_context.window.gl_swap_window();
+        
+                        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+                        // The rest of the game loop goes here...
+        
+        
+                        // Wait for 0.5 sec
+                        //thread::sleep(Duration::from_millis(500));
+                        // Replace with the following once we're done with testing
+                        //thread::sleep(Duration::from_millis(0))
+        
+        
+                        // How many nanoseconds the last frame took
+                        main_loop_context.current_frame_delta = main_loop_context.framerate_timer.delta();
+        
+                        main_loop_context.frame_delay = 1_000_000_000 / main_loop_context.framerate;
+                        if main_loop_context.frame_delay < main_loop_context.current_frame_delta {
+                            main_loop_context.frame_delay = 0;
+                        } else {
+                            main_loop_context.frame_delay = main_loop_context.frame_delay - main_loop_context.current_frame_delta;
+                        }
+        
+                        //Log::info("before sleep");
+                        thread::sleep(Duration::from_millis((main_loop_context.frame_delay / 1_000_000) as u64));
+                        //Log::info("after sleep");
+        
+                        if main_loop_context.current_frame_delta < main_loop_context.frame_delay {
+                            /*
+                            unsafe {
+                                sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
+                                thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
+                            }
+                            */
+                        }
+        
+                        /*
+                        let f = (1_000_000_000.0 / framerate_timer.delta() as f64); // frames per second
+                        println!("FPS: {}",  &f.to_string());
+                        */
+        
+                        //thread::yield_now();
+                        main_loop_context.framerate_timer.restart();
+                    },
+                    None => {}
                 }
-
-                main_loop_context.debug_name_manager.update(0.0);
-                main_loop_context.scene.render_entities();
-
-                main_loop_context.sb.get_graphics_device_mut().apply_shader(&main_loop_context.quad_shader);
-                let mut vp = Rectangle::new(0.0, 0.0, 0, 0);
-                let mut multiplier: f32 = 1.0;
-                let mut camera_transform_mat: Matrix4<f32> = Matrix4::one();
-                build_scaling_viewport(800, 600, 320, 240, &mut vp, &mut multiplier, &mut camera_transform_mat);
-                camera_transform_mat = Matrix4::one();
-                GraphicsDevice::apply_viewport(&vp);
-                GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "resolution", 320 as f32, 240 as f32);
-                GraphicsDevice::set_uniform_mat4(&main_loop_context.quad_shader, "transform", camera_transform_mat);
-                GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "scale", multiplier, multiplier);
-                GraphicsDevice::set_uniform_float2(&main_loop_context.quad_shader, "viewport", vp.x, vp.y);
-                GraphicsDevice::draw_quad_to_screen(&main_loop_context.quad_shader, &main_loop_context.screen_render_target);
-
-
-                //main_loop_context.canvas.present();
-                main_loop_context.window.gl_swap_window();
-
-                //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-                // The rest of the game loop goes here...
-
-
-                // Wait for 0.5 sec
-                //thread::sleep(Duration::from_millis(500));
-                // Replace with the following once we're done with testing
-                //thread::sleep(Duration::from_millis(0))
-
-
-                // How many nanoseconds the last frame took
-                main_loop_context.current_frame_delta = main_loop_context.framerate_timer.delta();
-
-                main_loop_context.frame_delay = 1_000_000_000 / main_loop_context.framerate;
-                if main_loop_context.frame_delay < main_loop_context.current_frame_delta {
-                    main_loop_context.frame_delay = 0;
-                } else {
-                    main_loop_context.frame_delay = main_loop_context.frame_delay - main_loop_context.current_frame_delta;
-                }
-
-                //Log::info("before sleep");
-                thread::sleep(Duration::from_millis((main_loop_context.frame_delay / 1_000_000) as u64));
-                //Log::info("after sleep");
-
-                if main_loop_context.current_frame_delta < main_loop_context.frame_delay {
-                    /*
-                    unsafe {
-                        sdl2::sys::timer::SDL_Delay((frame_delay) - current_frame_delta);
-                        thread::sleep(Duration::from_millis(((frame_delay - current_frame_delta) / 1_000_000) as u64))
-                    }
-                    */
-                }
-
-                /*
-                let f = (1_000_000_000.0 / framerate_timer.delta() as f64); // frames per second
-                println!("FPS: {}",  &f.to_string());
-                */
-
-                //thread::yield_now();
-                main_loop_context.framerate_timer.restart();
             },
             None => {
                 Log::error("main_loop(): Context shouldn't be None");
@@ -1034,13 +957,13 @@ impl Engine {
             shader: shader,
             bunnies: bunnies,
             wabbit: wabbit,
-            scene: scene,
             window: window,
             gl_context: gl_context,
             camera: player_camera,
             screen_render_target: screen_render_target,
             quad_shader: quad_shader,
         });
+        self.scene = Some(scene);
 
         //
         // While this is running (printing a number) change return value in file src/test_shared.rs
@@ -1067,23 +990,23 @@ pub struct SpriteSystem {
     base: BaseSystem,
 }
 
-impl System for SpriteSystem {
+impl System<MainLoopContext> for SpriteSystem {
     fn get_entities(&self) -> Vec<Entity> {
         return self.base.get_entities();
     }
 
-    fn process(&self, entity: Entity, dt: f32, user_data: &SystemData) {
+    fn process(&self, entity: Entity, dt: f32, scene: &Scene<MainLoopContext>, user_data: &mut MainLoopContext) {
         //println!("SpriteSystem process()");
-        let main_loop_context = user_data;
-        let sc_compo = main_loop_context.scene.get_component::<SpriteComponent>(entity);
-        let tc_compo = main_loop_context.scene.get_component::<TransformComponent>(entity);
+        let main_loop_data = user_data;
+        let sc_compo = &mut scene.get_component::<SpriteComponent>(entity);
+        let tc_compo = &mut scene.get_component::<TransformComponent>(entity);
         let sc = sc_compo.unwrap();
         let tc = tc_compo.unwrap();
         let current_frame = sc.get_current_frame();
         let frame = sc.get_frame(current_frame).unwrap();
         let tex = frame.get_texture().unwrap();
         let clip_rect = sc.get_source_rect();
-        main_loop_context.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
+        main_loop_data.sb.draw(tex, Some(*tc.get_position()), None, Some(*clip_rect), None, 0.0, None, Color::white(), 0.0);
     }
 
     fn get_components(&self) -> Vec<TypeId> {

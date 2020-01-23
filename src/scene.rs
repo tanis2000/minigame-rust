@@ -10,6 +10,7 @@ use std::vec::Vec;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use self::cgmath::Vector2;
+use engine::Engine;
 
 pub trait SceneTrait {
     fn before_update();
@@ -34,20 +35,20 @@ pub trait SceneTrait {
     //void RayCast(Ray2 *ray, std::vector<Colliders::RayCollisionData *> *rayCollisionData, int layerMask);
 }
 
-pub struct Scene {
+pub struct Scene<T> {
     time_active: f32,
     focused: bool,
-    world: World,
+    world: World<T>,
     //tag_lists: TagLists,
     //helper_entity: Entity,
     //spatial_hash: SpatialHash,
     actual_depth_lookup: HashMap<i32, f32>,
     tmp_rect: Rectangle,
     colliding_bodies: Vec<Rc<Collider>>,
-    renderers: Vec<Rc<Renderer>>,
+    renderers: Vec<Rc<Renderer<T>>>,
 }
 
-impl Scene {
+impl<T> Scene<T> {
     pub fn new(cell_size: u32) -> Self {
         let s = Scene {
             time_active: 0.0,
@@ -69,7 +70,7 @@ impl Scene {
         //self.world.render_entities();
     }
 
-    pub fn add_renderer(&mut self, renderer: Rc<Renderer>) {
+    pub fn add_renderer(&mut self, renderer: Rc<Renderer<T>>) {
         self.renderers.push(renderer);
     }
 
@@ -136,11 +137,11 @@ impl Scene {
         self.world.destroy_entity(entity);
     }
 
-    pub fn add_system<S: System>(&mut self, system: S) {
+    pub fn add_system<S: System<T>>(&mut self, system: S) {
         self.world.add_system(system);
     }
 
-    pub fn process(&self, dt: f32, user_data: &SystemData) {
-        self.world.process(dt, user_data);
+    pub fn process(&self, dt: f32, user_data: &mut T) {
+        self.world.process(dt, &self, user_data);
     } 
 }

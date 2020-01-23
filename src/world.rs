@@ -6,16 +6,18 @@ use std::rc::Rc;
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::any::{Any, TypeId};
+use engine::Engine;
+use scene::Scene;
 
-pub struct World {
+pub struct World<T> {
     next_entity_id: Entity,
     entities: Vec<EntityData>,
     active_entities: BitSet,
     components: HashMap<TypeId, Box<dyn Any>>,
-    systems: Vec<Box<dyn System>>,
+    systems: Vec<Box<dyn System<T>>>,
 }
 
-impl World {
+impl<T> World<T> {
     pub fn new() -> Self {
         World {
             next_entity_id: 0,
@@ -117,28 +119,28 @@ impl World {
         }
     }
 
-    pub fn add_system<S: System>(&mut self, system: S) -> usize {
+    pub fn add_system<S: System<T>>(&mut self, system: S) -> usize {
         self.systems.push(Box::new(system));
         return self.systems.len() - 1;
     }
 
-    pub fn process(&self, dt: f32, user_data: &SystemData) {
+    pub fn process(&self, dt: f32, scene: &Scene<T>, user_data: &mut T) {
         for system in &self.systems {
             for entity in system.get_entities() {
                 println!("calling process");
-                system.process(entity, dt, user_data);
+                system.process(entity, dt, scene, user_data);
             }
         }
     }
 }
 
 pub trait SystemData {
-    fn get_context(&self) -> Any;
+    fn get_context<T>(&self) -> Any;
 }
 
-pub trait System: Any {
+pub trait System<T>: Any {
     fn get_entities(&self) -> Vec<Entity>;
-    fn process(&self, entity: Entity, dt: f32, user_data: &SystemData);
+    fn process(&self, entity: Entity, dt: f32, scene: &Scene<T>, user_data: &mut T);
     fn get_components(&self) -> Vec<TypeId>;
     fn add_entity(&mut self, entity: Entity);
 }

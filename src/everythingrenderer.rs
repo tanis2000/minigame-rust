@@ -15,8 +15,8 @@ impl EverythingRenderer {
     }
 }
 
-impl Renderer for EverythingRenderer {
-    fn render_end <'sb>(&self, scene: &Scene, viewport: Rectangle, spritebatch: &'sb mut SpriteBatch) {
+impl<T> Renderer<T> for EverythingRenderer {
+    fn render_end <'sb>(&self, scene: &Scene<T>, viewport: Rectangle, spritebatch: &'sb mut SpriteBatch) {
         scene.render_entities();
         spritebatch.end(viewport);
     }

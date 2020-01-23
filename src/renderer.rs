@@ -13,8 +13,8 @@ use sdl2::render::Canvas;
 use sdl2::rect::Rect;
 use rectangle::Rectangle;
 
-pub trait Renderer {
-    fn before_render(&self, scene: &Scene) {
+pub trait Renderer<T> {
+    fn before_render(&self, scene: &Scene<T>) {
 
     }
 
@@ -40,13 +40,13 @@ pub trait Renderer {
         spritebatch.begin(viewport, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(m));
     }
     
-    fn render_end <'sb>(&self, scene: &Scene, viewport: Rectangle, spritebatch: &'sb mut SpriteBatch);
+    fn render_end <'sb>(&self, scene: &Scene<T>, viewport: Rectangle, spritebatch: &'sb mut SpriteBatch);
     
-    fn after_render(&self, scene: &Scene) {
+    fn after_render(&self, scene: &Scene<T>) {
 
     }
 
-    fn render(&self, scene: &Scene) {
+    fn render(&self, scene: &Scene<T>) {
         //self.camera.force_matrix_update();
         //let m = self.camera.get_transform_matrix();
         //spritebatch.begin(renderer, SpriteSortMode::SpriteSortModeDeferred, Some(shader), Some(m));
